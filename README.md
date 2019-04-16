@@ -1,2 +1,2 @@
-# scorefall
+# ScoreFall
 Music composition program.
