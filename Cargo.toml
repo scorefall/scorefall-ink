@@ -1,0 +1,17 @@
+[package]
+name = "scorefall"
+version = "0.1.0"
+authors = ["Jeron Aldaron Lau <jeronaldaron@gmail.com>"]
+edition = "2018"
+
+license = "GPL"
+description = "Music composition software."
+documentation = "https://docs.rs/scorefall"
+homepage = "https://app.scorefall.com/"
+repository = "https://github.com/scorefall/scorefall"
+readme = "README.md"
+keywords = ["cross-platform", "gui", "scorefall", "music", "composition"]
+categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio", "multimedia"]
+
+[dependencies]
+quick-xml = "0.14.0"

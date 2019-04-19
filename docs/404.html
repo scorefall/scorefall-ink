@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ScoreFall</title>
+    <base href="">
+    <link rel="icon" href="scorefall_favicon.svg">
+    <style>
+    html {
+      background: #cdf3ff;
+      border-image-width: 0px;
+    }
+    body {
+      display: flex;
+      flex-flow: column;
+      height: 100vh;
+    }
+    body, h1, h2, h3, h4, h5, h6, p {
+      margin: 0px;
+      padding: 0px;
+      border: 0px;
+    }
+    p {
+      margin-top: 14px;
+      min-height: 0px;
+    }
+    body .header {
+      background: #ffb4c8;
+      margin: 0px;
+      padding: 0px;
+      border: 0px;
+      border-image-width: 0px;
+      flex: 0 1 auto;
+      height: 54px;
+      display:flex;
+    }
+    img {
+      margin: 0px;
+      padding: 0px;
+      border: 0px;
+      display: block;
+    }
+    .page {
+      margin: 10px auto;
+      padding: 24px;
+      border-radius: 24px;
+      width: 90%;
+      max-width: 976px;
+      min-width: 488px;
+      border: 3px solid #ffb4c880;
+      background: #FFF4;
+    }
+    body .content {
+      overflow-y: scroll;
+      flex: 1 1 auto;
+      display: flex;
+      flex-flow: column;
+    }
+    input {
+      -moz-box-sizing: content-box;
+      -webkit-box-sizing: content-box;
+      box-sizing: content-box;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="header"><a href="https://scorefall.com"><img src="scorefall_logo.svg" height="100%" width="108px"/></a>
+      <input type="search" placeholder="Search..." style="margin-top:13.5px;width:240px;height:27px;border:0px solid black;border-radius:5px;border-left:5px solid white;border-right:5px solid white"/>
+      <div style="flex: 1 1 auto;"></div>
+      <button style="width:108px;background:#0000;font-weight:bold;font-size:27px;border:0">Sign In</button>
+    </div>
+    <div class="content">
+      <div class="page">
+          <h2 style="text-align:center">404</h2>
+          <h1>Page Not Found</h1>
+          <p>The specified file was not found on this website. Please check the URL for mistakes and try again.</p>
+          <br/>
+        <a href="https://scorefall.com/"><img style="margin:auto" src="scorefall_logo.svg" width="75%"/></a>
+      </div>
+      <div style="flex: 1 1 auto;"></div>
+      <div class="page" style="font-size:10pt;display:flex;border:0px;border-radius:0px;border-top:1px solid #ffb4c8;background:#0000">
+        <div style="flex: 0 0 85%"><a href="https://scorefall.com">ScoreFall™</a> © 2019 Noah Feldman, <a href="mailto:jeronaldaron@gmail.com">Jeron Lau</a>.</div>
+        <div style="flex: 1;text-align:right"><a href="about">About</a></div>
+      </div>
+    </div>
+  </body>
+</html>
