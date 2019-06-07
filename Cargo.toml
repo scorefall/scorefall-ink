@@ -14,4 +14,3 @@ keywords = ["cross-platform", "gui", "scorefall", "music", "composition"]
 categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio", "multimedia"]
 
 [dependencies]
-quick-xml = "0.14.0"
