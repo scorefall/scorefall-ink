@@ -11,7 +11,7 @@ Music composition program.
     - [x] Add score metadata struct
     - [x] Add instrument & note structs
     - [ ] Scof Parser with Muon
-      - [ ] Muon Specification
+      - [x] Muon Specification
       - [ ] Muon Parser
   - [ ] [score2svg](https://github.com/scorefall/score2svg) music scores in [scof](https://github.com/scorefall/scof) structs into SVG files.
     - [ ] Convert Emmentaler font into SVG markers
