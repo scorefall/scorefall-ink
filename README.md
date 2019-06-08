@@ -3,6 +3,7 @@ Music composition program.
 
 ## Roadmap to first stable iteration (0.1.0)
 - [ ] [scorefall-ui](https://github.com/scorefall/scorefall-ui) the actual program (putting everything together).
+  - [ ] Start building WASM application in Rust for [scorefall-ui](https://github.com/scorefall/scorefall-ui).
   - [ ] [musicxml](https://github.com/scorefall/musicxml) parser with [quick-xml](https://crates.io/crates/quick-xml).
     - [ ] Translation to Muon
       - [ ] Score metadata iterator
