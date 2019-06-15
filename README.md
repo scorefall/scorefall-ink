@@ -5,7 +5,7 @@ Music composition program.
 - [ ] [scorefall-ui](https://github.com/scorefall/scorefall-ui) the actual program (putting everything together).
   - [ ] Start building WASM application in Rust for [scorefall-ui](https://github.com/scorefall/scorefall-ui).
   - [ ] [musicxml](https://github.com/scorefall/musicxml) parser with [quick-xml](https://crates.io/crates/quick-xml).
-    - [ ] Translation to Muon
+    - [ ] Translation to Scof
       - [ ] Score metadata iterator
       - [ ] Instrument & Notes iterators
   - [ ] [scof](https://github.com/scorefall/scof) structs of musical notation.
@@ -15,8 +15,10 @@ Music composition program.
       - [x] Muon Specification
       - [ ] Muon Parser
   - [ ] [score2svg](https://github.com/scorefall/score2svg) music scores in [scof](https://github.com/scorefall/scof) structs into SVG files.
-    - [ ] Convert Emmentaler font into SVG markers
-    - [ ] Depends on `scof` for music structs.
-    - [ ] Rendering
+    - [x] Convert Bravura font into SVG defs.
+    - [x] Rendering.
+    - [x] Depends on `scof` for music structs.
+    - [ ] API to take `scof` music structs and render it.
+    - [ ] Be able to render all supported glyphs.
   - [ ] [scorefall](https://github.com/scorefall/scorefall)
     - [ ] Functions for editing score.
