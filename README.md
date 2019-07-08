@@ -2,8 +2,8 @@
 Music composition program.
 
 ## Roadmap to first stable iteration (0.1.0)
-- [ ] [scorefall-ui](https://github.com/scorefall/scorefall-ui) the actual program (putting everything together).
-  - [ ] Start building WASM application in Rust for [scorefall-ui](https://github.com/scorefall/scorefall-ui).
+- [ ] [scorefall-studio](https://github.com/scorefall/scorefall-studio) the actual program (putting everything together).
+  - [x] Start building WASM application in Rust for [scorefall-studio](https://github.com/scorefall/scorefall-studio).
   - [ ] [musicxml](https://github.com/scorefall/musicxml) parser with [quick-xml](https://crates.io/crates/quick-xml).
     - [ ] Translation to Scof
       - [ ] Score metadata iterator
@@ -19,6 +19,7 @@ Music composition program.
     - [x] Rendering.
     - [x] Depends on `scof` for music structs.
     - [ ] API to take `scof` music structs and render it.
+      - [ ] Design & implement input.
     - [ ] Be able to render all supported glyphs.
   - [ ] [scorefall](https://github.com/scorefall/scorefall)
     - [ ] Functions for editing score.
