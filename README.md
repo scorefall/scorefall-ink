@@ -13,10 +13,9 @@ Music composition program.
     - [x] Add instrument & note structs
     - [ ] Scof Parser with Muon
       - [x] Muon Specification
-      - [ ] Muon Parser
+      - [x] Muon Parser
         - [x] Basic serde support
-        - [ ] Deserialize schemas
-        - [ ] Deserialize dictionary default mappings
+        - [x] Deserialize dictionary default mappings
   - [ ] [score2svg](https://github.com/scorefall/score2svg) music scores in [scof](https://github.com/scorefall/scof) structs into SVG files.
     - [x] Convert Bravura font into SVG defs.
     - [x] Rendering.
