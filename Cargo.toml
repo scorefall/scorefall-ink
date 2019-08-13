@@ -31,3 +31,4 @@ keywords = ["cross-platform", "gui", "scorefall", "music", "composition"]
 categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio", "multimedia"]
 
 [dependencies]
+scof = { path = "../scof" }
