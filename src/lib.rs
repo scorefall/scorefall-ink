@@ -23,17 +23,11 @@ pub struct Program {
     /// The save file.
     pub scof: Scof,
     // Which channel is the cursor at.
-    chan: usize,
+    pub chan: usize,
     // Which bar is the cursor at.
-    bar: usize,
+    pub bar: usize,
     // Cursor within the measure (not necessarily at a specific time).
-    curs: usize,
-}
-
-impl Program {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    pub curs: usize,
 }
 
 impl Default for Program {
@@ -43,6 +37,27 @@ impl Default for Program {
             bar: 0,
             curs: 0,
             chan: 0,
+        }
+    }
+}
+
+impl Program {
+    /// Create a new program.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Move cursor back.
+    pub fn left(&mut self) {
+        if self.curs > 0 {
+            self.curs -= 1;
+        }
+    }
+
+    /// Move cursor forward.
+    pub fn right(&mut self) {
+        if self.scof.get(self.bar, self.chan, self.curs + 1).is_some() {
+            self.curs += 1;
         }
     }
 }
