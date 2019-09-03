@@ -51,13 +51,35 @@ impl Program {
     pub fn left(&mut self) {
         if self.curs > 0 {
             self.curs -= 1;
+        } else if self.bar != 0 {
+            self.bar -= 1;
+            self.curs = 0;
+            while self
+                .scof
+                .marking(self.bar, self.chan, self.curs + 1)
+                .is_some()
+            {
+                self.curs += 1;
+            }
         }
     }
 
     /// Move cursor forward.
     pub fn right(&mut self) {
-        if self.scof.get(self.bar, self.chan, self.curs + 1).is_some() {
+        if self
+            .scof
+            .marking(self.bar, self.chan, self.curs + 1)
+            .is_some()
+        {
             self.curs += 1;
+        } else {
+            // Measure has ended.
+            self.bar += 1;
+            self.curs = 0;
+            if self.scof.marking(self.bar, self.chan, self.curs).is_none() {
+                // Measure doesn't exist, so make a new one.
+                self.scof.new_measure();
+            }
         }
     }
 }
