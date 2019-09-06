@@ -17,6 +17,7 @@
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use scof::Scof;
+use scof::Marking;
 
 /// This is the entire program context.
 pub struct Program {
@@ -81,5 +82,50 @@ impl Program {
                 self.scof.new_measure();
             }
         }
+    }
+
+    /// Step up or down within the key.
+    fn move_step(&mut self, up: bool) {
+        let create = (scof::PitchClass {
+            name: scof::PitchName::C,
+            accidental: None,
+        }, 4);
+
+        if let Some(mark) = self.scof.marking(self.bar, self.chan, self.curs) {
+            match mark {
+                Marking::Dynamic(_) => {/*Do nothing*/},
+                Marking::GraceInto(note) => {
+                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                },
+                Marking::GraceOutOf(note) => {
+                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                },
+                Marking::Note(note) => {
+                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                },
+                Marking::Breath => {/*Do nothing*/},
+                Marking::CaesuraShort => {/*Do nothing*/},
+                Marking::CaesuraLong => {/*Do nothing*/},
+                Marking::Cresc => {/*Do nothing*/},
+                Marking::Dim => {/*Do nothing*/},
+                Marking::Pizz => {/*Do nothing*/},
+                Marking::Arco => {/*Do nothing*/},
+                Marking::Mute => {/*Do nothing*/},
+                Marking::Open => {/*Do nothing*/},
+                Marking::Repeat => {/*Do nothing*/},
+            }
+        } else {
+            // Shouldn't happen, do nothing.
+        }
+    }
+
+    /// Move a note down 1 step within the key.
+    pub fn down_step(&mut self) {
+        self.move_step(false);
+    }
+
+    /// Move a note up 1 step within the key.
+    pub fn up_step(&mut self) {
+        self.move_step(true);
     }
 }
