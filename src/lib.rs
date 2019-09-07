@@ -128,4 +128,14 @@ impl Program {
     pub fn up_step(&mut self) {
         self.move_step(true);
     }
+
+    /// Move a note down 1 step within the key.
+    pub fn down_half_step(&mut self) {
+        self.down_half_step();
+    }
+
+    /// Move a note up 1 step within the key.
+    pub fn up_half_step(&mut self) {
+        self.up_half_step();
+    }
 }
