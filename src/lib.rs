@@ -16,28 +16,21 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use scof::Scof;
-use scof::Marking;
+use scof::{Cursor, Marking, Scof};
 
 /// This is the entire program context.
 pub struct Program {
     /// The save file.
     pub scof: Scof,
-    // Which channel is the cursor at.
-    pub chan: usize,
-    // Which bar is the cursor at.
-    pub bar: usize,
-    // Cursor within the measure (not necessarily at a specific time).
-    pub curs: usize,
+    /// Current cursor
+    pub cursor: Cursor,
 }
 
 impl Default for Program {
     fn default() -> Self {
         Self {
             scof: Scof::default(),
-            bar: 0,
-            curs: 0,
-            chan: 0,
+            cursor: Cursor::default(),
         }
     }
 }
@@ -50,37 +43,15 @@ impl Program {
 
     /// Move cursor back.
     pub fn left(&mut self) {
-        if self.curs > 0 {
-            self.curs -= 1;
-        } else if self.bar != 0 {
-            self.bar -= 1;
-            self.curs = 0;
-            while self
-                .scof
-                .marking(self.bar, self.chan, self.curs + 1)
-                .is_some()
-            {
-                self.curs += 1;
-            }
-        }
+        self.cursor.left(&self.scof);
     }
 
     /// Move cursor forward.
     pub fn right(&mut self) {
-        if self
-            .scof
-            .marking(self.bar, self.chan, self.curs + 1)
-            .is_some()
-        {
-            self.curs += 1;
-        } else {
-            // Measure has ended.
-            self.bar += 1;
-            self.curs = 0;
-            if self.scof.marking(self.bar, self.chan, self.curs).is_none() {
-                // Measure doesn't exist, so make a new one.
-                self.scof.new_measure();
-            }
+        self.cursor.right(&self.scof);
+        if self.scof.marking_len(&self.cursor) == 0 {
+            // Measure doesn't exist, so make a new one.
+            self.scof.new_measure();
         }
     }
 
@@ -91,17 +62,17 @@ impl Program {
             accidental: None,
         }, 4);
 
-        if let Some(mark) = self.scof.marking(self.bar, self.chan, self.curs) {
+        if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
                 Marking::GraceInto(note) => {
-                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
                 },
                 Marking::GraceOutOf(note) => {
-                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
                 },
                 Marking::Note(note) => {
-                    self.scof.set_pitch(self.bar, self.chan, self.curs, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
                 },
                 Marking::Breath => {/*Do nothing*/},
                 Marking::CaesuraShort => {/*Do nothing*/},
