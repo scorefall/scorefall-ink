@@ -60,7 +60,7 @@ impl Program {
         let create = (scof::PitchClass {
             name: scof::PitchName::C,
             accidental: None,
-        }, 4);
+        }, scof::PitchOctave::Octave4);
 
         if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
@@ -131,10 +131,11 @@ impl Program {
                         // Insert Rests
                         let rem = old_duration - dur; // TODO: Test Code Sub
 //                        while !rem.is_zero() {
+                            // TODO: Should be in scof
                             self.scof.insert_after(&self.cursor, Note {
                                 pitch: None,
                                 duration: rem,
-                                articulation: None,
+                                articulation: vec![],
                             }).unwrap();
 //                        }
                     } else {
@@ -145,10 +146,11 @@ impl Program {
                                 if marking.duration <= rem {
                                     rem = rem - marking.duration;
                                 } else {
+                                    // TODO: should be in scof
                                     self.scof.insert_after(&self.cursor, Note {
                                         pitch: None,
                                         duration: marking.duration - rem,
-                                        articulation: None,
+                                        articulation: vec![],
                                     });
                                     break;
                                 }
