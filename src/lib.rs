@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use scof::{Cursor, Marking, Scof, Fraction, IsZero, Note};
+use scof::{Cursor, Marking, Scof, Fraction, IsZero, Note, Duration};
 
 /// This is the entire program context.
 pub struct Program {
@@ -113,23 +113,25 @@ impl Program {
     }
 
     /// Set duration of a note.
-    pub fn set_dur(&mut self, num: u8, den: u8) {
-        if let Some(mark) = self.scof.marking(&self.cursor) {
-            let dur = Fraction::new(num, den);
+    pub fn set_dur(&mut self, dur: Duration) {
+        let index = 0; // FIXME: Support ties.
+        let fraction = dur.fraction();
 
+        if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
                 Marking::GraceInto(note) => {
-                    self.scof.set_duration(&self.cursor, dur)
+                    self.scof.set_duration_indexed(&self.cursor, dur, index)
                 }
                 Marking::GraceOutOf(note) => {
-                    self.scof.set_duration(&self.cursor, dur)
+                    self.scof.set_duration_indexed(&self.cursor, dur, index)
                 },
                 Marking::Note(note) => {
-                    let old_duration = note.duration;
-                    if old_duration > dur {
-                        // Insert Rests
-                        let rem = old_duration - dur; // TODO: Test Code Sub
+                    self.scof.set_duration_indexed(&self.cursor, dur, index)
+                    /*let old_duration = note.fraction(0 /*FIXME*/).unwrap();
+                    if old_duration > fraction {
+                        /*// Insert Rests
+                        let rem = old_duration - fraction; // TODO: Test Code Sub
 //                        while !rem.is_zero() {
                             // TODO: Should be in scof
                             self.scof.insert_after(&self.cursor, Note {
@@ -137,19 +139,19 @@ impl Program {
                                 duration: rem,
                                 articulation: vec![],
                             }).unwrap();
-//                        }
+//                        }*/
                     } else {
-                        // Delete Notes
-                        let mut rem = dur - old_duration;
+                        /*// Delete Notes
+                        let mut rem = fraction - old_duration;
                         while !rem.is_zero() {
                             if let Some(marking) = self.scof.remove_after(&self.cursor) {
-                                if marking.duration <= rem {
-                                    rem = rem - marking.duration;
+                                if marking.fraction(0/*FIXME*/).unwrap() <= rem {
+                                    rem = rem - marking.fraction(0/*FIXME*/).unwrap();
                                 } else {
                                     // TODO: should be in scof
                                     self.scof.insert_after(&self.cursor, Note {
                                         pitch: None,
-                                        duration: marking.duration - rem,
+                                        duration: marking.fraction(0/*FIXME*/).unwrap() - rem,
                                         articulation: vec![],
                                     });
                                     break;
@@ -157,9 +159,8 @@ impl Program {
                             } else {
                                 // FIXME: Algorithm Over barlines.
                             }
-                        }
-                    }
-                    self.scof.set_duration(&self.cursor, dur)
+                        }*/
+                    }*/
                 },
                 Marking::Breath => {/*Do nothing*/},
                 Marking::CaesuraShort => {/*Do nothing*/},
