@@ -114,20 +114,19 @@ impl Program {
 
     /// Set duration of a note.
     pub fn set_dur(&mut self, dur: Duration) {
-        let index = 0; // FIXME: Support ties.
         let fraction = dur.fraction();
 
         if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
                 Marking::GraceInto(note) => {
-                    self.scof.set_duration_indexed(&self.cursor, dur, index)
+                    self.scof.set_duration(&self.cursor, dur)
                 }
                 Marking::GraceOutOf(note) => {
-                    self.scof.set_duration_indexed(&self.cursor, dur, index)
+                    self.scof.set_duration(&self.cursor, dur)
                 },
                 Marking::Note(note) => {
-                    self.scof.set_duration_indexed(&self.cursor, dur, index)
+                    self.scof.set_duration(&self.cursor, dur)
                     /*let old_duration = note.fraction(0 /*FIXME*/).unwrap();
                     if old_duration > fraction {
                         /*// Insert Rests
