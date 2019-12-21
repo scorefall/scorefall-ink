@@ -117,13 +117,13 @@ impl Program {
         if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
-                Marking::GraceInto(note) => {
+                Marking::GraceInto(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
                 }
-                Marking::GraceOutOf(note) => {
+                Marking::GraceOutOf(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
                 },
-                Marking::Note(note) => {
+                Marking::Note(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
                 },
                 Marking::Breath => {/*Do nothing*/},
