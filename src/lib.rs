@@ -50,6 +50,7 @@ impl Program {
     pub fn right(&mut self) {
         self.cursor.right(&self.scof);
         if self.scof.marking_len(&self.cursor) == 0 {
+            cala::info!("NEW MEASEMRE");
             // Measure doesn't exist, so make a new one.
             self.scof.new_measure();
         }
@@ -86,7 +87,7 @@ impl Program {
                 Marking::Repeat => {/*Do nothing*/},
             }
         } else {
-            // Shouldn't happen, do nothing.
+            self.scof.set_whole_pitch(&self.cursor);
         }
     }
 
@@ -138,7 +139,7 @@ impl Program {
                 Marking::Repeat => {/*Do nothing*/},
             }
         } else {
-            // Shouldn't happen, do nothing.
+            self.scof.set_whole_duration(&self.cursor, dur);
         }
     }
 
