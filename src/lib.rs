@@ -63,7 +63,7 @@ impl Program {
             accidental: None,
         }, scof::PitchOctave::Octave4);
 
-        if let Some(mark) = self.scof.marking(&self.cursor) {
+        if let Some(mark) = self.scof.marking(&self.cursor).cloned() {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
                 Marking::GraceInto(note) => {
