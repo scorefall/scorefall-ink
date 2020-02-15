@@ -67,13 +67,13 @@ impl Program {
             match mark {
                 Marking::Dynamic(_) => {/*Do nothing*/},
                 Marking::GraceInto(note) => {
-                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
                 }
                 Marking::GraceOutOf(note) => {
-                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
                 }
                 Marking::Note(note) => {
-                    self.scof.set_pitch(&self.cursor, if up { note.step_up(create) } else { note.step_down(create) }.pitch.unwrap())
+                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
                 }
                 Marking::Breath => {/*Do nothing*/},
                 Marking::CaesuraShort => {/*Do nothing*/},
