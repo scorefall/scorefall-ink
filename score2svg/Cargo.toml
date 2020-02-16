@@ -1,0 +1,13 @@
+[package]
+name = "score2svg"
+version = "0.1.0"
+authors = [
+    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
+    "Douglas Lau <doug.p.lau@gmail.com>"
+]
+edition = "2018"
+license = "GPL"
+
+[dependencies]
+cala = "0.7"
+scof = { path = "../scof" }
