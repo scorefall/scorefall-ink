@@ -1,0 +1,9 @@
+# Set synthesis for channel 0
+chan: 0
+    instrument: 
+    volume: 
+    reverb: 
+chan: 1
+    
+chan: 2
+    

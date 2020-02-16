@@ -1,6 +1,6 @@
 # ScoreFall Studio - Music Composition Software
 #
-# Copyright (C) 2019 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+# Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 # Copyright (C) 2019 Doug P. Lau
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -16,21 +16,10 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-[package]
-name = "scorefall"
-version = "0.1.0"
-authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
-edition = "2018"
-
-license = "GPL"
-description = "Music composition software."
-documentation = "https://docs.rs/scorefall"
-homepage = "https://app.scorefall.com/"
-repository = "https://github.com/scorefall/scorefall"
-readme = "README.md"
-keywords = ["cross-platform", "gui", "scorefall", "music", "composition"]
-categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio", "multimedia"]
-
-[dependencies]
-scof = { path = "../scof" }
-cala = { version = "0.7", default-features = false }
+[workspace]
+members = [
+    # Scorefall's "Backend"
+    "scorefall",
+    # Scorefall's native file format
+    "scof",
+]

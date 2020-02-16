@@ -1,4 +1,4 @@
-# ScoreFall
+# ScoreFall Studio
 Music composition program.
 
 ## Roadmap to first stable iteration (0.1.0)

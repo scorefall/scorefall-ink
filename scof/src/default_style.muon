@@ -1,0 +1,6 @@
+sig:
+  time: 4/4
+bar:
+  sig:
+    chan: 0
+    clef: C4

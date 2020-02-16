@@ -1,0 +1,24 @@
+[package]
+name = "scof"
+version = "0.1.0"
+authors = [
+    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
+    "Doug Lau <doug.p.lau@gmail.com>",
+]
+edition = "2018"
+
+license = "GPL"
+description = "Parser for SCOF: A Music Score File Format."
+documentation = "https://docs.rs/scof"
+homepage = "https://scorefall.github.io/scof/"
+repository = "https://github.com/scorefall/scof"
+readme = "README.md"
+keywords = ["music", "format", "scof", "score", "muon"]
+categories = ["data-structures", "encoding", "parser-implementations"]
+
+[dependencies]
+muon-rs = "0.2"
+serde = "1.0"
+serde_derive = "1.0"
+cala = { version = "0.7", default-features = false }
+# devout = "0.0"

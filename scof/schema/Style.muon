@@ -1,0 +1,13 @@
+# Style.muon schema
+:::
+# Style a signature
+sig: [table]
+   # Text that should show up rather than "beat = BPM" marking.
+   tempo: text?
+   # Whether or not the time signature should use a special symbol (C for 4/4).
+   # Default=false
+   time_symbol: bool false
+   # Text that should show up rather than default.
+   # "1/8 1/8 = 1/6 1/12"
+   swing_text: text?
+:::

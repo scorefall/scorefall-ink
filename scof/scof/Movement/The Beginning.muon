@@ -1,0 +1,19 @@
+sig: 0
+  time: 4/4
+  tempo: 144
+sig: 0
+  time: 4/4
+  tempo: 100
+bar:
+  sig: 0
+  chan: 1/1R
+  chan: fff 1/16E4 1/16E4 1/16E4 1/16E4 1/8E4 1/8E4 1/2R
+    lyric: these are sil- ly ly- rics
+bar:
+  chan: 1/1C4
+  chan: R;4
+bar:
+  sig: 1
+  chan: 1/1C4,E4,G4
+  chan: 1/1R
+

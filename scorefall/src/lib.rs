@@ -1,6 +1,6 @@
 // ScoreFall Studio - Music Composition Software
 //
-// Copyright (C) 2019 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 // Copyright (C) 2019 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify

@@ -1,0 +1,108 @@
+# Movement/*.muon schema
+:::
+# Define a signature
+sig: [table]
+   # Which key are the following measures in?
+   #  - Cn (0): The key of C natural.
+   #  - C# (2): The key of C (1/2 step) sharp.
+   #  - Cb: The Key of C (1/2 step) flat.
+   #  - Cx / Dn (4): The key of C (1 step) sharp.
+   #  - Cp: The key of C (1 step) flat.
+   #   [microtonal]
+   #  - Cd: The key of C (1/4 step) flat.
+   #  - Cq: The key of C (3/4 step) flat.
+   #  - C! (1): The key of C (1/4 step) sharp.
+   #  - C* (3): The key of C (3/4 step) sharp.
+   key: int
+   # Time Signature (num_beats/note_len)
+   time: int int
+   # BPM (beats per minute), 120 is common.
+   tempo: int
+   # Swing (new % for half a beat - the default is 50%)
+   swing: int?
+
+# A bar (measure) of music.
+bar: [table]
+   # Signature index
+   sig: int?
+   # A channel.
+   chan: [table]
+      # List of notes.
+      #
+      # --- Soft to strong ---
+      # pppppp ppppp pppp ppp pp p mp mf f ff fff ffff fffff ffffff
+      # n      --- silent
+      # sf sfz --- Suddenly strong
+      # fp sfp --- Strong and then immediately soft
+      #
+      # --- Accidentals ---
+      # p   Double flat
+      # q   3/4 tone flat
+      # b   1/2 tone flat (normal flat)
+      # d   1/4 tone flat
+      # !   1/4 tone sharp
+      # #   1/2 tone sharp (normal sharp)
+      # *   3/4 tone sharp
+      # x   Double sharp
+      #
+      # --- A through G ---
+      # A B C D E F G
+      # - 0 1 2 3 4 5 6 7 8 9
+      #
+      # --- Markings between notes ---
+      # `       Breath mark
+      # ||      Short Caesura || (everyone pauses)
+      # //      Long Caesura // (everyone pauses)
+      # cresc   Crescendo (getting stronger)
+      # dim     Decrescendo (getting softer).
+      # pizz    Start playing pizzicato
+      # arco    Start playing bowed
+      # mute    Start playing muted.
+      # open    Start playing without the mute.
+      # %       Repeat previous measure
+      # {       Grace note in of
+      # }       Grace note out of
+      #
+      # --- Articulation ---
+      # '   staccatissimo
+      # .   staccato (short 1/2)
+      # _   tenuto
+      # _.  tenuto staccato
+      # ^   marcato (short sharp attack) (2/3)
+      # ^.  marcato staccato
+      # ^_  marcato tenuto
+      # >   accent (sharp attack)
+      # >.  accent staccato
+      # >_  accent tenuto (≥)
+      # &   slur
+      # -   glissando
+      # /-  pitch bend slide up into
+      # \-  pitch bend slide down into
+      # -/  pitch bend slide up out of
+      # -\  pitch bend slide down out of (fall)
+      # $   fermata (everyone plays long)
+      # +   closed mute (or palm mute rendered as _ on guitar)
+      # o   open mute
+      # @   harmonic (smaller o)
+      # s   turn
+      # z   inverted turn
+      # ~   trill
+      # =1  tremelo (with length 1)
+      # M   arpeggio (strum) pitch up, strum guitar down
+      # W   arpeggio (strum) pitch down, strum guitar up
+      # []  pedal
+      notes: text
+      # Lyrics
+      lyric: text?
+
+   # Open -- ||:
+   # Close -- :||
+   # Segno -- Sign (to jump backwards to).
+   # DC -- Jump back to beginning.
+   # DS -- Jump back to sign.
+   # Coda -- The marks the beginning of the coda.
+   # To Coda -- Jump forward to the coda.
+   # Fine -- End here (after jumping backwards to the sign).
+   # Ending(u8) -- Numbered ending.
+   repeat: [text]
+:::

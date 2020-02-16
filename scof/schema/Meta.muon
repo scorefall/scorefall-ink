@@ -1,0 +1,103 @@
+# Meta.muon schema
+:::
+# The title of the piece.
+title: text
+
+# The subtitle of the piece.
+subtitle: text?
+
+# Work number.
+number: int?
+
+# Who wrote the original music "{}"
+music: text
+
+# Who wrote the lyrics to the music "Words by {}"
+words: text?
+
+# Who translated the lyrics "Translated by {}"
+translator: text?
+
+# Who performed the music "Performed by {}"
+performers: text?
+
+# List of people who arranged & rearranged the music in order "Arranged for {} by {}".
+arranger: [table]
+   name: text
+   ensemble: text?
+
+# List of people who revised the score "Revised by {}".
+revised: [text]
+
+# The license(s) this work is under and which people own part of the copyright.
+# 
+# [Share] [Adapt] [Sell] without permision
+#    Sharing means: Copy & redistribute in any format.
+#    Adapt means: Perform and/or Arrange/Rearrange.
+#    Sell means: Commercially make money off of.
+#    Values:
+#       P: Need direct permission from copyright holder.
+#       C: Can do as long as you credit the copyright holder.
+#       F: Free to do without attribution or release under same license (you own
+#          the entire copyright in all derivative works).
+#       S: Can do as long as you credit the copyright holder and use the same
+#          license.
+#
+# Example License Section With 3 Licenses
+# =======================================
+# license: © Copyright 2014-2015 Douglas P. Lau / CC BY
+#        : This work is licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+# license: Previous Arrangement © Copyright 2018 Norej N. Aul <norej@mail.mail>.
+#        : All Rights Reserved.
+# license: This Revision © Copyright 2020 Jeron Aldaron Lau.
+#        : All Rights Reserved.
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com>.
+# All Rights Reserved.
+#    [P] [P] [P]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY-NC-ND.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
+#    [C] [P] [P]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY-ND.
+# This work is licensed under the Creative Commons Attribution-NoDerivatives 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nd/4.0/.
+#    [C] [P] [C]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY-NC.
+# This work is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/.
+#    [C] [C] [P]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY.
+# This work is licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+#    [C] [C] [C]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY-NC-SA.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
+#    [S] [S] [P]
+#
+# © Copyright 2018-2019 Jeron Aldaron Lau <jeronaldaron@gmail.com> / CC BY-SA.
+# This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.
+#    [S] [S] [S]
+#
+# CC0
+# To the extent possible under law, Jeron Aldaron Lau has waived all copyright and related or neighboring rights to this work.
+#    [F] [F] [F]
+#
+# Public Domain Mark
+# This work, identified by Jeron Aldaron Lau, is free of known copyright restrictions.
+#    [F] [F] [F]
+license: [text]
+
+# Notes for the conductor about the piece, in markdown.
+notes: text
+
+# Playing level (how hard it is to play times 2 - to allow grade 1.5 etc.).
+grade: int
+
+# Filename path for SVG cover page.
+cover: text
+
+# List of the movements in order.
+movement: [text]
+:::
