@@ -1,8 +1,10 @@
 //! Fraction
 
-use std::ops::{Mul, Add, Sub, Div, MulAssign, AddAssign, SubAssign, DivAssign};
-use std::convert::TryInto;
 use std::cmp::Ordering;
+use std::convert::TryInto;
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
+};
 use std::{fmt, str::FromStr};
 
 /// (Unsigned) Fraction of a measure.
@@ -21,14 +23,20 @@ impl Fraction {
 
     /// Reciprocal (1 / self).
     pub fn recip(self) -> Self {
-        Self { num: self.den, den: self.num }
+        Self {
+            num: self.den,
+            den: self.num,
+        }
     }
 
     /// Simpify the fraction (2/2) => (1/1).
     pub fn simplify(self) -> Self {
         let a = gcd_i(self.num, self.den);
 
-        Self { num: self.num / a, den: self.den / a }
+        Self {
+            num: self.num / a,
+            den: self.den / a,
+        }
     }
 }
 
@@ -87,12 +95,17 @@ impl Add for Fraction {
             (other.den, self.den, self.den * other.den)
         };
 
-        let num: u32 = self.num as u32 * self_mul as u32 + other.num as u32 * other_mul as u32;
+        let num: u32 = self.num as u32 * self_mul as u32
+            + other.num as u32 * other_mul as u32;
         let den: u32 = den.into();
         let gcd: u32 = gcd_i(num, den);
         Fraction {
-            num: (num / gcd).try_into().unwrap_or_else(|_| {panic!("n {} {} {}", self, other, num/gcd)}),
-            den: (den / gcd).try_into().unwrap_or_else(|_| {panic!("d {} {} {}", self, other, den/gcd)}),
+            num: (num / gcd).try_into().unwrap_or_else(|_| {
+                panic!("n {} {} {}", self, other, num / gcd)
+            }),
+            den: (den / gcd).try_into().unwrap_or_else(|_| {
+                panic!("d {} {} {}", self, other, den / gcd)
+            }),
         }
     }
 }
@@ -147,8 +160,7 @@ impl PartialEq for Fraction {
         let simple = self.simplify();
         let other_simple = other.simplify();
 
-        simple.den == other_simple.den
-            && simple.num == other_simple.num
+        simple.den == other_simple.den && simple.num == other_simple.num
     }
 }
 
@@ -157,7 +169,7 @@ impl PartialOrd for Fraction {
         let self_int = self.num as i32 * other.den as i32;
         let other_int = other.num as i32 * self.den as i32;
 
-        (self_int-other_int).partial_cmp(&0)
+        (self_int - other_int).partial_cmp(&0)
     }
 }
 
@@ -169,8 +181,9 @@ impl FromStr for Fraction {
         let num = (iter.next().ok_or(())?).parse::<u16>().or(Err(()))?;
         let den = (iter.next().ok_or(())?).parse::<u16>().or(Err(()))?;
 
-        if iter.next().is_some() { // Too many `/`s
-            return Err(())
+        if iter.next().is_some() {
+            // Too many `/`s
+            return Err(());
         }
 
         Ok(Fraction { num, den })
@@ -199,20 +212,17 @@ impl IsZero for u16 {
     }
 }
 
-
 impl IsZero for u32 {
     fn is_zero(self) -> bool {
         self == 0
     }
 }
 
-
 impl IsZero for u64 {
     fn is_zero(self) -> bool {
         self == 0
     }
 }
-
 
 impl IsZero for u128 {
     fn is_zero(self) -> bool {
@@ -228,7 +238,8 @@ impl IsZero for Fraction {
 
 // Iterative Greatest Common Divisor.
 fn gcd_i<T>(mut a: T, mut b: T) -> T
-    where T: PartialEq + std::ops::RemAssign + IsZero + Copy + Clone
+where
+    T: PartialEq + std::ops::RemAssign + IsZero + Copy + Clone,
 {
     if a.is_zero() {
         return b;
@@ -254,38 +265,74 @@ mod tests {
 
     #[test]
     fn add_zero() {
-        assert_eq!(Fraction::new(3, 8) + Fraction::new(0, 1), Fraction::new(3, 8));
-        assert_eq!(Fraction::new(0, 1) + Fraction::new(3, 8), Fraction::new(3, 8));
+        assert_eq!(
+            Fraction::new(3, 8) + Fraction::new(0, 1),
+            Fraction::new(3, 8)
+        );
+        assert_eq!(
+            Fraction::new(0, 1) + Fraction::new(3, 8),
+            Fraction::new(3, 8)
+        );
     }
 
     #[test]
     fn sub_zero() {
-        assert_eq!(Fraction::new(3, 8) - Fraction::new(0, 1), Fraction::new(3, 8));
+        assert_eq!(
+            Fraction::new(3, 8) - Fraction::new(0, 1),
+            Fraction::new(3, 8)
+        );
     }
 
     #[test]
     fn add() {
-        assert_eq!(Fraction::new(1, 2) + Fraction::new(3, 4), Fraction::new(5, 4));
-        assert_eq!(Fraction::new(1, 8) + Fraction::new(1, 2), Fraction::new(5, 8));
-        assert_eq!(Fraction::new(1, 1) + Fraction::new(10, 1), Fraction::new(11, 1));
-        assert_eq!(Fraction::new(1, 3) + Fraction::new(1, 5), Fraction::new(8, 15));
-        assert_eq!(Fraction::new(4, 4) + Fraction::new(2, 4), Fraction::new(3, 2));
+        assert_eq!(
+            Fraction::new(1, 2) + Fraction::new(3, 4),
+            Fraction::new(5, 4)
+        );
+        assert_eq!(
+            Fraction::new(1, 8) + Fraction::new(1, 2),
+            Fraction::new(5, 8)
+        );
+        assert_eq!(
+            Fraction::new(1, 1) + Fraction::new(10, 1),
+            Fraction::new(11, 1)
+        );
+        assert_eq!(
+            Fraction::new(1, 3) + Fraction::new(1, 5),
+            Fraction::new(8, 15)
+        );
+        assert_eq!(
+            Fraction::new(4, 4) + Fraction::new(2, 4),
+            Fraction::new(3, 2)
+        );
     }
 
     #[test]
     fn sub() {
-        assert_eq!(Fraction::new(5, 4) - Fraction::new(1, 2), Fraction::new(3, 4));
-        assert_eq!(Fraction::new(1, 1) - Fraction::new(1, 64), Fraction::new(63, 64));
+        assert_eq!(
+            Fraction::new(5, 4) - Fraction::new(1, 2),
+            Fraction::new(3, 4)
+        );
+        assert_eq!(
+            Fraction::new(1, 1) - Fraction::new(1, 64),
+            Fraction::new(63, 64)
+        );
     }
 
     #[test]
     fn div() {
-        assert_eq!(Fraction::new(1, 2) / Fraction::new(3, 4), Fraction::new(2, 3));
+        assert_eq!(
+            Fraction::new(1, 2) / Fraction::new(3, 4),
+            Fraction::new(2, 3)
+        );
     }
 
     #[test]
     fn mul() {
-        assert_eq!(Fraction::new(1, 2) * Fraction::new(3, 4), Fraction::new(3, 8));
+        assert_eq!(
+            Fraction::new(1, 2) * Fraction::new(3, 4),
+            Fraction::new(3, 8)
+        );
     }
 
     #[test]

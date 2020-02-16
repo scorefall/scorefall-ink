@@ -22,13 +22,13 @@ use std::str::FromStr;
 
 use cala;
 
-pub mod note;
 mod fraction;
+pub mod note;
 
 pub use fraction::{Fraction, IsZero};
 pub use note::{
-    Note, Articulation, PitchClass, PitchName, PitchAccidental, PitchOctave,
-    Steps, Pitch,
+    Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
+    PitchOctave, Steps,
 };
 
 /// Cursor pointing to a marking
@@ -46,10 +46,18 @@ pub struct Cursor {
 
 impl Cursor {
     /// Create a new cursor
-    pub fn new(movement: usize, measure: usize, chan: usize, marking: usize)
-        -> Self
-    {
-        Cursor { movement, measure, chan, marking }
+    pub fn new(
+        movement: usize,
+        measure: usize,
+        chan: usize,
+        marking: usize,
+    ) -> Self {
+        Cursor {
+            movement,
+            measure,
+            chan,
+            marking,
+        }
     }
 
     /// Create a cursor from the first marking
@@ -58,7 +66,7 @@ impl Cursor {
             movement: self.movement,
             measure: self.measure,
             chan: self.chan,
-            marking: 0
+            marking: 0,
         }
     }
 
@@ -568,10 +576,14 @@ impl Default for Scof {
 impl Scof {
     /// Lookup a marking at a cursor position
     pub fn marking(&self, cursor: &Cursor) -> Option<&Marking> {
-        self.movement.get(cursor.movement)?
-            .bar.get(cursor.measure)?
-            .chan.get(cursor.chan)?
-            .notes.get(cursor.marking)
+        self.movement
+            .get(cursor.movement)?
+            .bar
+            .get(cursor.measure)?
+            .chan
+            .get(cursor.chan)?
+            .notes
+            .get(cursor.marking)
     }
 
     /// Get mutable marking at a cursor position
@@ -581,10 +593,16 @@ impl Scof {
 
     /// Get mutable vec of markings for measure at cursor position.
     fn chan_notes_mut(&mut self, cursor: &Cursor) -> Option<&mut Vec<Marking>> {
-        Some(&mut self.movement.get_mut(cursor.movement)?
-            .bar.get_mut(cursor.measure)?
-            .chan.get_mut(cursor.chan)?
-            .notes)
+        Some(
+            &mut self
+                .movement
+                .get_mut(cursor.movement)?
+                .bar
+                .get_mut(cursor.measure)?
+                .chan
+                .get_mut(cursor.chan)?
+                .notes,
+        )
     }
 
     /// Get the last measure of a movement
@@ -607,11 +625,14 @@ impl Scof {
             for _ in last_bar.chan.iter() {
                 chan.push(Channel::default());
             }
-            self.push_measure(0, Measure {
-                sig: None,      // No signature changes
-                repeat: vec![], // No repeat symbols
-                chan,
-            });
+            self.push_measure(
+                0,
+                Measure {
+                    sig: None,      // No signature changes
+                    repeat: vec![], // No repeat symbols
+                    chan,
+                },
+            );
         }
     }
 
@@ -644,22 +665,25 @@ impl Scof {
 
     /// Set an empty measure to be filled with all of the beats.
     /// Returns the fraction that doesn't fit in the measure.
-    pub fn set_empty_measure(&mut self, cursor: &Cursor, note: &Note)
-        -> Option<Fraction>
-    {
+    pub fn set_empty_measure(
+        &mut self,
+        cursor: &Cursor,
+        note: &Note,
+    ) -> Option<Fraction> {
         // FIXME: Time Signatures
-        self.chan_notes_mut(cursor).unwrap().push("1/1R".parse().unwrap());
-        self.set_full_measure(
-            cursor,
-            note,
-        )
+        self.chan_notes_mut(cursor)
+            .unwrap()
+            .push("1/1R".parse().unwrap());
+        self.set_full_measure(cursor, note)
     }
 
     /// Set a full measure to be replaced at the start.
     /// Returns the fraction that doesn't fit in the measure.
-    pub fn set_full_measure(&mut self, cursor: &Cursor, note: &Note)
-        -> Option<Fraction>
-    {
+    pub fn set_full_measure(
+        &mut self,
+        cursor: &Cursor,
+        note: &Note,
+    ) -> Option<Fraction> {
         let mut cursor = cursor.clone();
         cursor.marking = 0;
         self.set_part_measure(&cursor, note)
@@ -667,9 +691,11 @@ impl Scof {
 
     /// Set a full measure to be replaced at the start.
     /// Returns the fraction that doesn't fit in the measure.
-    pub fn set_part_measure(&mut self, cursor: &Cursor, note: &Note)
-        -> Option<Fraction>
-    {
+    pub fn set_part_measure(
+        &mut self,
+        cursor: &Cursor,
+        note: &Note,
+    ) -> Option<Fraction> {
         let mut note = note.clone();
 
         let notes = self.chan_notes_mut(cursor).unwrap();
@@ -721,7 +747,9 @@ impl Scof {
     pub fn set_whole_pitch(&mut self, cursor: &Cursor) {
         // If it's a whole measure rest, insert a whole note (4/4)
         // FIXME: Add time signatures.
-        self.chan_notes_mut(cursor).unwrap().push("1/1C4".parse().unwrap());
+        self.chan_notes_mut(cursor)
+            .unwrap()
+            .push("1/1C4".parse().unwrap());
     }
 
     /// Set duration of a note.
@@ -732,11 +760,14 @@ impl Scof {
         if old > dur {
             let rests = old - dur;
 
-            self.insert_after(cursor, Marking::Note(Note {
-                pitch: vec![],
-                duration: rests,
-                articulation: vec![],
-            }));
+            self.insert_after(
+                cursor,
+                Marking::Note(Note {
+                    pitch: vec![],
+                    duration: rests,
+                    articulation: vec![],
+                }),
+            );
 
             // Set first note.
             let m = self.marking_mut(&cursor).unwrap();
@@ -772,8 +803,13 @@ impl Scof {
 
     // FIXME: Needed?
     /// Insert a note after the cursor.
-    fn insert_after(&mut self, cursor: &Cursor, marking: Marking) -> Option<()> {
-        let _string = self.chan_notes_mut(&cursor.clone().right_unchecked())?
+    fn insert_after(
+        &mut self,
+        cursor: &Cursor,
+        marking: Marking,
+    ) -> Option<()> {
+        let _string = self
+            .chan_notes_mut(&cursor.clone().right_unchecked())?
             .insert(cursor.marking + 1, marking);
         Some(())
     }

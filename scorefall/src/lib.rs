@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use scof::{Cursor, Marking, Scof, Fraction, Pitch};
+use scof::{Cursor, Fraction, Marking, Pitch, Scof};
 
 /// This is the entire program context.
 pub struct Program {
@@ -58,33 +58,57 @@ impl Program {
 
     /// Step up or down within the key.
     fn move_step(&mut self, up: bool) {
-        let create = Pitch(scof::PitchClass {
-            name: scof::PitchName::C,
-            accidental: None,
-        }, scof::PitchOctave::Octave4);
+        let create = Pitch(
+            scof::PitchClass {
+                name: scof::PitchName::C,
+                accidental: None,
+            },
+            scof::PitchOctave::Octave4,
+        );
 
         if let Some(mark) = self.scof.marking(&self.cursor).cloned() {
             match mark {
-                Marking::Dynamic(_) => {/*Do nothing*/},
-                Marking::GraceInto(note) => {
-                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
-                }
-                Marking::GraceOutOf(note) => {
-                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
-                }
-                Marking::Note(note) => {
-                    self.scof.set_pitch(&self.cursor, 0, if up { note.step_up(0, create) } else { note.step_down(0, create) }.pitch[0])
-                }
-                Marking::Breath => {/*Do nothing*/},
-                Marking::CaesuraShort => {/*Do nothing*/},
-                Marking::CaesuraLong => {/*Do nothing*/},
-                Marking::Cresc => {/*Do nothing*/},
-                Marking::Dim => {/*Do nothing*/},
-                Marking::Pizz => {/*Do nothing*/},
-                Marking::Arco => {/*Do nothing*/},
-                Marking::Mute => {/*Do nothing*/},
-                Marking::Open => {/*Do nothing*/},
-                Marking::Repeat => {/*Do nothing*/},
+                Marking::Dynamic(_) => { /*Do nothing*/ }
+                Marking::GraceInto(note) => self.scof.set_pitch(
+                    &self.cursor,
+                    0,
+                    if up {
+                        note.step_up(0, create)
+                    } else {
+                        note.step_down(0, create)
+                    }
+                    .pitch[0],
+                ),
+                Marking::GraceOutOf(note) => self.scof.set_pitch(
+                    &self.cursor,
+                    0,
+                    if up {
+                        note.step_up(0, create)
+                    } else {
+                        note.step_down(0, create)
+                    }
+                    .pitch[0],
+                ),
+                Marking::Note(note) => self.scof.set_pitch(
+                    &self.cursor,
+                    0,
+                    if up {
+                        note.step_up(0, create)
+                    } else {
+                        note.step_down(0, create)
+                    }
+                    .pitch[0],
+                ),
+                Marking::Breath => { /*Do nothing*/ }
+                Marking::CaesuraShort => { /*Do nothing*/ }
+                Marking::CaesuraLong => { /*Do nothing*/ }
+                Marking::Cresc => { /*Do nothing*/ }
+                Marking::Dim => { /*Do nothing*/ }
+                Marking::Pizz => { /*Do nothing*/ }
+                Marking::Arco => { /*Do nothing*/ }
+                Marking::Mute => { /*Do nothing*/ }
+                Marking::Open => { /*Do nothing*/ }
+                Marking::Repeat => { /*Do nothing*/ }
             }
         } else {
             self.scof.set_whole_pitch(&self.cursor);
@@ -117,26 +141,26 @@ impl Program {
     pub fn set_dur(&mut self, dur: Fraction) {
         if let Some(mark) = self.scof.marking(&self.cursor) {
             match mark {
-                Marking::Dynamic(_) => {/*Do nothing*/},
+                Marking::Dynamic(_) => { /*Do nothing*/ }
                 Marking::GraceInto(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
                 }
                 Marking::GraceOutOf(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
-                },
+                }
                 Marking::Note(_note) => {
                     self.scof.set_duration(&self.cursor, dur)
-                },
-                Marking::Breath => {/*Do nothing*/},
-                Marking::CaesuraShort => {/*Do nothing*/},
-                Marking::CaesuraLong => {/*Do nothing*/},
-                Marking::Cresc => {/*Do nothing*/},
-                Marking::Dim => {/*Do nothing*/},
-                Marking::Pizz => {/*Do nothing*/},
-                Marking::Arco => {/*Do nothing*/},
-                Marking::Mute => {/*Do nothing*/},
-                Marking::Open => {/*Do nothing*/},
-                Marking::Repeat => {/*Do nothing*/},
+                }
+                Marking::Breath => { /*Do nothing*/ }
+                Marking::CaesuraShort => { /*Do nothing*/ }
+                Marking::CaesuraLong => { /*Do nothing*/ }
+                Marking::Cresc => { /*Do nothing*/ }
+                Marking::Dim => { /*Do nothing*/ }
+                Marking::Pizz => { /*Do nothing*/ }
+                Marking::Arco => { /*Do nothing*/ }
+                Marking::Mute => { /*Do nothing*/ }
+                Marking::Open => { /*Do nothing*/ }
+                Marking::Repeat => { /*Do nothing*/ }
             }
         } else {
             self.scof.set_whole_duration(&self.cursor, dur);

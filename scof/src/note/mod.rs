@@ -1,11 +1,11 @@
 //! # Note (convert Note Struct <-> String)
 //! A note has an optional pitch, None = Rest.
-//! 
+//!
 //! ## Structure
-//! 
+//!
 //! **note duration**: Almost always required number for note length.  If it is
 //! not provided, then next must be R for a whole measure rest.
-//! 
+//!
 //! - O: 128th note
 //! - X: 64th note
 //! - Y: 32nd note
@@ -17,9 +17,9 @@
 //! - V: double whole note (breve)
 //! - L: quadruple whole note (longa)
 //! - .: augmentation dot
-//! 
+//!
 //! **note name**: Required name of the note.  A-G, or R for rest.
-//! 
+//!
 //! - `A`
 //! - `B`
 //! - `C`
@@ -28,9 +28,9 @@
 //! - `F`
 //! - `G`
 //! - `R`
-//! 
+//!
 //! **accidental**: Optional accidental.  If not provided, from key signature.  Cannot be same as what is in the key signature.
-//! 
+//!
 //! - `bb`: Double Flat (Whole-Tone Flat)
 //! - `db`: 3/4-Tone Flat
 //! - `b`: Flat (1/2-Tone Flat)
@@ -40,11 +40,11 @@
 //! - `#`: Sharp (1/2-Tone Sharp)
 //! - `t#`: 3/4-Tone Sharp
 //! - `x`: Double Sharp (Whole-Tone Sharp)
-//! 
+//!
 //! **octave**: Required octave.  `-`=-1,`0`,`1`,`2`,`3`,`4`,`5`,`6`,`7`,`8`,`9`
-//! 
+//!
 //! **articulation**: Optional articulation.
-//! 
+//!
 //! - `^`: Marcato (separated sharp attack)
 //! - `>`: Accent (sharp attack)
 //! - `.`: Staccato (separated)
@@ -60,8 +60,8 @@
 //! - `@`: harmonic (smaller o)
 //! - `|`: pedal
 
-use std::{fmt, str::FromStr};
 use crate::Fraction;
+use std::{fmt, str::FromStr};
 
 mod articulation;
 mod pitch;
@@ -167,9 +167,12 @@ impl Note {
         self.duration
     }
 
-    fn move_step(&self, i: usize, create: Pitch, run: &dyn Fn(&Pitch) -> Pitch)
-        -> Note
-    {
+    fn move_step(
+        &self,
+        i: usize,
+        create: Pitch,
+        run: &dyn Fn(&Pitch) -> Pitch,
+    ) -> Note {
         let mut pitch = self.pitch.clone();
         pitch[i] = if let Some(pitch) = self.pitch.get(i) {
             (run)(pitch)
@@ -224,10 +227,13 @@ impl Note {
             };
 
             if let Some(pitch_octave) = pitch_octave {
-                Pitch(PitchClass {
-                    name: pitch_class,
-                    accidental: pitch.0.accidental,
-                }, pitch_octave)
+                Pitch(
+                    PitchClass {
+                        name: pitch_class,
+                        accidental: pitch.0.accidental,
+                    },
+                    pitch_octave,
+                )
             } else {
                 *pitch
             }
@@ -254,10 +260,13 @@ impl Note {
             };
 
             if let Some(pitch_octave) = pitch_octave {
-                Pitch(PitchClass {
-                    name: pitch_class,
-                    accidental: pitch.0.accidental,
-                }, pitch_octave)
+                Pitch(
+                    PitchClass {
+                        name: pitch_class,
+                        accidental: pitch.0.accidental,
+                    },
+                    pitch_octave,
+                )
             } else {
                 Pitch(pitch.0, pitch.1)
             }
@@ -292,21 +301,20 @@ impl FromStr for Note {
                 "" => break 'note_pitches,
                 "R" => {
                     end_index += 1;
-                    break 'note_pitches
+                    break 'note_pitches;
                 }
                 // Find notes
                 text => {
                     match text.chars().next().unwrap() {
                         'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'R' => {}
-                        _ => break 'note_pitches
+                        _ => break 'note_pitches,
                     }
                     // Get Pitch Class
                     let mut end_index2 = Err(());
                     for (i, c) in s.char_indices().skip(begin_index) {
                         match c {
-                            '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7'
-                                | '8' | '9' =>
-                            {
+                            '-' | '0' | '1' | '2' | '3' | '4' | '5' | '6'
+                            | '7' | '8' | '9' => {
                                 end_index2 = Ok(i);
                                 break;
                             }
@@ -328,7 +336,8 @@ impl FromStr for Note {
         for articulation_char in s[end_index..].chars() {
             articulation_str.clear();
             articulation_str.push(articulation_char);
-            articulation.push(articulation_str.parse::<Articulation>().or(Err(()))?);
+            articulation
+                .push(articulation_str.parse::<Articulation>().or(Err(()))?);
         }
 
         Ok(Note {
@@ -345,10 +354,13 @@ mod tests {
 
     #[test]
     fn rest() {
-        assert_eq!("1/1R".parse::<Note>().unwrap(), Note {
-            pitch: vec![],
-            duration: Fraction::new(1, 1),
-            articulation: vec![],
-        });
+        assert_eq!(
+            "1/1R".parse::<Note>().unwrap(),
+            Note {
+                pitch: vec![],
+                duration: Fraction::new(1, 1),
+                articulation: vec![],
+            }
+        );
     }
 }

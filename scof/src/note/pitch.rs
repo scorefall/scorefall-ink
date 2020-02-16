@@ -43,7 +43,7 @@ impl FromStr for PitchName {
             "G" => PitchName::G,
             "A" => PitchName::A,
             "B" => PitchName::B,
-            _ => return Err(())
+            _ => return Err(()),
         })
     }
 }
@@ -103,7 +103,7 @@ impl FromStr for PitchAccidental {
             "#" => PitchAccidental::Sharp,
             "t#" => PitchAccidental::SharpQuarterSharp,
             "x" => PitchAccidental::DoubleSharp,
-            _ => return Err(())
+            _ => return Err(()),
         })
     }
 }
@@ -129,14 +129,14 @@ impl FromStr for PitchClass {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-/*        if s.is_empty() {
+        /*        if s.is_empty() {
             Err(())
         } else if s.len() == 1 {*/
-            Ok(PitchClass {
-                name: s.parse()?,
-                accidental: None,
-            })
-/*        } else {
+        Ok(PitchClass {
+            name: s.parse()?,
+            accidental: None,
+        })
+        /*        } else {
             Ok(PitchClass {
                 name: PitchName::from_str(s.get(..1).ok_or(())?)?,
                 accidental: Some(PitchAccidental::from_str(s.get(1..).ok_or(())?)?),
@@ -266,7 +266,9 @@ impl Pitch {
         let steps = self.0.name as i32;
 
         // Calculate total number of steps from middle C.
-        Steps { 0: steps + octaves * 7 }
+        Steps {
+            0: steps + octaves * 7,
+        }
     }
 }
 
@@ -280,10 +282,10 @@ impl FromStr for Pitch {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let pitch_class = s[0..s.len()-1].parse::<PitchClass>()?;
+        let pitch_class = s[0..s.len() - 1].parse::<PitchClass>()?;
 
         // Get Pitch Octave
-        let pitch_octave = s[s.len()-1..].parse::<PitchOctave>()?;
+        let pitch_octave = s[s.len() - 1..].parse::<PitchOctave>()?;
 
         Ok(Pitch(pitch_class, pitch_octave))
     }
