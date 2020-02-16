@@ -1,6 +1,6 @@
 [package]
-name = "score2svg"
-version = "0.1.0"
+name = "muflor"
+version = "0.0.1"
 authors = [
     "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
     "Douglas Lau <doug.p.lau@gmail.com>"

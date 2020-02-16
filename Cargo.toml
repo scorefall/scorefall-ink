@@ -19,11 +19,11 @@
 [workspace]
 members = [
     # ScoreFall Studio's "Backend"
-    "scorefall",
+    "scorefall-studio",
     # ScoreFall Studio's native file format (*.scof)
     "scof",
     # ScoreFall Studio's web-based GUI
     "sfstudio-web",
     # ScoreFall Studio's render engine
-    "score2svg",
+    "muflor",
 ]

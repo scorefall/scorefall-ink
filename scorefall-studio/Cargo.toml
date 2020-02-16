@@ -1,7 +1,10 @@
 [package]
-name = "scorefall"
-version = "0.1.0"
-authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
+name = "scorefall-studio"
+version = "0.0.1"
+authors = [
+    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
+    "Doug Lau <doug.p.lau@gmail.com>",
+]
 edition = "2018"
 
 license = "GPL"
