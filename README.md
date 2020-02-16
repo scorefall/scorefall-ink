@@ -1,42 +1,10 @@
 # ScoreFall Studio
 Music composition program.
 
-## Roadmap to first stable iteration (0.1.0)
-- [ ] [scorefall-studio](https://github.com/scorefall/scorefall-studio) the actual program (putting everything together).
-  - [x] Start building WASM application in Rust for [scorefall-studio](https://github.com/scorefall/scorefall-studio).
-    - [ ] Design 2-mode keyboard Input, and touchscreen/mouse interface
-    - [ ] Implement input.
-  - [ ] [scof](https://github.com/scorefall/scof) structs of musical notation.
-    - [x] Add score metadata struct
-    - [x] Add instrument & note structs
-    - [ ] Scof Parser with Muon
-      - [x] Muon Specification
-      - [x] Muon Parser
-      - [ ] Zip File support
-  - [ ] [score2svg](https://github.com/scorefall/score2svg) music scores in [scof](https://github.com/scorefall/scof) structs into SVG files.
-    - [x] Convert Bravura font into SVG defs.
-    - [x] Rendering.
-    - [x] Depends on `scof` for music structs.
-    - [x] API to take `scof` music structs and render it.
-    - [ ] Be able to render all supported glyphs.
-      - [ ] Beaming
-      - [ ] Clefs
-      - [ ] Time Signatures
-      - [ ] Articulations
-      - [ ] Dynamics
-      - [ ] Tempo changes
-      - [ ] Lyrics
-      - [ ] Rehearsal Markings
-      - [ ] Ledger Lines
-  - [ ] [scorefall](https://github.com/scorefall/scorefall)
-    - [ ] Functions for editing score.
-      - [ ] Durations
-      - [ ] Pitches
-        - [x] Basic pitch manipulation
-        - [ ] Key Signatures
-        - [ ] Flats & Sharps
-        - [ ] Quarter Tones
-  - [ ] [musicxml](https://github.com/scorefall/musicxml) parser with [quick-xml](https://crates.io/crates/quick-xml).
-    - [ ] Translation to Scof
-      - [ ] Score metadata iterator
-      - [ ] Instrument & Notes iterators
+## Crates In This Repository
+- [sfstudio-web](https://github.com/scorefall/scorefall-studio/tree/master/sfstudio-web)
+  the actual program (putting everything together).
+- [scof](https://github.com/scorefall/scorefall-studio/tree/master/scof)
+  structs of musical notation.
+- [muflor](https://github.com/scorefall/scorefall-studio/tree/master/muflor) music scores in [scof](https://github.com/scorefall/scorefall-studio/tree/master/scof) structs into SVG files.
+- [scorefall-studio](https://github.com/scorefall/scorefall-studio/tree/master/scorefall-studio)
