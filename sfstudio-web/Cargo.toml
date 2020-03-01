@@ -12,5 +12,5 @@ license = "GPL"
 cala = "0.7"
 stdweb = "0.4"
 scof = { path = "../scof" }
-muflor = { path = "../muflor" }
+staverator = { path = "../staverator" }
 scorefall-studio = { path = "../scorefall-studio" }

@@ -25,5 +25,5 @@ members = [
     # ScoreFall Studio's web-based GUI
     "sfstudio-web",
     # ScoreFall Studio's render engine
-    "muflor",
+    "staverator",
 ]

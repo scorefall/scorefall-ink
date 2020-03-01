@@ -45,7 +45,7 @@ use std::rc::Rc;
 use std::panic;
 
 use scof::{Cursor, Fraction, Steps, Pitch};
-use muflor::{MeasureElem, Staff};
+use staverator::{MeasureElem, Staff, Element};
 use scorefall_studio::Program;
 
 mod input;
@@ -192,7 +192,7 @@ impl State {
         let svg = &self.svg;
         let defs = document().create_element_ns(SVGNS, "defs")?;
 
-        for path in muflor::bravura() {
+        for path in staverator::bravura() {
             let id = path.id.unwrap();
             let shape = document().create_element_ns(SVGNS, "path")?;
             shape.set_attribute("d", &path.d)?;
@@ -276,10 +276,10 @@ impl State {
     }
 }
 
-/// Create DOM element from a muflor Element
-fn create_elem(elem: muflor::Element) -> Option<stdweb::Value> {
+/// Create DOM element from a staverator Element
+fn create_elem(elem: Element) -> Option<stdweb::Value> {
     match elem {
-        muflor::Element::Rect(r) => {
+        Element::Rect(r) => {
             Some(js! {
                 var rect = document.createElementNS(@{SVGNS}, "rect");
                 rect.setAttributeNS(null, "x", @{r.x});
@@ -298,7 +298,7 @@ fn create_elem(elem: muflor::Element) -> Option<stdweb::Value> {
                 return rect;
             })
         },
-        muflor::Element::Use(u) => {
+        Element::Use(u) => {
             let xlink = format!("#{:x}", u.id);
             Some(js! {
                 var stamp = document.createElementNS(@{SVGNS}, "use");
@@ -308,7 +308,7 @@ fn create_elem(elem: muflor::Element) -> Option<stdweb::Value> {
                 return stamp;
             })
         },
-        muflor::Element::Path(p) => {
+        Element::Path(p) => {
             Some(js! {
                 var path = document.createElementNS(@{SVGNS}, "path");
                 path.setAttributeNS(null, "d", @{p.d});
