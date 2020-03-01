@@ -154,7 +154,12 @@ impl Note {
 
     /// Set pitch class and octave.
     pub fn set_pitch(&mut self, i: usize, pitch: Pitch) {
-        self.pitch[i] = pitch;
+        if i >= self.pitch.len() {
+            assert_eq!(self.pitch.len(), i);
+            self.pitch.push(pitch);
+        } else {
+            self.pitch[i] = pitch;
+        }
     }
 
     /// Set duration of note.
@@ -174,10 +179,10 @@ impl Note {
         run: &dyn Fn(&Pitch) -> Pitch,
     ) -> Note {
         let mut pitch = self.pitch.clone();
-        pitch[i] = if let Some(pitch) = self.pitch.get(i) {
-            (run)(pitch)
+        if let Some(old_pitch) = self.pitch.get(i) {
+            pitch[i] = (run)(old_pitch);
         } else {
-            create
+            pitch.resize(i + 1, create);
         };
 
         Note {

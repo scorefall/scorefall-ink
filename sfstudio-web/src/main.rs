@@ -384,7 +384,7 @@ fn main() {
         //        js! {
         //            alert("keydown!");
         //        }
-                event.prevent_default();
+            event.prevent_default();
         }),
     );
 
