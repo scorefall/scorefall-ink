@@ -136,9 +136,9 @@ impl MeasureElem {
     /// Width of stems
     const STEM_WIDTH: u32 = 30;
     /// Length of stems
-    const STEM_LENGTH: u32 = (7.0 * Staff::STEP_DY as f32) as u32;
+    const STEM_LENGTH: u32 = 7 * Staff::STEP_DY as u32;
     /// Width of note head
-    const HEAD_WIDTH: i32 = 263;
+    const HEAD_WIDTH: i32 = 266;
 
     /// Create a new measure element
     pub fn new(staff: Staff, high: Steps, low: Steps) -> Self {
@@ -274,6 +274,16 @@ impl MeasureElem {
             match dur {
                 128 | 256 => {},
                 _ => self.add_stem(x, y),
+            }
+            // Draw flag if 8th note or shorter.
+            if let Some(flag_glyph) = GlyphId::flag_duration(dur, y > self.middle()) {
+                let (ofsx, ofsy) = if y > self.middle() {
+                    (Self::HEAD_WIDTH, -(Self::STEM_LENGTH as i32))
+                } else {
+                    (0, Self::STEM_LENGTH as i32)
+                };
+
+                self.add_use(flag_glyph, x + ofsx, y + ofsy);
             }
         }
     }
