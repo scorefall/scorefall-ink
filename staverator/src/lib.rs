@@ -33,7 +33,7 @@ const BAR_WIDTH: i32 = 3200;
 /// Width of the barline.
 const BARLINE_WIDTH: i32 = 36;
 /// Space before each note.
-const NOTE_MARGIN: i32 = 250;
+const NOTE_MARGIN: i32 = BARLINE_WIDTH; // 250;
 /// Color of cursor
 const CURSOR_COLOR: u32 = 0xFF9AF0;
 /// Width of a whole rest (in font units).
@@ -232,7 +232,7 @@ impl MeasureElem {
     fn add_cursor_rect(&mut self, fraction: Fraction, width: &mut i32, add: bool) {
         if add {
             let x = (Staff::MARGIN_X - BARLINE_WIDTH) + *width + BARLINE_WIDTH;
-            let w = fraction * BAR_WIDTH - BARLINE_WIDTH;
+            let w = fraction * BAR_WIDTH;
             if w > 0 {
                 let height = self.height();
                 let width = w as u32;
