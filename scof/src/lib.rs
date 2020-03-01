@@ -19,6 +19,7 @@
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
+use std::collections::LinkedList;
 
 use cala;
 
@@ -382,32 +383,32 @@ impl Default for Mvmt {
     }
 }
 
-impl From<Mvmt> for Movement {
-    fn from(mut mvmt: Mvmt) -> Movement {
-        let mut bar = vec![];
-
-        for i in mvmt.bar.drain(..) {
-            bar.push(i.into());
-        }
-
-        let sig = mvmt.sig;
-
-        Movement { sig, bar }
-    }
-}
-
 /// A movement in the score.
 #[derive(PartialEq, Debug)]
 pub struct Movement {
     /// A list of key signatures used in this movement.
     pub sig: Vec<Sig>,
-    /// Each measure of the movement in order.
-    pub bar: Vec<Measure>,
+    /// Each measure of the movement up to the cursor in order.
+    pub pre: LinkedList<Measure>,
+    /// Each measure of the movement from the cursor in order.
+    pub bar: LinkedList<Measure>,
 }
 
 impl Default for Movement {
     fn default() -> Movement {
         Mvmt::default().into()
+    }
+}
+
+impl From<Mvmt> for Movement {
+    fn from(mut mvmt: Mvmt) -> Movement {
+        let sig = mvmt.sig;
+        let pre = LinkedList::new();
+        let mut bar = LinkedList::new();
+
+        bar.extend(mvmt.bar.drain(..).map(|i| i.into()));
+
+        Movement { sig, pre, bar }
     }
 }
 
@@ -579,7 +580,7 @@ impl Scof {
         self.movement
             .get(cursor.movement)?
             .bar
-            .get(cursor.measure)?
+            .iter().skip(cursor.measure).next()?
             .chan
             .get(cursor.chan)?
             .notes
@@ -598,7 +599,7 @@ impl Scof {
                 .movement
                 .get_mut(cursor.movement)?
                 .bar
-                .get_mut(cursor.measure)?
+                .iter_mut().skip(cursor.measure).next()?
                 .chan
                 .get_mut(cursor.chan)?
                 .notes,
@@ -607,13 +608,13 @@ impl Scof {
 
     /// Get the last measure of a movement
     fn last_measure(&self, movement: usize) -> Option<&Measure> {
-        Some(self.movement.get(movement)?.bar.last()?)
+        self.movement.get(movement)?.bar.back()
     }
 
     /// Push a measure at end of movement
     fn push_measure(&mut self, movement: usize, bar: Measure) {
         if let Some(movement) = &mut self.movement.get_mut(movement) {
-            movement.bar.push(bar);
+            movement.bar.push_back(bar);
         }
     }
 
