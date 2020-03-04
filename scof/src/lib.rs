@@ -19,7 +19,6 @@
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
-use std::collections::LinkedList;
 
 use cala;
 
@@ -388,10 +387,8 @@ impl Default for Mvmt {
 pub struct Movement {
     /// A list of key signatures used in this movement.
     pub sig: Vec<Sig>,
-    /// Each measure of the movement up to the cursor in order.
-    pub pre: LinkedList<Measure>,
-    /// Each measure of the movement from the cursor in order.
-    pub bar: LinkedList<Measure>,
+    /// Each measure of the movement in order.
+    pub bar: Vec<Measure>,
 }
 
 impl Default for Movement {
@@ -403,12 +400,11 @@ impl Default for Movement {
 impl From<Mvmt> for Movement {
     fn from(mut mvmt: Mvmt) -> Movement {
         let sig = mvmt.sig;
-        let pre = LinkedList::new();
-        let mut bar = LinkedList::new();
+        let mut bar = Vec::new();
 
         bar.extend(mvmt.bar.drain(..).map(|i| i.into()));
 
-        Movement { sig, pre, bar }
+        Movement { sig, bar }
     }
 }
 
@@ -580,7 +576,7 @@ impl Scof {
         self.movement
             .get(cursor.movement)?
             .bar
-            .iter().skip(cursor.measure).next()?
+            .get(cursor.measure)?
             .chan
             .get(cursor.chan)?
             .notes
@@ -599,7 +595,7 @@ impl Scof {
                 .movement
                 .get_mut(cursor.movement)?
                 .bar
-                .iter_mut().skip(cursor.measure).next()?
+                .get_mut(cursor.measure)?
                 .chan
                 .get_mut(cursor.chan)?
                 .notes,
@@ -608,13 +604,13 @@ impl Scof {
 
     /// Get the last measure of a movement
     fn last_measure(&self, movement: usize) -> Option<&Measure> {
-        self.movement.get(movement)?.bar.back()
+        self.movement.get(movement)?.bar.last()
     }
 
     /// Push a measure at end of movement
     fn push_measure(&mut self, movement: usize, bar: Measure) {
         if let Some(movement) = &mut self.movement.get_mut(movement) {
-            movement.bar.push_back(bar);
+            movement.bar.push(bar);
         }
     }
 
