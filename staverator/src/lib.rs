@@ -146,9 +146,9 @@ impl fmt::Display for BarElem {
 
 impl BarElem {
     /// Width of stems
-    const STEM_WIDTH: u32 = 30;
+    const STEM_WIDTH: i32 = 30;
     /// Length of stems
-    const STEM_LENGTH: u32 = 7 * Stave::STEP_DY as u32;
+    const STEM_LENGTH: i32 = 7 * Stave::STEP_DY;
     /// Width of note head
     const HEAD_WIDTH: i32 = 266;
 
@@ -236,11 +236,16 @@ impl BarElem {
     }
 
     /// Get the full height
-    fn height(&self) -> u32 {
-        ((self.steps_top - self.steps_bottom) * Stave::STEP_DY).0 as u32
+    fn height(&self) -> i32 {
+        ((self.steps_top - self.steps_bottom) * Stave::STEP_DY).0
     }
 
-    /// Get the middle of the stave
+    /// Get the # of steps to the middle of the stave
+    fn middle_steps(&self) -> i32 {
+        (self.stave.steps_middle_c - self.stave.height_steps() / 2).0
+    }
+
+    /// Get the middle of the stave y position
     fn middle(&self) -> i32 {
         let steps = self.stave.steps_middle_c - self.stave.height_steps() / 2;
         self.offset_y(steps)
@@ -257,10 +262,8 @@ impl BarElem {
             let x = Stave::MARGIN_X + *width;
             let w = fraction * BAR_WIDTH;
             if w > 0 {
-                let height = self.height();
-                let width = w as u32;
                 let fill = Some(CURSOR_COLOR);
-                let rect = Rect::new(x, 0, width, height, None, None, fill);
+                let rect = Rect::new(x, 0, w, self.height(), None, None, fill);
                 self.elements.push(Element::Rect(rect));
             }
         }
@@ -269,10 +272,10 @@ impl BarElem {
 
     /// Add a barline to stave
     fn add_barline(&mut self, x: i32) {
-        let width = BARLINE_WIDTH as u32;
+        let width = BARLINE_WIDTH;
         let y = self.offset_y(self.stave.steps_middle_c);
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom());
-        let height = (y_bottom - y) as u32;
+        let height = y_bottom - y;
         let rect = Rect::new(
             x + (Stave::MARGIN_X - BARLINE_WIDTH),
             y,
@@ -319,12 +322,46 @@ impl BarElem {
                 GlyphId::flag_duration(dur, y > self.middle())
             {
                 let (ofsx, ofsy) = if y > self.middle() {
-                    (Self::HEAD_WIDTH, -(Self::STEM_LENGTH as i32))
+                    (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
                 } else {
-                    (0, Self::STEM_LENGTH as i32)
+                    (0, Self::STEM_LENGTH)
                 };
 
                 self.add_use(flag_glyph, x + ofsx, y + ofsy);
+            }
+            // Draw Ledger Line if below or above stave.
+            let yyy = steps.0; // - self.middle_steps();
+            if yyy > 0 {
+                let mut count = if yyy % 2 == 0 { 0 } else { 1 };
+                for i in (6..yyy + 1).step_by(2) {
+                    let rect = Rect::new(
+                        x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
+                        y - (Stave::LINE_WIDTH / 2) + (count * Stave::STEP_DY),
+                        Self::HEAD_WIDTH * 2,
+                        Stave::LINE_WIDTH,
+                        None,
+                        None,
+                        None,
+                    );
+                    self.elements.push(Element::Rect(rect));
+                    count += 2;
+                }
+            } else {
+                let yyy = -yyy;
+                let mut count = if yyy % 2 == 0 { 0 } else { 1 };
+                for i in (6..yyy + 1).step_by(2) {
+                    let rect = Rect::new(
+                        x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
+                        y - (Stave::LINE_WIDTH / 2) - (count * Stave::STEP_DY),
+                        Self::HEAD_WIDTH * 2,
+                        Stave::LINE_WIDTH,
+                        None,
+                        None,
+                        None,
+                    );
+                    self.elements.push(Element::Rect(rect));
+                    count += 2;
+                }
             }
         }
     }
@@ -355,7 +392,7 @@ impl BarElem {
         let ry = Some(Self::STEM_WIDTH);
         let rect = Rect::new(
             x + Self::HEAD_WIDTH,
-            y - Self::STEM_LENGTH as i32,
+            y - Self::STEM_LENGTH,
             Self::STEM_WIDTH,
             Self::STEM_LENGTH,
             rx,

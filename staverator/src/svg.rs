@@ -25,13 +25,13 @@ pub struct Rect {
     /// Y position
     pub y: i32,
     /// Width in user units
-    pub width: u32,
+    pub width: i32,
     /// Height in user units
-    pub height: u32,
+    pub height: i32,
     /// Rounded corner X-axis radius
-    pub rx: Option<u32>,
+    pub rx: Option<i32>,
     /// Rounded corner Y-axis radius
-    pub ry: Option<u32>,
+    pub ry: Option<i32>,
     /// Fill color
     pub fill: Option<String>,
 }
@@ -61,10 +61,10 @@ impl Rect {
     pub fn new(
         x: i32,
         y: i32,
-        width: u32,
-        height: u32,
-        rx: Option<u32>,
-        ry: Option<u32>,
+        width: i32,
+        height: i32,
+        rx: Option<i32>,
+        ry: Option<i32>,
         fill: Option<u32>,
     ) -> Self {
         let fill = match fill {
