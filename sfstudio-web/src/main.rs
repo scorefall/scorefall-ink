@@ -41,12 +41,12 @@ use stdweb::web::{
 };
 
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::panic;
+use std::rc::Rc;
 
-use scof::{Cursor, Fraction, Steps, Pitch};
-use staverator::{BarElem, Stave, Element};
+use scof::{Cursor, Fraction, Pitch, Steps};
 use scorefall_studio::Program;
+use staverator::{BarElem, Element, Stave};
 
 mod input;
 
@@ -106,7 +106,8 @@ impl State {
                 self.program.right();
                 self.render_measures();
             }
-            if self.input.held(Key::LeftShift) || self.input.held(Key::RightShift)
+            if self.input.held(Key::LeftShift)
+                || self.input.held(Key::RightShift)
             {
                 if self.input.press(Key::J) {
                     self.program.down_half_step();
@@ -133,25 +134,31 @@ impl State {
             } else if self.input.press(Key::Numpad1) {
                 self.program.set_dur(Fraction::new(1, 64));
                 self.render_measures();
-            } else if self.input.press(Key::Y) || self.input.press(Key::Numpad2) {
+            } else if self.input.press(Key::Y) || self.input.press(Key::Numpad2)
+            {
                 self.program.set_dur(Fraction::new(1, 32));
                 self.render_measures();
-            } else if self.input.press(Key::S)  || self.input.press(Key::Numpad3) {
+            } else if self.input.press(Key::S) || self.input.press(Key::Numpad3)
+            {
                 self.program.set_dur(Fraction::new(1, 16));
                 self.render_measures();
-            } else if self.input.press(Key::T)  || self.input.press(Key::Numpad4) {
+            } else if self.input.press(Key::T) || self.input.press(Key::Numpad4)
+            {
                 self.program.set_dur(Fraction::new(1, 8));
                 self.render_measures();
-            } else if self.input.press(Key::Q) || self.input.press(Key::Numpad5) {
+            } else if self.input.press(Key::Q) || self.input.press(Key::Numpad5)
+            {
                 self.program.set_dur(Fraction::new(1, 4));
                 self.render_measures();
-            } else if self.input.press(Key::H) || self.input.press(Key::Numpad6) {
+            } else if self.input.press(Key::H) || self.input.press(Key::Numpad6)
+            {
                 self.program.set_dur(Fraction::new(1, 2));
                 self.render_measures();
-            } else if self.input.press(Key::W) || self.input.press(Key::Numpad7) {
+            } else if self.input.press(Key::W) || self.input.press(Key::Numpad7)
+            {
                 self.program.set_dur(Fraction::new(1, 1));
                 self.render_measures();
-            }  else if self.input.press(Key::Numpad8) {
+            } else if self.input.press(Key::Numpad8) {
                 self.program.set_dur(Fraction::new(2, 1));
                 self.render_measures();
             } else if self.input.press(Key::Numpad9) {
@@ -163,9 +170,9 @@ impl State {
                 self.program.dotted();
                 self.render_measures();
             } /*else if self.input.press(Key::T)  || self.input.press(Key::Numpad0) {
-                self.program.tuplet();
-                self.render_measures();
-            } */
+                  self.program.tuplet();
+                  self.render_measures();
+              } */
         }
 
         self.input.reset();
@@ -283,25 +290,23 @@ impl State {
 /// Create DOM element from a staverator Element
 fn create_elem(elem: Element) -> Option<stdweb::Value> {
     match elem {
-        Element::Rect(r) => {
-            Some(js! {
-                var rect = document.createElementNS(@{SVGNS}, "rect");
-                rect.setAttributeNS(null, "x", @{r.x});
-                rect.setAttributeNS(null, "y", @{r.y});
-                rect.setAttributeNS(null, "width", @{r.width});
-                rect.setAttributeNS(null, "height", @{r.height});
-                var rx = @{r.rx};
-                if (rx !== null) {
-                    rect.setAttributeNS(null, "rx", rx);
-                }
-                var ry = @{r.ry};
-                if (ry !== null) {
-                    rect.setAttributeNS(null, "ry", ry);
-                }
-                rect.setAttributeNS(null, "fill", @{r.fill});
-                return rect;
-            })
-        },
+        Element::Rect(r) => Some(js! {
+            var rect = document.createElementNS(@{SVGNS}, "rect");
+            rect.setAttributeNS(null, "x", @{r.x});
+            rect.setAttributeNS(null, "y", @{r.y});
+            rect.setAttributeNS(null, "width", @{r.width});
+            rect.setAttributeNS(null, "height", @{r.height});
+            var rx = @{r.rx};
+            if (rx !== null) {
+                rect.setAttributeNS(null, "rx", rx);
+            }
+            var ry = @{r.ry};
+            if (ry !== null) {
+                rect.setAttributeNS(null, "ry", ry);
+            }
+            rect.setAttributeNS(null, "fill", @{r.fill});
+            return rect;
+        }),
         Element::Use(u) => {
             let xlink = format!("#{:x}", u.id);
             Some(js! {
@@ -311,14 +316,12 @@ fn create_elem(elem: Element) -> Option<stdweb::Value> {
                 stamp.setAttributeNS(null, "href", @{xlink});
                 return stamp;
             })
-        },
-        Element::Path(p) => {
-            Some(js! {
-                var path = document.createElementNS(@{SVGNS}, "path");
-                path.setAttributeNS(null, "d", @{p.d});
-                return path;
-            })
-        },
+        }
+        Element::Path(p) => Some(js! {
+            var path = document.createElementNS(@{SVGNS}, "path");
+            path.setAttributeNS(null, "d", @{p.d});
+            return path;
+        }),
         _ => None,
     }
 }

@@ -203,7 +203,13 @@ impl InputState {
         self.has_input = false;
     }
 
-    fn code_into_key(&mut self, key: String, code: String, state: KeyState, ic: bool) {
+    fn code_into_key(
+        &mut self,
+        key: String,
+        code: String,
+        state: KeyState,
+        ic: bool,
+    ) {
         if key.len() == 1 && !ic {
             self.text = key.chars().nth(0).unwrap();
         }
@@ -275,7 +281,7 @@ impl InputState {
             a => {
                 warn!("Unknown {}", a);
                 return;
-            },
+            }
         } as usize] = state;
     }
 

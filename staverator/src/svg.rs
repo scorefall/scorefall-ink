@@ -38,8 +38,11 @@ pub struct Rect {
 
 impl fmt::Display for Rect {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<rect x='{}' y='{}' width='{}' height='{}'",
-            self.x, self.y, self.width, self.height)?;
+        write!(
+            f,
+            "<rect x='{}' y='{}' width='{}' height='{}'",
+            self.x, self.y, self.width, self.height
+        )?;
         if let Some(ref rx) = self.rx {
             write!(f, " rx='{}'", rx)?;
         }
@@ -55,14 +58,28 @@ impl fmt::Display for Rect {
 
 impl Rect {
     /// Create a new SVG `rect` element
-    pub fn new(x: i32, y: i32, width: u32, height: u32, rx: Option<u32>,
-        ry: Option<u32>, fill: Option<u32>) -> Self
-    {
+    pub fn new(
+        x: i32,
+        y: i32,
+        width: u32,
+        height: u32,
+        rx: Option<u32>,
+        ry: Option<u32>,
+        fill: Option<u32>,
+    ) -> Self {
         let fill = match fill {
             Some(f) => Some(format!("#{:x}", f)),
             None => None,
         };
-        Rect { x, y, width, height, rx, ry, fill }
+        Rect {
+            x,
+            y,
+            width,
+            height,
+            rx,
+            ry,
+            fill,
+        }
     }
 }
 
@@ -78,8 +95,11 @@ pub struct Use {
 
 impl fmt::Display for Use {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<use x='{}' y='{}' xlink:href='#{:x}'/>", self.x,
-            self.y, self.id)
+        write!(
+            f,
+            "<use x='{}' y='{}' xlink:href='#{:x}'/>",
+            self.x, self.y, self.id
+        )
     }
 }
 
@@ -182,26 +202,32 @@ impl fmt::Display for Element {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::glyph::GlyphId;
+    use super::*;
 
     #[test]
     fn rect() {
-        assert_eq!(Rect::new(10, 12, 25, 20, None, None, None).to_string(),
-        "<rect x='10' y='12' width='25' height='20'/>");
+        assert_eq!(
+            Rect::new(10, 12, 25, 20, None, None, None).to_string(),
+            "<rect x='10' y='12' width='25' height='20'/>"
+        );
     }
 
     #[test]
     fn glyph() {
-        assert_eq!(Use::new(37, 21, GlyphId::StemHarpStringNoise.into()).to_string(),
-        "<use x='37' y='21' xlink:href='#e21f'/>");
+        assert_eq!(
+            Use::new(37, 21, GlyphId::StemHarpStringNoise.into()).to_string(),
+            "<use x='37' y='21' xlink:href='#e21f'/>"
+        );
     }
 
     #[test]
     fn group() {
         let mut group = Group::new(0, 0);
         group.push(Element::Use(Use::new(2, 3, GlyphId::NoteheadWhole.into())));
-        assert_eq!(group.to_string(),
-        "<g><use x='2' y='3' xlink:href='#e0a2'/></g>");
+        assert_eq!(
+            group.to_string(),
+            "<g><use x='2' y='3' xlink:href='#e0a2'/></g>"
+        );
     }
 }

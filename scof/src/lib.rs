@@ -18,8 +18,8 @@
 
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
-use std::str::FromStr;
 use std::convert::TryInto;
+use std::str::FromStr;
 
 use cala;
 
@@ -47,12 +47,7 @@ pub struct Cursor {
 
 impl Cursor {
     /// Create a new cursor
-    pub fn new(
-        movement: u16,
-        measure: u16,
-        chan: u16,
-        marking: u16,
-    ) -> Self {
+    pub fn new(movement: u16, measure: u16, chan: u16, marking: u16) -> Self {
         Cursor {
             movement,
             measure,
@@ -586,7 +581,8 @@ impl Scof {
 
     /// Get mutable marking at a cursor position
     pub fn marking_mut(&mut self, cursor: &Cursor) -> Option<&mut Marking> {
-        self.chan_notes_mut(cursor)?.get_mut(cursor.marking as usize)
+        self.chan_notes_mut(cursor)?
+            .get_mut(cursor.marking as usize)
     }
 
     /// Get mutable vec of markings for measure at cursor position.
@@ -814,7 +810,8 @@ impl Scof {
 
     /// Insert a note after the cursor.
     fn insert_at(&mut self, cursor: &Cursor, marking: Marking) -> Option<()> {
-        self.chan_notes_mut(cursor)?.insert(cursor.marking.try_into().unwrap(), marking);
+        self.chan_notes_mut(cursor)?
+            .insert(cursor.marking.try_into().unwrap(), marking);
         Some(())
     }
 

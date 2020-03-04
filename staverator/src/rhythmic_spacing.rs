@@ -21,10 +21,8 @@
 //! Render a bar for all parts.  This not only handles space between notes, but
 //! also calculates the required width of the bar.
 
-/// 
-pub struct BarEngraver {
-    
-}
+///
+pub struct BarEngraver {}
 
 /// Linear interpolation
 fn lerp(a: f32, b: f32, amount: f32) -> f32 {
@@ -52,7 +50,7 @@ fn get_spacing(duration: u16) -> f32 {
         128..=255 => lerp(7.0, 8.0, clamp(dur, 128.0, 256.0)), // Whole
         256..=383 => lerp(8.0, 9.0, clamp(dur, 256.0, 384.0)), // Dotted Whole
         384..=511 => lerp(9.0, 10.0, clamp(dur, 384.0, 512.0)), // Double Whole
-        512 => 10.0, // Quadruple Whole
+        512 => 10.0,                                    // Quadruple Whole
         _ => panic!("Bug in Notator, no glyph for ({})", duration),
     }
 }

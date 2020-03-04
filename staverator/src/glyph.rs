@@ -322,9 +322,9 @@ impl GlyphId {
             16 | 24 | 36 | 54 | 81 => Rest8,
             32 | 48 | 72 | 108 | 162 => Rest4,
             64 | 96 | 144 | 216 => Rest2,
-            128 | 192 | 288  => Rest1,
+            128 | 192 | 288 => Rest1,
             256 | 384 => Rest1, // FIXME: Double Whole Rest
-            512 => Rest1, // FIXME: Quadruple Whole Rest
+            512 => Rest1,       // FIXME: Quadruple Whole Rest
             _ => panic!("Bug in Notator, no glyph for ({})", duration),
         }
     }
@@ -340,35 +340,35 @@ impl GlyphId {
                 } else {
                     FlagDown128
                 }
-            },
+            }
             2 | 3 => {
                 if up {
                     FlagUp64
                 } else {
                     FlagDown64
                 }
-            },
+            }
             4 | 6 | 9 => {
                 if up {
                     FlagUp32
                 } else {
                     FlagDown32
                 }
-            },
+            }
             8 | 12 | 18 | 27 => {
                 if up {
                     FlagUp16
                 } else {
                     FlagDown16
                 }
-            },
+            }
             16 | 24 | 36 | 54 | 81 => {
                 if up {
                     FlagUp8
                 } else {
                     FlagDown8
                 }
-            },
+            }
             // All other longer durations don't have flags.
             _ => return None,
         })

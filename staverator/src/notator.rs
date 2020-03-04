@@ -18,7 +18,7 @@
 
 use std::convert::TryInto;
 
-use crate::{Fraction, Note, BarElem, GlyphId, Steps};
+use crate::{BarElem, Fraction, GlyphId, Note, Steps};
 
 /// An iterator over durations of notes in a measure.  Should only output
 /// correct notation.
@@ -42,7 +42,8 @@ impl<'a> Notator<'a> {
     pub(super) fn notate(&mut self, note: &Note) {
         // FIXME: Tuplets (test for not divisible by 128)
         let dur = ((note.duration.num as u32 * 128) / note.duration.den as u32)
-            .try_into().unwrap();
+            .try_into()
+            .unwrap();
 
         if note.pitch.is_empty() {
             self.notate_rest(dur);
@@ -89,12 +90,14 @@ impl<'a> Notator<'a> {
             if dur == check {
                 self.width = self.width - Fraction::new(check, 128).simplify();
                 self.width = self.width.simplify();
-                self.measure.add_rest(GlyphId::rest_duration(check), self.width);
+                self.measure
+                    .add_rest(GlyphId::rest_duration(check), self.width);
                 dur -= check;
             } else if dur > check {
                 self.width = self.width - Fraction::new(check, 128).simplify();
                 self.width = self.width.simplify();
-                self.measure.add_rest(GlyphId::rest_duration(check), self.width);
+                self.measure
+                    .add_rest(GlyphId::rest_duration(check), self.width);
                 dur -= check;
             }
 

@@ -61,8 +61,8 @@
 //! - `|`: pedal
 
 use crate::Fraction;
-use std::{fmt, str::FromStr};
 use std::convert::TryInto;
+use std::{fmt, str::FromStr};
 
 mod articulation;
 mod pitch;
