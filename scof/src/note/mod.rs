@@ -62,6 +62,7 @@
 
 use crate::Fraction;
 use std::{fmt, str::FromStr};
+use std::convert::TryInto;
 
 mod articulation;
 mod pitch;
@@ -153,12 +154,12 @@ impl Note {
     }
 
     /// Set pitch class and octave.
-    pub fn set_pitch(&mut self, i: usize, pitch: Pitch) {
-        if i >= self.pitch.len() {
-            assert_eq!(self.pitch.len(), i);
+    pub fn set_pitch(&mut self, i: u16, pitch: Pitch) {
+        if i >= self.pitch.len().try_into().unwrap() {
+            assert_eq!(self.pitch.len(), i as usize);
             self.pitch.push(pitch);
         } else {
-            self.pitch[i] = pitch;
+            self.pitch[i as usize] = pitch;
         }
     }
 

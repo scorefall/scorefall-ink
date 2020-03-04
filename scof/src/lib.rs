@@ -19,6 +19,7 @@
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
+use std::convert::TryInto;
 
 use cala;
 
@@ -35,22 +36,22 @@ pub use note::{
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct Cursor {
     /// Movement number at cursor
-    movement: usize,
+    movement: u16,
     /// Measure number at cursor
-    measure: usize,
+    measure: u16,
     /// Channel number at curosr
-    chan: usize,
+    chan: u16,
     /// Marking number within measure
-    marking: usize,
+    marking: u16,
 }
 
 impl Cursor {
     /// Create a new cursor
     pub fn new(
-        movement: usize,
-        measure: usize,
-        chan: usize,
-        marking: usize,
+        movement: u16,
+        measure: u16,
+        chan: u16,
+        marking: u16,
     ) -> Self {
         Cursor {
             movement,
@@ -574,18 +575,18 @@ impl Scof {
     /// Lookup a marking at a cursor position
     pub fn marking(&self, cursor: &Cursor) -> Option<&Marking> {
         self.movement
-            .get(cursor.movement)?
+            .get(cursor.movement as usize)?
             .bar
-            .get(cursor.measure)?
+            .get(cursor.measure as usize)?
             .chan
-            .get(cursor.chan)?
+            .get(cursor.chan as usize)?
             .notes
-            .get(cursor.marking)
+            .get(cursor.marking as usize)
     }
 
     /// Get mutable marking at a cursor position
     pub fn marking_mut(&mut self, cursor: &Cursor) -> Option<&mut Marking> {
-        self.chan_notes_mut(cursor)?.get_mut(cursor.marking)
+        self.chan_notes_mut(cursor)?.get_mut(cursor.marking as usize)
     }
 
     /// Get mutable vec of markings for measure at cursor position.
@@ -593,11 +594,11 @@ impl Scof {
         Some(
             &mut self
                 .movement
-                .get_mut(cursor.movement)?
+                .get_mut(cursor.movement as usize)?
                 .bar
-                .get_mut(cursor.measure)?
+                .get_mut(cursor.measure as usize)?
                 .chan
-                .get_mut(cursor.chan)?
+                .get_mut(cursor.chan as usize)?
                 .notes,
         )
     }
@@ -634,7 +635,7 @@ impl Scof {
     }
 
     /// Get the count of markings in a measure
-    pub fn marking_len(&self, cursor: &Cursor) -> usize {
+    pub fn marking_len(&self, cursor: &Cursor) -> u16 {
         let mut curs = (*cursor).clone();
         curs.marking = 0;
         while self.marking(&curs).is_some() {
@@ -653,7 +654,7 @@ impl Scof {
     }
 
     /// Set pitch class and octave of a note at a cursor
-    pub fn set_pitch(&mut self, cursor: &Cursor, i: usize, pitch: Pitch) {
+    pub fn set_pitch(&mut self, cursor: &Cursor, i: u16, pitch: Pitch) {
         let mut note = self.note(cursor).unwrap().clone();
         note.set_pitch(i, pitch);
         let m = self.marking_mut(cursor).unwrap();
@@ -701,7 +702,7 @@ impl Scof {
 
         let b = cursor.marking;
 
-        new_notes.extend(notes.drain(0..b));
+        new_notes.extend(notes.drain(0..b.try_into().unwrap()));
 
         let mut i = 0;
         i = loop {
@@ -807,20 +808,20 @@ impl Scof {
     ) -> Option<()> {
         let _string = self
             .chan_notes_mut(&cursor.clone().right_unchecked())?
-            .insert(cursor.marking + 1, marking);
+            .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
     }
 
     /// Insert a note after the cursor.
     fn insert_at(&mut self, cursor: &Cursor, marking: Marking) -> Option<()> {
-        self.chan_notes_mut(cursor)?.insert(cursor.marking, marking);
+        self.chan_notes_mut(cursor)?.insert(cursor.marking.try_into().unwrap(), marking);
         Some(())
     }
 
     /// Remove the note after the cursor.
     fn remove_at(&mut self, cursor: &Cursor) -> Option<Marking> {
         let notes = self.chan_notes_mut(cursor)?;
-        let note = notes.remove(cursor.marking);
+        let note = notes.remove(cursor.marking.try_into().unwrap());
 
         cala::note!("REMOVE \"{:?}\"", note);
 

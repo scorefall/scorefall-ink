@@ -236,7 +236,7 @@ impl State {
     }
 
     /// Render one measure
-    fn render_measure(&self, measure: usize, offset_x: i32) -> i32 {
+    fn render_measure(&self, measure: u16, offset_x: i32) -> i32 {
         // FIXME: iterate through channels
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
