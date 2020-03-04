@@ -18,7 +18,7 @@
 
 use std::convert::TryInto;
 
-use crate::{Fraction, Note, MeasureElem, GlyphId, Steps};
+use crate::{Fraction, Note, BarElem, GlyphId, Steps};
 
 /// An iterator over durations of notes in a measure.  Should only output
 /// correct notation.
@@ -26,12 +26,12 @@ pub(super) struct Notator<'a> {
     // Fraction of the measure that's been notated.
     pub(super) width: Fraction,
     //
-    measure: &'a mut MeasureElem,
+    measure: &'a mut BarElem,
 }
 
 impl<'a> Notator<'a> {
     /// Create a new `Notator`
-    pub(super) fn new(measure: &'a mut MeasureElem) -> Self {
+    pub(super) fn new(measure: &'a mut BarElem) -> Self {
         Notator {
             width: Fraction::new(0, 1),
             measure,

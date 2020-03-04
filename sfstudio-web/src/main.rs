@@ -45,7 +45,7 @@ use std::rc::Rc;
 use std::panic;
 
 use scof::{Cursor, Fraction, Steps, Pitch};
-use staverator::{MeasureElem, Staff, Element};
+use staverator::{BarElem, Stave, Element};
 use scorefall_studio::Program;
 
 mod input;
@@ -54,7 +54,8 @@ use input::*;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const SCALEDOWN: f64 = 25_000.0;
+const ZOOM_LEVEL: f64 = 2.0;
+const SCALEDOWN: f64 = 50_000.0 / ZOOM_LEVEL;
 const SVGNS: &str = "http://www.w3.org/2000/svg";
 
 struct State {
@@ -126,42 +127,45 @@ impl State {
                 }
             }
             // Note Lengths
-            if self.input.press(Key::Q) || self.input.press(Key::Numpad5) {
-                self.program.set_dur(Fraction::new(1, 4));
-                self.render_measures();
-            } else if self.input.press(Key::W)  || self.input.press(Key::Numpad7) {
-                self.program.set_dur(Fraction::new(1, 1));
-                self.render_measures();
-            } else if self.input.press(Key::T)  || self.input.press(Key::Numpad4) {
-                self.program.set_dur(Fraction::new(1, 8));
-                self.render_measures();
-            } else if self.input.press(Key::Y) || self.input.press(Key::Numpad2) {
-                self.program.set_dur(Fraction::new(1, 32));
-                self.render_measures();
-            } /*else if self.input.press(Key::T)  || self.input.press(Key::Numpad0) {
-                self.program.tuplet();
-                self.render_measures();
-            } */ else if self.input.press(Key::H)  || self.input.press(Key::Numpad6) {
-                self.program.set_dur(Fraction::new(1, 2));
-                self.render_measures();
-            } else if self.input.press(Key::S)  || self.input.press(Key::Numpad3) {
-                self.program.set_dur(Fraction::new(1, 16));
-                self.render_measures();
-            } else if self.input.press(Key::Numpad8) {
-                self.program.set_dur(Fraction::new(2, 1));
+            if self.input.press(Key::Numpad0) {
+                self.program.set_dur(Fraction::new(1, 128));
                 self.render_measures();
             } else if self.input.press(Key::Numpad1) {
                 self.program.set_dur(Fraction::new(1, 64));
                 self.render_measures();
-            } else if self.input.press(Key::Numpad9) {
+            } else if self.input.press(Key::Y) || self.input.press(Key::Numpad2) {
+                self.program.set_dur(Fraction::new(1, 32));
+                self.render_measures();
+            } else if self.input.press(Key::S)  || self.input.press(Key::Numpad3) {
+                self.program.set_dur(Fraction::new(1, 16));
+                self.render_measures();
+            } else if self.input.press(Key::T)  || self.input.press(Key::Numpad4) {
+                self.program.set_dur(Fraction::new(1, 8));
+                self.render_measures();
+            } else if self.input.press(Key::Q) || self.input.press(Key::Numpad5) {
+                self.program.set_dur(Fraction::new(1, 4));
+                self.render_measures();
+            } else if self.input.press(Key::H) || self.input.press(Key::Numpad6) {
+                self.program.set_dur(Fraction::new(1, 2));
+                self.render_measures();
+            } else if self.input.press(Key::W) || self.input.press(Key::Numpad7) {
                 self.program.set_dur(Fraction::new(1, 1));
+                self.render_measures();
+            }  else if self.input.press(Key::Numpad8) {
+                self.program.set_dur(Fraction::new(2, 1));
+                self.render_measures();
+            } else if self.input.press(Key::Numpad9) {
+                self.program.set_dur(Fraction::new(4, 1));
                 self.render_measures();
             } else if self.input.press(Key::Period)
                 || self.input.press(Key::NumpadDot)
             {
                 self.program.dotted();
                 self.render_measures();
-            }
+            } /*else if self.input.press(Key::T)  || self.input.press(Key::Numpad0) {
+                self.program.tuplet();
+                self.render_measures();
+            } */
         }
 
         self.input.reset();
@@ -257,7 +261,7 @@ impl State {
 
         let mut curs = Cursor::new(0, measure, 0, 0);
         // Alto clef has 0 steps offset
-        let mut bar = MeasureElem::new(Staff::new(5, Steps(4)), high, low);
+        let mut bar = BarElem::new(Stave::new(5, Steps(4)), high, low);
         if curs == self.program.cursor.first_marking() {
             bar.add_cursor(&self.program.scof, &self.program.cursor);
         }
@@ -265,7 +269,7 @@ impl State {
             bar.add_signature();
         }
         bar.add_markings(&self.program.scof, &mut curs);
-        bar.add_staff();
+        bar.add_stave();
 
         for elem in bar.elements {
             if let Some(e) = create_elem(elem) {
