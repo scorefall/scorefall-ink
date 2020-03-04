@@ -302,7 +302,7 @@ impl FromStr for Note {
         // Read pitches
         'note_pitches: loop {
             let begin_index = end_index;
-            let pitch = match s.get(begin_index..).ok_or(())? {
+            pitch.push(match s.get(begin_index..).ok_or(())? {
                 // Find rest, used in absence of notes.
                 "" => break 'note_pitches,
                 "R" => {
@@ -329,11 +329,9 @@ impl FromStr for Note {
                     }
                     end_index = end_index2? + 1;
 
-                    let pitch2 = s[begin_index..end_index].parse::<Pitch>()?;
-
-                    pitch.push(pitch2)
+                    s[begin_index..end_index].parse::<Pitch>()?
                 }
-            };
+            });
         }
 
         // Read articulation symbols.

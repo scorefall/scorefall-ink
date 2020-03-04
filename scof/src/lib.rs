@@ -807,21 +807,4 @@ impl Scof {
             .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
     }
-
-    /// Insert a note after the cursor.
-    fn insert_at(&mut self, cursor: &Cursor, marking: Marking) -> Option<()> {
-        self.chan_notes_mut(cursor)?
-            .insert(cursor.marking.try_into().unwrap(), marking);
-        Some(())
-    }
-
-    /// Remove the note after the cursor.
-    fn remove_at(&mut self, cursor: &Cursor) -> Option<Marking> {
-        let notes = self.chan_notes_mut(cursor)?;
-        let note = notes.remove(cursor.marking.try_into().unwrap());
-
-        cala::note!("REMOVE \"{:?}\"", note);
-
-        Some(note)
-    }
 }

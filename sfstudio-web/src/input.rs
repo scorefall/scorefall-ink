@@ -13,6 +13,7 @@ pub enum KeyState {
     /// Just got released
     Lift = 0b_001,
     /// A key was typed (like Just, but repeats when held down).
+    #[allow(unused)]
     Type = 0b_111,
 }
 
@@ -38,6 +39,7 @@ impl KeyState {
 /// Escape & F11 are treated specially.  Escape is treated as the back key on a
 /// phone, and F11 always toggles fullscreen.
 #[allow(missing_docs)]
+#[allow(unused)]
 #[repr(usize)]
 pub enum Key {
     Backtick = 0usize,
