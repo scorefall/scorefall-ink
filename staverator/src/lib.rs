@@ -314,7 +314,7 @@ impl BarElem {
             self.add_use(cp, x, y);
             // Only draw stem if not a whole note or double whole note (breve).
             match dur {
-                128 | 256 => {}
+                128..=511 => {}
                 _ => self.add_stem(x, y),
             }
             // Draw flag if 8th note or shorter.
@@ -330,6 +330,12 @@ impl BarElem {
                 self.add_use(flag_glyph, x + ofsx, y + ofsy);
             }
             // Draw Ledger Line if below or above stave.
+            let head_width = if dur >= 128 {
+                // Whole note, breve, and longa all have wide noteheads.
+                Self::HEAD_WIDTH + (Self::HEAD_WIDTH / 2)
+            } else {
+                Self::HEAD_WIDTH
+            };
             let yyy = steps.0; // - self.middle_steps();
             if yyy > 0 {
                 let mut count = if yyy % 2 == 0 { 0 } else { 1 };
@@ -337,7 +343,7 @@ impl BarElem {
                     let rect = Rect::new(
                         x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
                         y - (Stave::LINE_WIDTH / 2) + (count * Stave::STEP_DY),
-                        Self::HEAD_WIDTH * 2,
+                        Self::HEAD_WIDTH + head_width,
                         Stave::LINE_WIDTH,
                         None,
                         None,
@@ -353,7 +359,7 @@ impl BarElem {
                     let rect = Rect::new(
                         x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
                         y - (Stave::LINE_WIDTH / 2) - (count * Stave::STEP_DY),
-                        Self::HEAD_WIDTH * 2,
+                        Self::HEAD_WIDTH + head_width,
                         Stave::LINE_WIDTH,
                         None,
                         None,
