@@ -39,9 +39,9 @@ pub struct Cursor {
     movement: u16,
     /// Measure number at cursor
     measure: u16,
-    /// Channel number at curosr
+    /// Channel number at cursor
     chan: u16,
-    /// Marking number within measure
+    /// Marking number within bar
     marking: u16,
 }
 

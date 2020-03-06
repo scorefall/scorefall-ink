@@ -4,4 +4,7 @@ sig: 0
 bar:
   sig: 0
   chan: 1/4C4A4 3/4R
-
+  chan: 1/8A3 1/8A3 1/8A3 1/8R 1/2R
+bar:
+  chan: 3/4R 1/4B3
+  chan: 3/4R 1/4B3

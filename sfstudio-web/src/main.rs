@@ -266,9 +266,12 @@ impl State {
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
 
-        let mut curs = Cursor::new(0, measure, 0, 0);
+        let mut bar_width = 0;
+        let mut ypos = Steps(0);
+        for i in 0..2 { // FIXME
+        let mut curs = Cursor::new(0 /*mvmt*/, measure, i /*chan*/, 0 /*marking*/);
         // Alto clef has 0 steps offset
-        let mut bar = BarElem::new(Stave::new(5, Steps(4)), high, low);
+        let mut bar = BarElem::new(Stave::new(5, Steps(4), ypos), high, low);
         if curs == self.program.cursor.first_marking() {
             bar.add_cursor(&self.program.scof, &self.program.cursor);
         }
@@ -283,7 +286,11 @@ impl State {
                 js! { @{&bar_g}.appendChild(@{e}); }
             }
         }
-        bar.width
+        bar_width = bar.width;
+        let stave = Stave::new(5, Steps(4), ypos);
+        ypos = ypos + stave.height_steps() + Steps(12); // Margin above & below
+        }
+        bar_width
     }
 }
 

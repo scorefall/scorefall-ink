@@ -51,6 +51,8 @@ pub struct Stave {
     pub lines: i32,
     /// Number of steps top of stave is above middle C
     steps_middle_c: Steps,
+    /// Y position (in steps).
+    ypos: Steps,
 }
 
 impl Stave {
@@ -64,17 +66,18 @@ impl Stave {
     const LINE_WIDTH: i32 = BARLINE_WIDTH;
 
     /// Create a new stave
-    pub fn new(lines: i32, steps_middle_c: Steps) -> Self {
+    pub fn new(lines: i32, steps_middle_c: Steps, ypos: Steps) -> Self {
         Stave {
             lines,
             steps_middle_c,
+            ypos,
         }
     }
 
     /// Get number of steps top margin is above middle C
     fn steps_top(&self, steps: Steps) -> Steps {
         let top = ((steps / 2) * 2).0 + 2; // round to nearest line
-        let dflt = self.steps_middle_c + Self::MARGIN_STEPS;
+        let dflt = self.steps_middle_c + Self::MARGIN_STEPS + self.ypos;
         Steps(dflt.0.max(top))
     }
 
@@ -82,7 +85,7 @@ impl Stave {
     fn steps_bottom(&self, steps: Steps) -> Steps {
         let bottom = ((steps / 2) * 2).0 - 2; // round to nearest line
         let dflt =
-            self.steps_middle_c - self.height_steps() - Self::MARGIN_STEPS;
+            self.steps_middle_c - self.height_steps() - Self::MARGIN_STEPS + self.ypos;
         Steps(dflt.0.min(bottom))
     }
 
