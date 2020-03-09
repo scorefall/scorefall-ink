@@ -239,6 +239,7 @@ impl InputState {
             "Backspace" => Key::Backspace,
             "Escape" => Key::Back,
             "Enter" => Key::Enter,
+            "CapsLock" => Key::CapsLock,
             "NumpadEnter" => Key::NumpadEnter,
             "ArrowUp" => Key::Up,
             "ArrowDown" => Key::Down,

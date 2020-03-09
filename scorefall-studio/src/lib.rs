@@ -49,9 +49,8 @@ impl Program {
     /// Move cursor forward.
     pub fn right(&mut self) {
         self.cursor.right(&self.scof);
-        if self.scof.marking_len(&self.cursor) == 0 {
-            cala::info!("NEW MEASEMRE");
-            // Measure doesn't exist, so make a new one.
+        // If measure doesn't exist, make a new one.
+        if self.scof.marking_is_empty(&self.cursor) {
             self.scof.new_measure();
         }
     }

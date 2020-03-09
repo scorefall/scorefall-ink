@@ -336,7 +336,7 @@ fn create_elem(elem: Element) -> Option<stdweb::Value> {
 fn panic_hook(panic_info: &std::panic::PanicInfo) {
     let msg = panic_info.to_string();
 
-    info!("Custom panic: {:?}", msg);
+    info!("ScoreFall Studio panicked!: {:?}", msg);
     js! { console.trace() }
 
     std::process::exit(0);
@@ -401,8 +401,6 @@ fn main() {
             event.prevent_default();
         }),
     );
-
-    note!("YA");
 
     state.borrow().render_score().unwrap();
 

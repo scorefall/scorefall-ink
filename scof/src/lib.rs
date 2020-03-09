@@ -104,7 +104,7 @@ impl Cursor {
     /// ended.  If the measure has ended, the cursor is not changed.
     pub fn right_checked(&mut self, scof: &Scof) -> bool {
         let len = scof.marking_len(self);
-        cala::note!("Rgiht CHecka {} {}", self.marking, len);
+        
         if self.marking + 1 < len {
             self.marking += 1;
             false
@@ -640,6 +640,12 @@ impl Scof {
         curs.marking
     }
 
+    /// Return true if there are no markings in a measure (measure doesn't
+    /// exist).
+    pub fn marking_is_empty(&self, cursor: &Cursor) -> bool {
+        self.marking_len(cursor) == 0
+    }
+
     /// Get the note at cursor
     pub fn note(&self, cursor: &Cursor) -> Option<&Note> {
         if let Marking::Note(note) = self.marking(cursor)? {
@@ -779,9 +785,7 @@ impl Scof {
                     notes.push("1/1R".parse().unwrap());
                 }
                 note.set_duration(rem);
-                cala::note!("Next…");
             }
-            cala::note!("RFni");
         }
     }
 
