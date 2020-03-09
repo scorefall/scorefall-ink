@@ -175,35 +175,47 @@ impl BarElem {
     /// - `scof`: The score.
     /// - `curs`: Cursor of measure.
     pub fn add_markings(&mut self, scof: &Scof, curs: &mut Cursor) {
-        let mut is_empty = true;
+        let reset_cursor = curs.clone();
+        let reset_width = self.width;
+        let ymargin = self.stave.height_steps() + Steps(12);
 
-        let mut notator = Notator::new(self);
-        while let Some(marking) = scof.marking(&curs) {
-            is_empty = false;
-            match marking {
-                Marking::Note(note) => {
-                    notator.notate(&note);
-                    //                    self.width += note.duration() * BAR_WIDTH;
-                    //                        self.add_mark(&note);
-                    //                        self.width += fraction * BAR_WIDTH;
+        for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
+            let mut is_empty = true;
+
+            self.width = reset_width;
+            *curs = reset_cursor.chan(chan);
+
+            let mut notator = Notator::new(self);
+
+            while let Some(marking) = scof.marking(&curs) {
+                is_empty = false;
+                match marking {
+                    Marking::Note(note) => notator.notate(&note),
+                    _ => unreachable!(),
                 }
-                _ => unreachable!(),
+                curs.right_unchecked();
             }
-            curs.right_unchecked();
+
+            // Insert whole measure rest (different from whole rest).  Whole
+            // measure rests are always 1 measure, so can be any number of beats
+            // depending on the time signature.  They look like a whole rest,
+            // but are centered.
+            if is_empty {
+                self.add_measure_rest();
+            }
+
+            self.width += BAR_WIDTH;
+
+            self.add_barline(self.width);
+
+            let y = self.offset_y(self.stave.steps_middle_c) + ymargin.0 * chan as i32;
+            let path = self.stave.path(y, self.width);
+            self.elements.push(Element::Path(path));
+
+            // Update Y Margin
+            self.steps_top = self.steps_top + ymargin;
+            self.steps_bottom = self.steps_top + ymargin;
         }
-
-        // Insert whole measure rest (different from whole rest).
-        // whole measure rests are always 1 measure, so can be any number of
-        // beats depending on the time signature.  They look like a whole rest,
-        // but are centered.
-        if is_empty {
-            //            cala::info!("Add measure rest {}", curs.measure);
-            self.add_measure_rest();
-        }
-
-        self.width += BAR_WIDTH;
-
-        self.add_barline(self.width);
     }
 
     /// Add a cursor
@@ -291,15 +303,6 @@ impl BarElem {
         self.elements.push(Element::Rect(rect));
     }
 
-    /*    /// Add mark node for either a note or a rest
-    #[deprecated]
-    fn add_mark(&mut self, note: &Note) {
-        match &note.pitch {
-            Some(_pitch) => self.add_pitch(note),
-            None => self.add_rest(Some(note)),
-        }
-    }*/
-
     /// Add elements for a note
     fn add_pitch(
         &mut self,
@@ -332,7 +335,7 @@ impl BarElem {
 
                 self.add_use(flag_glyph, x + ofsx, y + ofsy);
             }
-            // Draw Ledger Line if below or above stave.
+            // Draw Ledger Lines if below or above stave.
             let head_width = if dur >= 128 {
                 // Whole note, breve, and longa all have wide noteheads.
                 Self::HEAD_WIDTH + (Self::HEAD_WIDTH / 2)
@@ -342,7 +345,7 @@ impl BarElem {
             let yyy = steps.0; // - self.middle_steps();
             if yyy > 0 {
                 let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-                for i in (6..yyy + 1).step_by(2) {
+                for _ in (6..yyy + 1).step_by(2) {
                     let rect = Rect::new(
                         x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
                         y - (Stave::LINE_WIDTH / 2) + (count * Stave::STEP_DY),
@@ -358,7 +361,7 @@ impl BarElem {
             } else {
                 let yyy = -yyy;
                 let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-                for i in (6..yyy + 1).step_by(2) {
+                for _ in (6..yyy + 1).step_by(2) {
                     let rect = Rect::new(
                         x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
                         y - (Stave::LINE_WIDTH / 2) - (count * Stave::STEP_DY),
@@ -453,41 +456,40 @@ impl BarElem {
             .push(Element::Use(Use::new(x, y, glyph.into())));
     }
 
-    /// Add stave
-    pub fn add_stave(&mut self) {
-        let y = self.offset_y(self.stave.steps_middle_c);
-        let path = self.stave.path(y, self.width);
-        self.elements.push(Element::Path(path))
-    }
-
     /// Add clef
-    pub fn add_clef(&mut self) {
-        self.add_use(GlyphId::ClefC, Stave::MARGIN_X + 150, self.middle());
+    pub fn add_clefs(&mut self, scof: &Scof) {
+        for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
+            let ymargin = (self.stave.height_steps() + Steps(12)).0 * Stave::STEP_DY;
+            self.add_use(GlyphId::ClefC, Stave::MARGIN_X + 150, self.middle() + ymargin * i);
+        }
         self.width += 1000;
     }
 
     /// Add time signature
-    pub fn add_time(&mut self) {
-        // width=421
-        self.add_use(
-            GlyphId::TimeSig3,
-            Stave::MARGIN_X + self.width + 50,
-            self.middle() - Stave::STEP_DY * 2,
-        );
-        // width=470
-        self.add_use(
-            GlyphId::TimeSig4,
-            Stave::MARGIN_X + self.width + 50 - ((470 - 421) / 2),
-            self.middle() + Stave::STEP_DY * 2,
-        );
+    pub fn add_times(&mut self, scof: &Scof) {
+        for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
+            let ymargin = (self.stave.height_steps() + Steps(12)).0 * Stave::STEP_DY;
+            // width=421
+            self.add_use(
+                GlyphId::TimeSig3,
+                Stave::MARGIN_X + self.width + 50,
+                self.middle() - Stave::STEP_DY * 2 + ymargin * i,
+            );
+            // width=470
+            self.add_use(
+                GlyphId::TimeSig4,
+                Stave::MARGIN_X + self.width + 50 - ((470 - 421) / 2),
+                self.middle() + Stave::STEP_DY * 2 + ymargin * i,
+            );
+        }
 
         self.width += 640;
     }
 
     /// Add clef & time signature.
-    pub fn add_signature(&mut self) {
-        self.add_clef();
-        self.add_time();
+    pub fn add_signatures(&mut self, scof: &Scof) {
+        self.add_clefs(scof);
+        self.add_times(scof);
     }
 }
 

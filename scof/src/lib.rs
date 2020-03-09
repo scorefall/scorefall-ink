@@ -37,8 +37,8 @@ pub use note::{
 pub struct Cursor {
     /// Movement number at cursor
     movement: u16,
-    /// Measure number at cursor
-    measure: u16,
+    /// Bar number at cursor
+    bar: u16,
     /// Channel number at cursor
     chan: u16,
     /// Marking number within bar
@@ -47,10 +47,10 @@ pub struct Cursor {
 
 impl Cursor {
     /// Create a new cursor
-    pub fn new(movement: u16, measure: u16, chan: u16, marking: u16) -> Self {
+    pub fn new(movement: u16, bar: u16, chan: u16, marking: u16) -> Self {
         Cursor {
             movement,
-            measure,
+            bar,
             chan,
             marking,
         }
@@ -60,9 +60,19 @@ impl Cursor {
     pub fn first_marking(&self) -> Self {
         Cursor {
             movement: self.movement,
-            measure: self.measure,
+            bar: self.bar,
             chan: self.chan,
             marking: 0,
+        }
+    }
+
+    /// Create a cursor from the first marking and chan #.
+    pub fn chan(&self, chan: u16) -> Self {
+        Cursor {
+            movement: self.movement,
+            bar: self.bar,
+            chan: chan,
+            marking: self.marking,
         }
     }
 
@@ -70,29 +80,29 @@ impl Cursor {
     pub fn left(&mut self, scof: &Scof) {
         if self.marking > 0 {
             self.marking -= 1;
-        } else if self.measure != 0 {
-            self.measure -= 1;
+        } else if self.bar != 0 {
+            self.bar -= 1;
             let len = scof.marking_len(self);
             self.marking = if len > 0 { len - 1 } else { 0 };
         }
     }
 
-    /// Move cursor right, and to the next measure if the measure ended.
+    /// Move cursor right, and to the next bar if the bar ended.
     pub fn right(&mut self, scof: &Scof) {
         if self.right_checked(scof) {
-            // Measure has ended.
-            self.measure += 1;
+            // Bar has ended.
+            self.bar += 1;
             self.marking = 0;
         }
     }
 
-    /// Fix the cursor if it is wrong.  Move cursor right, and to the next
-    /// measure if the measure ended.  FIXME: Maybe remove other API in favor of
-    /// this function in conjunction with others.
+    /// Fix the cursor if it is wrong.  Move cursor right, and to the next bar
+    /// if the bar ended.  FIXME: Maybe remove other API in favor of this
+    /// function in conjunction with others.
     pub fn right_fix(&mut self, scof: &Scof) -> bool {
         if self.marking >= scof.marking_len(self) {
-            // Measure has ended.
-            self.measure += 1;
+            // Bar has ended.
+            self.bar += 1;
             self.marking = 0;
             true
         } else {
@@ -100,8 +110,8 @@ impl Cursor {
         }
     }
 
-    /// Move cursor right within the measure, returning true if the measure
-    /// ended.  If the measure has ended, the cursor is not changed.
+    /// Move cursor right within the bar, returning true if the bar ended.  If
+    /// the bar has ended, the cursor is not changed.
     pub fn right_checked(&mut self, scof: &Scof) -> bool {
         let len = scof.marking_len(self);
         
@@ -113,7 +123,7 @@ impl Cursor {
         }
     }
 
-    /// Move cursor to the right within the measure, not checking if it ended.
+    /// Move cursor to the right within the bar, not checking if it ended.
     pub fn right_unchecked(&mut self) -> Self {
         self.marking += 1;
         self.clone()
@@ -121,7 +131,7 @@ impl Cursor {
 
     /// Returns true if it's the first bar of music.
     pub fn is_first_bar(&self) -> bool {
-        self.measure == 0
+        self.bar == 0
     }
 }
 
@@ -190,7 +200,7 @@ impl FromStr for Marking {
     }
 }
 
-/// A repeat marking for a measure.
+/// A repeat marking for a bar.
 pub enum Repeat {
     /// Repeat sign open ||:
     Open,
@@ -572,7 +582,7 @@ impl Scof {
         self.movement
             .get(cursor.movement as usize)?
             .bar
-            .get(cursor.measure as usize)?
+            .get(cursor.bar as usize)?
             .chan
             .get(cursor.chan as usize)?
             .notes
@@ -592,7 +602,7 @@ impl Scof {
                 .movement
                 .get_mut(cursor.movement as usize)?
                 .bar
-                .get_mut(cursor.measure as usize)?
+                .get_mut(cursor.bar as usize)?
                 .chan
                 .get_mut(cursor.chan as usize)?
                 .notes,
@@ -777,7 +787,7 @@ impl Scof {
 
             while let Some(rem) = self.set_part_measure(&cursor, &note) {
                 cala::note!("Remainder {}", rem);
-                cursor.measure += 1;
+                cursor.bar += 1;
                 cursor.marking = 0;
                 self.new_measure();
                 let notes = self.chan_notes_mut(&cursor).unwrap();
