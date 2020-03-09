@@ -235,10 +235,15 @@ impl State {
         };
 
         let mut offset_x = 0;
-        for measure in 0..9 {
+        let mut measure = 0;
+        'render_measures: loop {
             let width = self.render_measure(measure, offset_x);
-            note!("measure: {}  width {}", measure, width);
+            note!("measure: {} width {}", measure, width);
             offset_x += width;
+            if offset_x >= SCALEDOWN as i32 {
+                break 'render_measures;
+            }
+            measure += 1;
         }
     }
 
