@@ -20,15 +20,10 @@ use std::convert::TryInto;
 
 use scof::{Cursor, Marking, Pitch, Scof};
 
-use crate::Fraction;
-
 /// An iterator over durations of notes in a measure.  Should only output
 /// correct notation.  (Turns 3/8 into dotted 1/4 or 1/4 tied to 1/8 depending
 /// on what's appropriate).
 pub(super) struct Notator<'a> {
-    // Fraction of the measure that's been notated.
-    pub(super) width: Fraction,
-
     // Cursor through the notes.
     curs: Cursor,
     // Duration left of current note (may be note tied to another)
@@ -49,7 +44,6 @@ impl<'a> Notator<'a> {
     /// Create a new `Notator`
     pub(super) fn new(scof: &'a Scof, cursor: Cursor, curs: Cursor) -> Self {
         Notator {
-            width: Fraction::new(0, 1),
             curs,
             dur: 0,
             check: 128,

@@ -165,7 +165,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             }
         }
         // Cursor at end of bar.
-        if let Some((x, stave_j)) = self.cursor {
+        if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
             let x =
                 crate::Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;

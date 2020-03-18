@@ -17,6 +17,8 @@
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #![recursion_limit = "128"]
+#![allow(clippy::too_many_arguments)] // js! macro causing clippy to flip out
+#![allow(clippy::blacklisted_name)] // bar is a useful musical term
 
 use cala::{info, note};
 
@@ -65,7 +67,6 @@ struct State {
     command: String,
     input: InputState,
     svg: stdweb::web::Element,
-    cursor: stdweb::web::Element,
 }
 
 impl State {
@@ -83,15 +84,12 @@ impl State {
             @{&svg}.appendChild(@{&cursor});
         }
 
-        let cursor = document().get_element_by_id("cursor").unwrap();
-
         Ok(State {
             program: Program::new(),
             time_old: 0.0,
             command: "".to_string(),
             input: InputState::new(),
             svg,
-            cursor,
         })
     }
 
@@ -198,7 +196,7 @@ impl State {
         rc.borrow_mut().process_input(time);
 
         window().request_animation_frame(move |time| {
-            Self::run(time, rc.clone());
+            Self::run(time, rc);
         });
     }
 
@@ -429,6 +427,6 @@ fn main() {
 
     state.borrow().render_score().unwrap();
 
-    State::run(0.0, state.clone());
+    State::run(0.0, state);
     stdweb::event_loop();
 }

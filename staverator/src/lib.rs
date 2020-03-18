@@ -16,6 +16,8 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#![allow(clippy::blacklisted_name)] // bar is a useful musical term
+
 mod glyph;
 mod notator;
 mod rhythmic_spacing;
@@ -27,7 +29,7 @@ pub use svg::{Element, Group, Path, Rect, Use};
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
 
-use scof::{Cursor, Fraction, Marking, Note, Scof, Steps};
+use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
@@ -183,15 +185,12 @@ impl BarElem {
         curs: &mut Cursor,
     ) -> Option<(i32, i32, i32, i32)> {
         let reset_cursor = curs.clone();
-        let reset_width = self.width;
-        let ymargin = self.stave.height_steps() + Steps(12);
 
         // Make notators for each stave.
         let mut notators = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
             *curs = reset_cursor.chan(chan);
-            let mut notator = Notator::new(scof, cursor.clone(), curs.clone());
-            notators.push(notator);
+            notators.push(Notator::new(scof, cursor.clone(), curs.clone()));
         }
 
         // Engrave the music.
@@ -209,11 +208,6 @@ impl BarElem {
     /// Get the full height
     fn height(&self) -> i32 {
         ((self.steps_top - self.steps_bottom) * Stave::STEP_DY).0
-    }
-
-    /// Get the # of steps to the middle of the stave
-    fn middle_steps(&self) -> i32 {
-        (self.stave.steps_middle_c - self.stave.height_steps() / 2).0
     }
 
     /// Get the middle of the stave y position
@@ -420,9 +414,9 @@ impl BarElem {
     }
 
     /// Add clef & time signature.
-    pub fn add_signatures(&mut self, scof: &Scof) {
-        //self.add_clefs(scof);
-        //self.add_times(scof);
+    pub fn add_signatures(&mut self, _scof: &Scof) {
+        //self.add_clefs(_scof);
+        //self.add_times(_scof);
     }
 }
 

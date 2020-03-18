@@ -213,7 +213,7 @@ impl InputState {
         ic: bool,
     ) {
         if key.len() == 1 && !ic {
-            self.text = key.chars().nth(0).unwrap();
+            self.text = key.chars().next().unwrap();
         }
 
         // A unicode character has been typed.

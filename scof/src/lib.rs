@@ -16,6 +16,8 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#![allow(clippy::blacklisted_name)] // bar is a useful musical term
+
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
 use std::convert::TryInto;
@@ -71,7 +73,7 @@ impl Cursor {
         Cursor {
             movement: self.movement,
             bar: self.bar,
-            chan: chan,
+            chan,
             marking: self.marking,
         }
     }
@@ -196,7 +198,7 @@ impl FromStr for Marking {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Marking::Note(s.parse::<Note>().and_then(|a| Ok(a))?))
+        Ok(Marking::Note(s.parse::<Note>().and_then(Ok)?))
     }
 }
 
@@ -816,8 +818,7 @@ impl Scof {
         cursor: &Cursor,
         marking: Marking,
     ) -> Option<()> {
-        let _string = self
-            .chan_notes_mut(&cursor.clone().right_unchecked())?
+        self.chan_notes_mut(&cursor.clone().right_unchecked())?
             .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
     }

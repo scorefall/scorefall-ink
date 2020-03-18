@@ -188,7 +188,7 @@ impl Note {
 
         Note {
             pitch,
-            duration: self.duration.clone(),
+            duration: self.duration,
             articulation: self.articulation.clone(),
         }
     }
@@ -347,7 +347,7 @@ impl FromStr for Note {
         Ok(Note {
             pitch,
             duration,
-            articulation: articulation.clone(),
+            articulation,
         })
     }
 }

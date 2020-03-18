@@ -97,7 +97,7 @@ impl FromStr for Articulation {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.chars().nth(0).ok_or(())? {
+        Ok(match s.chars().next().ok_or(())? {
             // Articulation
             '\'' => Articulation::Staccatissimo,
             '.' => Articulation::Staccato,

@@ -1,5 +1,7 @@
 //! Fraction
 
+#![allow(clippy::suspicious_arithmetic_impl)] // It's fractions, come on clippy!
+
 use std::cmp::Ordering;
 use std::convert::TryInto;
 use std::ops::{
@@ -88,9 +90,9 @@ impl Add for Fraction {
         }
 
         let (self_mul, other_mul, den) = if self.den % other.den == 0 {
-            (1, self.den / other.den, self.den.into())
+            (1, self.den / other.den, self.den)
         } else if other.den % self.den == 0 {
-            (other.den / self.den, 1, other.den.into())
+            (other.den / self.den, 1, other.den)
         } else {
             (other.den, self.den, self.den * other.den)
         };

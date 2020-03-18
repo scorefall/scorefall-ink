@@ -237,7 +237,7 @@ impl FromStr for PitchOctave {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.chars().nth(0).ok_or(())? {
+        Ok(match s.chars().next().ok_or(())? {
             '-' => PitchOctave::Octave_,
             '0' => PitchOctave::Octave0,
             '1' => PitchOctave::Octave1,
@@ -259,7 +259,7 @@ impl FromStr for PitchOctave {
 pub struct Pitch(pub PitchClass, pub PitchOctave);
 
 impl Pitch {
-    pub fn visual_distance(&self) -> Steps {
+    pub fn visual_distance(self) -> Steps {
         // Calculate number of octaves from middle C (C4).
         let octaves = self.1 as i32 - 4;
         // Calculate number of steps from C within key.
