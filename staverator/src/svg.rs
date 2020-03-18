@@ -118,11 +118,16 @@ pub struct Group {
     pub y: i32,
     /// Elements within group
     pub elements: Vec<Element>,
+    /// Render Order
+    pub render_order: Option<i32>,
 }
 
 impl fmt::Display for Group {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "<g")?;
+        if let Some(ro) = self.render_order {
+            write!(f, " render-order=\"{}\"", ro)?;
+        }
         if self.x != 0 && self.y != 0 {
             write!(f, " transform='translate({} {})'>", self.x, self.y)?;
         } else {
@@ -137,9 +142,9 @@ impl fmt::Display for Group {
 
 impl Group {
     /// Create a new SVG group `g` element
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: i32, y: i32, render_order: Option<i32>) -> Self {
         let elements = vec![];
-        Group { x, y, elements }
+        Group { x, y, elements, render_order }
     }
     /// Push an element into the group
     pub fn push(&mut self, elem: Element) {
@@ -223,7 +228,7 @@ mod tests {
 
     #[test]
     fn group() {
-        let mut group = Group::new(0, 0);
+        let mut group = Group::new(0, 0, None);
         group.push(Element::Use(Use::new(2, 3, GlyphId::NoteheadWhole.into())));
         assert_eq!(
             group.to_string(),

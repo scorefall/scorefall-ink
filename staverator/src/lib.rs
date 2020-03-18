@@ -25,6 +25,7 @@ pub use glyph::GlyphId;
 pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
+use rhythmic_spacing::BarEngraver;
 
 use scof::{Cursor, Fraction, Marking, Note, Scof, Steps};
 use std::fmt;
@@ -35,8 +36,6 @@ const BAR_WIDTH: i32 = 3200;
 const BARLINE_WIDTH: i32 = 36;
 /// Space before each note.
 const NOTE_MARGIN: i32 = BARLINE_WIDTH; // 250;
-/// Color of cursor
-const CURSOR_COLOR: u32 = 0xFF9AF0;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
 
@@ -104,12 +103,13 @@ impl Stave {
     }
 
     /// Create a stave path
-    pub fn path(&self, top: i32, width: i32) -> Path {
+    pub fn path(&self, top: i32, width: i32, ofs: Steps) -> Path {
         let width = width + (BARLINE_WIDTH / 2);
+        let ofs = (ofs * Stave::STEP_DY).0;
         let mut d = String::new();
         for i in 0..self.lines {
             let x = Self::MARGIN_X - (BARLINE_WIDTH / 2);
-            let y = top + Stave::STEP_DY * (i * 2) - Stave::LINE_WIDTH / 2;
+            let y = top + Stave::STEP_DY * (i * 2) - Stave::LINE_WIDTH / 2 + ofs;
             let line = &format!(
                 "M{} {}h{}v{}h-{}v-{}z",
                 x,
@@ -174,74 +174,25 @@ impl BarElem {
     ///
     /// - `scof`: The score.
     /// - `curs`: Cursor of measure.
-    pub fn add_markings(&mut self, scof: &Scof, curs: &mut Cursor) {
+    pub fn add_markings(&mut self, scof: &Scof, cursor: &Cursor, curs: &mut Cursor)
+        -> Option<(i32, i32, i32, i32)>
+    {
         let reset_cursor = curs.clone();
         let reset_width = self.width;
         let ymargin = self.stave.height_steps() + Steps(12);
 
+        // Make notators for each stave.
+        let mut notators = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
-            let mut is_empty = true;
-
-            self.width = reset_width;
             *curs = reset_cursor.chan(chan);
-
-            let mut notator = Notator::new(self);
-
-            while let Some(marking) = scof.marking(&curs) {
-                is_empty = false;
-                match marking {
-                    Marking::Note(note) => notator.notate(&note),
-                    _ => unreachable!(),
-                }
-                curs.right_unchecked();
-            }
-
-            // Insert whole measure rest (different from whole rest).  Whole
-            // measure rests are always 1 measure, so can be any number of beats
-            // depending on the time signature.  They look like a whole rest,
-            // but are centered.
-            if is_empty {
-                self.add_measure_rest();
-            }
-
-            self.width += BAR_WIDTH;
-
-            self.add_barline(self.width);
-
-            let y = self.offset_y(self.stave.steps_middle_c) + ymargin.0 * chan as i32;
-            let path = self.stave.path(y, self.width);
-            self.elements.push(Element::Path(path));
-
-            // Update Y Margin
-            self.steps_top = self.steps_top + ymargin;
-            self.steps_bottom = self.steps_top + ymargin;
-        }
-    }
-
-    /// Add a cursor
-    /// - `cursor`: Cursor position.
-    pub fn add_cursor(&mut self, scof: &Scof, cursor: &Cursor) {
-        let mut width = 0;
-        let mut curs = cursor.first_marking();
-
-        if cursor.is_first_bar() {
-            width += 1640;
+            let mut notator = Notator::new(scof, cursor.clone(), curs.clone());
+            notators.push(notator);
         }
 
-        let mut is_empty = true;
-        while let Some(Marking::Note(note)) = scof.marking(&curs) {
-            let add = *cursor == curs;
-            is_empty = false;
-            self.add_cursor_rect(note.duration(), &mut width, add);
-            if add {
-                break;
-            }
-            curs.right_unchecked();
-        }
-        if is_empty {
-            let add = *cursor == curs;
-            self.add_cursor_rect(Fraction::new(1, 1), &mut width, add);
-        }
+        // Engrave the music.
+        let (width, rect) = BarEngraver::new(self, &mut notators).engrave();
+        self.width += width;
+        rect
     }
 
     /// Get the Y offset of a step value
@@ -266,30 +217,12 @@ impl BarElem {
         self.offset_y(steps)
     }
 
-    /// Add the cursor rectangle.
-    fn add_cursor_rect(
-        &mut self,
-        fraction: Fraction,
-        width: &mut i32,
-        add: bool,
-    ) {
-        if add {
-            let x = Stave::MARGIN_X + *width;
-            let w = fraction * BAR_WIDTH;
-            if w > 0 {
-                let fill = Some(CURSOR_COLOR);
-                let rect = Rect::new(x, 0, w, self.height(), None, None, fill);
-                self.elements.push(Element::Rect(rect));
-            }
-        }
-        *width += fraction * BAR_WIDTH;
-    }
-
     /// Add a barline to stave
-    fn add_barline(&mut self, x: i32) {
+    fn add_barline(&mut self, x: i32, ofs: Steps) {
         let width = BARLINE_WIDTH;
-        let y = self.offset_y(self.stave.steps_middle_c);
-        let y_bottom = self.offset_y(self.stave.steps_stave_bottom());
+        let ofs = (ofs * Stave::STEP_DY).0;
+        let y = self.offset_y(self.stave.steps_middle_c) + ofs;
+        let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
         let rect = Rect::new(
             x + (Stave::MARGIN_X - BARLINE_WIDTH),
@@ -307,83 +240,83 @@ impl BarElem {
     fn add_pitch(
         &mut self,
         dur: u16,
-        offset: Fraction,
-        vd: Option<scof::Steps>,
+        offset: f32,
+        steps: scof::Steps,
+        ofs: Steps,
     ) {
-        if let Some(steps) = vd {
-            let x = (Stave::MARGIN_X - BARLINE_WIDTH)
-                + NOTE_MARGIN
-                + self.width
-                + (offset * BAR_WIDTH);
-            let y = self.offset_y(steps);
-            let cp = GlyphId::notehead_duration(dur);
-            self.add_use(cp, x, y);
-            // Only draw stem if not a whole note or double whole note (breve).
-            match dur {
-                128..=511 => {}
-                _ => self.add_stem(x, y),
-            }
-            // Draw flag if 8th note or shorter.
-            if let Some(flag_glyph) =
-                GlyphId::flag_duration(dur, y > self.middle())
-            {
-                let (ofsx, ofsy) = if y > self.middle() {
-                    (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
-                } else {
-                    (0, Self::STEM_LENGTH)
-                };
-
-                self.add_use(flag_glyph, x + ofsx, y + ofsy);
-            }
-            // Draw Ledger Lines if below or above stave.
-            let head_width = if dur >= 128 {
-                // Whole note, breve, and longa all have wide noteheads.
-                Self::HEAD_WIDTH + (Self::HEAD_WIDTH / 2)
+        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+            + NOTE_MARGIN
+            + self.width
+            + ((offset * BAR_WIDTH as f32) as i32);
+        let ofs = (ofs * Stave::STEP_DY).0;
+        let y = self.offset_y(steps);
+        let cp = GlyphId::notehead_duration(dur);
+        self.add_use(cp, x, y + ofs);
+        // Only draw stem if not a whole note or double whole note (breve).
+        match dur {
+            128..=511 => {}
+            _ => self.add_stem(x, y, ofs),
+        }
+        // Draw flag if 8th note or shorter.
+        if let Some(flag_glyph) =
+            GlyphId::flag_duration(dur, y > self.middle())
+        {
+            let (ofsx, ofsy) = if y > self.middle() {
+                (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
             } else {
-                Self::HEAD_WIDTH
+                (0, Self::STEM_LENGTH)
             };
-            let yyy = steps.0; // - self.middle_steps();
-            if yyy > 0 {
-                let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-                for _ in (6..yyy + 1).step_by(2) {
-                    let rect = Rect::new(
-                        x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
-                        y - (Stave::LINE_WIDTH / 2) + (count * Stave::STEP_DY),
-                        Self::HEAD_WIDTH + head_width,
-                        Stave::LINE_WIDTH,
-                        None,
-                        None,
-                        None,
-                    );
-                    self.elements.push(Element::Rect(rect));
-                    count += 2;
-                }
-            } else {
-                let yyy = -yyy;
-                let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-                for _ in (6..yyy + 1).step_by(2) {
-                    let rect = Rect::new(
-                        x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
-                        y - (Stave::LINE_WIDTH / 2) - (count * Stave::STEP_DY),
-                        Self::HEAD_WIDTH + head_width,
-                        Stave::LINE_WIDTH,
-                        None,
-                        None,
-                        None,
-                    );
-                    self.elements.push(Element::Rect(rect));
-                    count += 2;
-                }
+
+            self.add_use(flag_glyph, x + ofsx, y + ofsy + ofs);
+        }
+        // Draw Ledger Lines if below or above stave.
+        let head_width = if dur >= 128 {
+            // Whole note, breve, and longa all have wide noteheads.
+            Self::HEAD_WIDTH + (Self::HEAD_WIDTH / 2)
+        } else {
+            Self::HEAD_WIDTH
+        };
+        let yyy = steps.0; // - self.middle_steps();
+        if yyy > 0 {
+            let mut count = if yyy % 2 == 0 { 0 } else { 1 };
+            for _ in (6..yyy + 1).step_by(2) {
+                let rect = Rect::new(
+                    x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
+                    ofs + y - (Stave::LINE_WIDTH / 2) + (count * Stave::STEP_DY),
+                    Self::HEAD_WIDTH + head_width,
+                    Stave::LINE_WIDTH,
+                    None,
+                    None,
+                    None,
+                );
+                self.elements.push(Element::Rect(rect));
+                count += 2;
+            }
+        } else {
+            let yyy = -yyy;
+            let mut count = if yyy % 2 == 0 { 0 } else { 1 };
+            for _ in (6..yyy + 1).step_by(2) {
+                let rect = Rect::new(
+                    x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
+                    ofs + y - (Stave::LINE_WIDTH / 2) - (count * Stave::STEP_DY),
+                    Self::HEAD_WIDTH + head_width,
+                    Stave::LINE_WIDTH,
+                    None,
+                    None,
+                    None,
+                );
+                self.elements.push(Element::Rect(rect));
+                count += 2;
             }
         }
     }
 
     /// Add a stem
-    fn add_stem(&mut self, x: i32, y: i32) {
+    fn add_stem(&mut self, x: i32, y: i32, ofs: i32) {
         if y > self.middle() {
-            self.add_stem_up(x, y);
+            self.add_stem_up(x, y + ofs);
         } else {
-            self.add_stem_down(x, y);
+            self.add_stem_down(x, y + ofs);
         }
     }
 
@@ -415,34 +348,21 @@ impl BarElem {
     }
 
     /// Add `use` element for a whole measure rest
-    fn add_measure_rest(&mut self /*, note: Option<&Note>*/) {
-        /*        let note = if let Some(note) = note {
-            note
-        } else {*/
+    fn add_measure_rest(&mut self, width: f32, y: Steps) {
         let x = (Stave::MARGIN_X - BARLINE_WIDTH)
-            + (BAR_WIDTH - WHOLE_REST_WIDTH) / 2;
-        let y = self.middle() - Stave::STEP_DY * 2;
+            + ((width * BAR_WIDTH as f32) as i32 - WHOLE_REST_WIDTH) / 2;
+        let y = self.middle() + ((y - Steps(2)) * Stave::STEP_DY).0;
         self.add_use(GlyphId::Rest1, x, y);
-        /*            return;
-        };
-        let duration = &note.duration;
-        let glyph = GlyphId::rest_duration(duration);
-        let x = NOTE_MARGIN + self.width;
-        let mut y = self.middle();
-        // Position whole rest glyph up 2 steps.
-        if duration.num == duration.den {
-            y -= Stave::STEP_DY * 2;
-        }
-        self.add_use(glyph, x, y);*/
     }
 
     /// Add `use` element for a rest.
-    fn add_rest(&mut self, glyph: GlyphId, offset: Fraction) {
+    fn add_rest(&mut self, glyph: GlyphId, offset: f32, ofs: Steps) {
         let x = (Stave::MARGIN_X - BARLINE_WIDTH)
             + NOTE_MARGIN
             + self.width
-            + (offset * BAR_WIDTH);
-        let mut y = self.middle();
+            + ((offset * BAR_WIDTH as f32) as i32);
+        let ofs = (ofs * Stave::STEP_DY).0;
+        let mut y = self.middle() + ofs;
         // Position whole rest glyph up 2 steps.
         if glyph == GlyphId::Rest1 {
             y -= Stave::STEP_DY * 2;
@@ -488,8 +408,8 @@ impl BarElem {
 
     /// Add clef & time signature.
     pub fn add_signatures(&mut self, scof: &Scof) {
-        self.add_clefs(scof);
-        self.add_times(scof);
+        //self.add_clefs(scof);
+        //self.add_times(scof);
     }
 }
 

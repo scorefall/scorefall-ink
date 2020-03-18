@@ -1,6 +1,6 @@
 // ScoreFall Studio - Music Composition Software
 //
-// Copyright (C) 2019 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 // Copyright (C) 2019 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -18,92 +18,80 @@
 
 use std::convert::TryInto;
 
-use crate::{BarElem, Fraction, GlyphId, Note, Steps};
+use scof::{Scof, Cursor, Marking, Pitch};
+
+use crate::{Fraction};
 
 /// An iterator over durations of notes in a measure.  Should only output
-/// correct notation.
+/// correct notation.  (Turns 3/8 into dotted 1/4 or 1/4 tied to 1/8 depending
+/// on what's appropriate).
 pub(super) struct Notator<'a> {
     // Fraction of the measure that's been notated.
     pub(super) width: Fraction,
-    //
-    measure: &'a mut BarElem,
+
+    // Cursor through the notes.
+    curs: Cursor,
+    // Duration left of current note (may be note tied to another)
+    dur: u16,
+    // Note to check duration against
+    check: u16,
+    // 
+    scof: &'a Scof,
+    // 
+    pitch: Vec<Pitch>,
+    // User's cursor
+    cursor: Cursor,
+    // Is User's Cursor
+    ic: bool,
 }
 
 impl<'a> Notator<'a> {
     /// Create a new `Notator`
-    pub(super) fn new(measure: &'a mut BarElem) -> Self {
+    pub(super) fn new(scof: &'a Scof, cursor: Cursor, curs: Cursor) -> Self {
         Notator {
             width: Fraction::new(0, 1),
-            measure,
+            curs,
+            dur: 0,
+            check: 128,
+            scof,
+            pitch: vec![],
+            cursor,
+            ic: false,
         }
     }
 
-    /// Notate a note.
-    pub(super) fn notate(&mut self, note: &Note) {
-        // FIXME: Tuplets (test for not divisible by 128)
-        let dur = ((note.duration.num as u32 * 128) / note.duration.den as u32)
-            .try_into()
-            .unwrap();
-
-        if note.pitch.is_empty() {
-            self.notate_rest(dur);
-        }
-        let reset_width = self.width;
-        for pitch_index in 0..note.pitch.len() {
-            self.width = reset_width;
-            self.notate_pitch(dur, note.visual_distance(pitch_index));
-        }
+    pub(super) fn is_cursor(&self) -> bool {
+        self.curs == self.cursor
     }
+}
 
-    // Notate a pitched note.
-    fn notate_pitch(&mut self, mut dur: u16, visual_distance: Option<Steps>) {
-        let mut check = 128;
-        let temp_width = self.width + Fraction::new(dur, 128).simplify();
-        self.width = temp_width;
+impl<'a> Iterator for Notator<'a> {
+    type Item = (Vec<Pitch>, u16, bool);
 
-        while dur != 0 {
-            if dur == check {
-                self.width = self.width - Fraction::new(check, 128).simplify();
-                self.width = self.width.simplify();
-                self.measure.add_pitch(check, self.width, visual_distance);
-                dur -= check;
-            } else if dur > check {
-                self.width = self.width - Fraction::new(check, 128).simplify();
-                self.width = self.width.simplify();
-                self.measure.add_pitch(check, self.width, visual_distance);
-                dur -= check;
+    fn next(&mut self) -> Option<Self::Item> {
+        // If duration is not 0, find next note to add.
+        while self.dur != 0 {
+            if self.dur >= self.check {
+                self.dur -= self.check;
+                return Some((self.pitch.clone(), self.check, self.ic));
             }
-
-            check /= 2;
+            self.check /= 2;
         }
-
-        self.width = temp_width;
-    }
-
-    // Notate a rest.
-    fn notate_rest(&mut self, mut dur: u16) {
-        let mut check = 128;
-        let temp_width = self.width + Fraction::new(dur, 128).simplify();
-        self.width = temp_width;
-
-        while dur != 0 {
-            if dur == check {
-                self.width = self.width - Fraction::new(check, 128).simplify();
-                self.width = self.width.simplify();
-                self.measure
-                    .add_rest(GlyphId::rest_duration(check), self.width);
-                dur -= check;
-            } else if dur > check {
-                self.width = self.width - Fraction::new(check, 128).simplify();
-                self.width = self.width.simplify();
-                self.measure
-                    .add_rest(GlyphId::rest_duration(check), self.width);
-                dur -= check;
+        // Get next note/rest, return None if done.
+        match self.scof.marking(&self.curs)? {
+            Marking::Note(note) => {
+                self.ic = self.curs == self.cursor;
+                self.check = 128;
+                // FIXME: Tuplets (test for not divisible by 128)
+                self.dur = ((note.duration.num as u32 * 128)
+                    / note.duration.den as u32)
+                    .try_into()
+                    .unwrap();
+                self.pitch = note.pitch.clone();
             }
-
-            check /= 2;
-        }
-
-        self.width = temp_width;
+            _ => unreachable!(),
+        };
+        self.curs.right_unchecked();
+        <Self as Iterator>::next(self)
     }
 }

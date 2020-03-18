@@ -65,18 +65,34 @@ struct State {
     command: String,
     input: InputState,
     svg: stdweb::web::Element,
+    cursor: stdweb::web::Element,
 }
 
 impl State {
     /// Create a new state
-    fn new(svg: stdweb::web::Element) -> State {
-        State {
+    fn new(svg: stdweb::web::Element) -> Result<State> {
+        let cursor = document().create_element_ns(SVGNS, "rect")?;
+        cursor.set_attribute("x", "0")?;
+        cursor.set_attribute("y", "0")?;
+        cursor.set_attribute("width", "1024")?;
+        cursor.set_attribute("height", "1024")?;
+        cursor.set_attribute("fill", "#FF9AF0")?;
+        cursor.set_attribute("id", "cursor")?;
+        js! {
+            @{&svg}.innerHTML = "";
+            @{&svg}.appendChild(@{&cursor});
+        }
+
+        let cursor = document().get_element_by_id("cursor").unwrap();
+
+        Ok(State {
             program: Program::new(),
             time_old: 0.0,
             command: "".to_string(),
             input: InputState::new(),
             svg,
-        }
+            cursor,
+        })
     }
 
     /// Resize the SVG
@@ -192,7 +208,6 @@ impl State {
         page.set_attribute("id", "page")?;
         let svg = &self.svg;
         js! {
-            @{svg}.innerHTML = "";
             @{svg}.appendChild(@{page});
         };
         Ok(())
@@ -249,7 +264,6 @@ impl State {
 
     /// Render one measure
     fn render_measure(&self, measure: u16, offset_x: i32) -> i32 {
-        // FIXME: iterate through channels
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
@@ -274,16 +288,14 @@ impl State {
         let mut curs = Cursor::new(0 /*mvmt*/, measure, 0 /*i chan*/, 0 /*marking*/);
         // Alto clef has 0 steps offset
         let mut bar = BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
-        if curs == self.program.cursor.first_marking() {
-            bar.add_cursor(&self.program.scof, &self.program.cursor);
-        }
+        if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(&self.program.scof, &self.program.cursor, &mut curs) {
+            let cur: stdweb::web::Element = document().get_element_by_id("cursor").unwrap();
 
-        // FIXME: Have as an actual channel element.
-        if measure == 0 {
-            bar.add_signatures(&self.program.scof);
+            cur.set_attribute("x", &format!("{}", cx + offset_x)).unwrap();
+            cur.set_attribute("y", &format!("{}", cy)).unwrap();
+            cur.set_attribute("width", &format!("{}", cwidth)).unwrap();
+            cur.set_attribute("height", &format!("{}", cheight)).unwrap();
         }
-
-        bar.add_markings(&self.program.scof, &mut curs);
 
         for elem in bar.elements {
             if let Some(e) = create_elem(elem) {
@@ -352,7 +364,7 @@ fn main() {
     }));
 
     let svg = document().get_element_by_id("canvas").unwrap();
-    let state = Rc::new(RefCell::new(State::new(svg)));
+    let state = Rc::new(RefCell::new(State::new(svg).unwrap()));
 
     // FIXME: Use this.
     let _prompt: stdweb::web::Element =
