@@ -108,13 +108,13 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             } else if let Some((x, stave_j)) = self.cursor {
                 if stave_i == stave_j {
                     self.cursor = None;
+                    let e = if x == 0.0 { 0 } else { -Stave::SPACE / 2 };
                     let x =
                         Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;
-                    let e = -Stave::SPACE / 8;
                     cursor_rect = Some((
-                        x + e,                                                 // X
-                        0i32, // Y
-                        (super::BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
+                        x + e,                                             // X
+                        0i32,                                              // Y
+                        (super::BAR_WIDTH as f32 * self.width) as i32 - x, // W
                         self.bar.height(),
                     ));
                 }
@@ -176,9 +176,9 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
+            let e = if x == 0.0 { 0 } else { -Stave::SPACE / 2 };
             let x =
                 crate::Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;
-            let e = -Stave::SPACE / 8;
             cursor_rect = Some((
                 x + e,                                                 // X
                 0i32,                                                  // Y
@@ -216,8 +216,8 @@ fn clamp(a: f32, min: f32, max: f32) -> f32 {
 fn get_spacing(duration: u16) -> f32 {
     let dur = duration as f32;
     match duration {
-        1..=7 => lerp(1.75, 2.0, clamp(dur, 1.0, 8.0)), // 128th-Sixteenth
-        8..=15 => lerp(2.0, 2.5, clamp(dur, 8.0, 16.0)), // Sixteenth
+        1..=7 => lerp(2.25, 2.375, clamp(dur, 1.0, 8.0)), // 128th-Sixteenth
+        8..=15 => lerp(2.375, 2.5, clamp(dur, 8.0, 16.0)), // Sixteenth
         16..=23 => lerp(2.5, 3.0, clamp(dur, 16.0, 24.0)), // Eighth
         24..=31 => lerp(3.0, 3.5, clamp(dur, 24.0, 32.0)), // Dotted Eighth
         32..=47 => lerp(3.5, 4.0, clamp(dur, 32.0, 48.0)), // Quarter
@@ -227,7 +227,7 @@ fn get_spacing(duration: u16) -> f32 {
         128..=255 => lerp(7.0, 8.0, clamp(dur, 128.0, 256.0)), // Whole
         256..=383 => lerp(8.0, 9.0, clamp(dur, 256.0, 384.0)), // Dotted Whole
         384..=511 => lerp(9.0, 10.0, clamp(dur, 384.0, 512.0)), // Double Whole
-        512 => 10.0,                                    // Quadruple Whole
+        512 => 10.0,                                      // Quadruple Whole
         _ => panic!("Bug in Notator, no glyph for ({})", duration),
     }
 }
