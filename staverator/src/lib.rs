@@ -33,7 +33,7 @@ use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
-const BAR_WIDTH: i32 = 1400;
+const BAR_WIDTH: i32 = 1200;
 /// Width of the barline.
 const BARLINE_WIDTH: i32 = 36;
 /// Space before each note.
