@@ -285,16 +285,28 @@ impl State {
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
 
-        let mut curs = Cursor::new(0 /*mvmt*/, measure, 0 /*i chan*/, 0 /*marking*/);
+        let mut curs = Cursor::new(
+            0, /*mvmt*/
+            measure, 0, /*i chan*/
+            0, /*marking*/
+        );
         // Alto clef has 0 steps offset
-        let mut bar = BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
-        if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(&self.program.scof, &self.program.cursor, &mut curs) {
-            let cur: stdweb::web::Element = document().get_element_by_id("cursor").unwrap();
+        let mut bar =
+            BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
+        if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(
+            &self.program.scof,
+            &self.program.cursor,
+            &mut curs,
+        ) {
+            let cur: stdweb::web::Element =
+                document().get_element_by_id("cursor").unwrap();
 
-            cur.set_attribute("x", &format!("{}", cx + offset_x)).unwrap();
+            cur.set_attribute("x", &format!("{}", cx + offset_x))
+                .unwrap();
             cur.set_attribute("y", &format!("{}", cy)).unwrap();
             cur.set_attribute("width", &format!("{}", cwidth)).unwrap();
-            cur.set_attribute("height", &format!("{}", cheight)).unwrap();
+            cur.set_attribute("height", &format!("{}", cheight))
+                .unwrap();
         }
 
         for elem in bar.elements {
@@ -302,7 +314,7 @@ impl State {
                 js! { @{&bar_g}.appendChild(@{e}); }
             }
         }
-        
+
         bar.width
     }
 }

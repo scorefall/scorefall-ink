@@ -18,9 +18,9 @@
 
 use std::convert::TryInto;
 
-use scof::{Scof, Cursor, Marking, Pitch};
+use scof::{Cursor, Marking, Pitch, Scof};
 
-use crate::{Fraction};
+use crate::Fraction;
 
 /// An iterator over durations of notes in a measure.  Should only output
 /// correct notation.  (Turns 3/8 into dotted 1/4 or 1/4 tied to 1/8 depending
@@ -35,9 +35,9 @@ pub(super) struct Notator<'a> {
     dur: u16,
     // Note to check duration against
     check: u16,
-    // 
+    //
     scof: &'a Scof,
-    // 
+    //
     pitch: Vec<Pitch>,
     // User's cursor
     cursor: Cursor,

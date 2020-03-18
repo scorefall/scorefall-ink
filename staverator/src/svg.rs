@@ -144,7 +144,12 @@ impl Group {
     /// Create a new SVG group `g` element
     pub fn new(x: i32, y: i32, render_order: Option<i32>) -> Self {
         let elements = vec![];
-        Group { x, y, elements, render_order }
+        Group {
+            x,
+            y,
+            elements,
+            render_order,
+        }
     }
     /// Push an element into the group
     pub fn push(&mut self, elem: Element) {

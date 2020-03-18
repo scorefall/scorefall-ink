@@ -114,7 +114,7 @@ impl Cursor {
     /// the bar has ended, the cursor is not changed.
     pub fn right_checked(&mut self, scof: &Scof) -> bool {
         let len = scof.marking_len(self);
-        
+
         if self.marking + 1 < len {
             self.marking += 1;
             false
