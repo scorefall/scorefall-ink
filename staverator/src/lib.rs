@@ -33,7 +33,7 @@ use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
-const BAR_WIDTH: i32 = 1200;
+const BAR_WIDTH: i32 = 1400;
 /// Width of the barline.
 const BARLINE_WIDTH: i32 = 36;
 /// Space before each note.
@@ -57,8 +57,10 @@ pub struct Stave {
 }
 
 impl Stave {
-    /// A half or whole step visual distance in the measure.
-    const STEP_DY: i32 = 125;
+    /// A stave space
+    const SPACE: i32 = 250;
+    /// Half or whole step visual distance in the measure (half a stave space)
+    const STEP_DY: i32 = Self::SPACE / 2;
     /// Margin X
     const MARGIN_X: i32 = BARLINE_WIDTH;
     /// Minimum number of steps in top/bottom margins
@@ -112,8 +114,7 @@ impl Stave {
         let mut d = String::new();
         for i in 0..self.lines {
             let x = Self::MARGIN_X - (BARLINE_WIDTH / 2);
-            let y =
-                top + Stave::STEP_DY * (i * 2) - Stave::LINE_WIDTH / 2 + ofs;
+            let y = top + Stave::SPACE * i - Stave::LINE_WIDTH / 2 + ofs;
             let line = &format!(
                 "M{} {}h{}v{}h-{}v-{}z",
                 x,
@@ -364,9 +365,9 @@ impl BarElem {
             + ((offset * BAR_WIDTH as f32) as i32);
         let ofs = (ofs * Stave::STEP_DY).0;
         let mut y = self.middle() + ofs;
-        // Position whole rest glyph up 2 steps.
+        // Position whole rest glyph up 1 stave space.
         if glyph == GlyphId::Rest1 {
-            y -= Stave::STEP_DY * 2;
+            y -= Stave::SPACE;
         }
         self.add_use(glyph, x, y);
     }
@@ -400,13 +401,13 @@ impl BarElem {
             self.add_use(
                 GlyphId::TimeSig3,
                 Stave::MARGIN_X + self.width + 50,
-                self.middle() - Stave::STEP_DY * 2 + ymargin * i,
+                self.middle() - Stave::SPACE + ymargin * i,
             );
             // width=470
             self.add_use(
                 GlyphId::TimeSig4,
                 Stave::MARGIN_X + self.width + 50 - ((470 - 421) / 2),
-                self.middle() + Stave::STEP_DY * 2 + ymargin * i,
+                self.middle() + Stave::SPACE + ymargin * i,
             );
         }
 
