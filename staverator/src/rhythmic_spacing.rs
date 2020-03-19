@@ -37,8 +37,6 @@ pub struct BarEngraver<'a, 'b, 'c> {
     bar: &'b mut BarElem,
     // Bar physical width
     width: f32,
-    // Remaining 128th notes for each stave
-    rem: Vec<u16>,
     // Remaining 128th notes for all staves
     all: u16,
     //
@@ -59,7 +57,6 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         }
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / super::BAR_WIDTH as f32;
-        let rem = vec![128; notators.len()];
         let all = 128;
         let cursor = None;
 
@@ -68,7 +65,6 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             notators,
             bar,
             width,
-            rem,
             all,
             cursor,
         }
@@ -90,11 +86,11 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     continue;
                 };
             // Increment width
-            if self.rem[stave_i] < self.all {
-                self.width += get_spacing(self.all - self.rem[stave_i]) / 7.0;
-                self.all = self.rem[stave_i];
+            if time < self.all {
+                self.width += get_spacing(self.all - time) / 7.0;
+                self.all = time;
             }
-            self.rem[stave_i] -= dur;
+            let new_time = time - dur;
             // Render cursor
             if ic {
                 if self.cursor.is_none() {
@@ -141,18 +137,17 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                 }
             }
             // Add back to queue if time is remaining.
-            let time = time - dur;
-            if time != 0 {
+            if new_time != 0 {
                 // Insert at correct priority level.
                 let mut index = self.pq.len();
                 'p: loop {
                     if index == 0 {
-                        self.pq.push_front((time, stave_i));
+                        self.pq.push_front((new_time, stave_i));
                         break 'p;
                     }
                     index -= 1;
-                    if self.pq[index].0 > time {
-                        self.pq.push_back((time, stave_i));
+                    if self.pq[index].0 > new_time {
+                        self.pq.push_back((new_time, stave_i));
                         break 'p;
                     }
                 }
