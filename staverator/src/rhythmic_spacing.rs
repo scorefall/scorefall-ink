@@ -77,7 +77,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         let mut rests = vec![];
         self.cursor = None;
         // Empty the priority queue.
-        while let Some((time, stave_i)) = self.pq.pop_front() {
+        while let Some((mut time, stave_i)) = self.pq.pop_front() {
             let (pitches, dur, ic) =
                 if let Some(a) = self.notators[stave_i].next() {
                     a
@@ -90,7 +90,6 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                 self.width += get_spacing(self.all - time) / 7.0;
                 self.all = time;
             }
-            let new_time = time - dur;
             // Render cursor
             if ic {
                 if self.cursor.is_none() {
@@ -137,17 +136,18 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                 }
             }
             // Add back to queue if time is remaining.
-            if new_time != 0 {
+            time -= dur;
+            if time != 0 {
                 // Insert at correct priority level.
                 let mut index = self.pq.len();
                 'p: loop {
                     if index == 0 {
-                        self.pq.push_front((new_time, stave_i));
+                        self.pq.push_front((time, stave_i));
                         break 'p;
                     }
                     index -= 1;
-                    if self.pq[index].0 > new_time {
-                        self.pq.push_back((new_time, stave_i));
+                    if self.pq[index].0 > time {
+                        self.pq.push_back((time, stave_i));
                         break 'p;
                     }
                 }

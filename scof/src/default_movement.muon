@@ -3,8 +3,8 @@ sig: 0
   tempo: 120
 bar:
   sig: 0
-  chan: 1/4C4A4 3/4R
-  chan: 1/8A3 1/8A3 1/8A3 1/8R 1/2R
+  chan: 1/4C4 1/16D4 1/16D4 1/16D4 1/16D4 1/2A3
+  chan: 1/8A3 1/8A3 1/8A3 1/8A3 1/2A3
 bar:
-  chan: 3/4R 1/4B3
-  chan: 3/4R 1/4B3
+  chan: 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/4R 1/4B3
+  chan: 1/2B3 1/2B3
