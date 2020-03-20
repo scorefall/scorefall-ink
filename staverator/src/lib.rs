@@ -29,7 +29,7 @@ pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
-use beaming::{Beams, Short};
+use beaming::{Beams, Beam, Short};
 
 use scof::{Cursor, Scof, Steps};
 use std::fmt;
@@ -250,7 +250,45 @@ impl BarElem {
         y + ofs
     }
 
-    /// Render stems and either flags or beams for short notes.
+    /// Add elements for flag and stem.
+    fn add_flag(&mut self, dur: u16, offset: f32, y: Steps, y_offset: Steps) {
+        let y = self.y_from_steps(y, y_offset);
+        let flag_glyph = GlyphId::flag_duration(dur, y > self.middle()).unwrap();
+        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+            + NOTE_MARGIN
+            + self.width
+            + ((offset * BAR_WIDTH as f32) as i32);
+
+        let (ofsx, ofsy) = if y > self.middle() {
+            (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
+        } else {
+            (0, Self::STEM_LENGTH)
+        };
+
+        self.add_use(flag_glyph, x + ofsx, y + ofsy);
+        self.add_stem(x, y, Self::STEM_LENGTH);
+    }
+
+    /// Add beam element.
+    fn add_beam(&mut self, beam: Beam) {
+        let add_stem = if beam.stems_up { Self::add_stem_up } else { Self::add_stem_down };
+
+        let d = String::new(); // format!("M{} {}m{} {}m{} {}m{} {}z", );
+        cala::info!("ADD_BEAM {} notes", beam.notes.len());
+        for note in beam.notes {
+            let (y, y_offset) = note.2;
+            let y = self.y_from_steps(y.visual_distance(), y_offset);
+            let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+                + NOTE_MARGIN
+                + self.width
+                + ((note.1 * BAR_WIDTH as f32) as i32);
+
+            add_stem(self, x, y, Self::STEM_LENGTH);
+        }
+        self.elements.push(Element::Path(Path::new(None, d)));
+    }
+
+    /// Add stems and either flags or beam elements for short notes.
     fn add_flags_and_beams(
         &mut self,
         beams: Beams,
@@ -259,27 +297,10 @@ impl BarElem {
             match short {
                 Short::Flag(dur, offset, (pitches, y_offset)) => {
                     let pitch = pitches[0]; // FIXME: Use closest to beam/flag.
-                    let y = self.y_from_steps(pitch.visual_distance(),
-                        y_offset);
-
-                    let flag_glyph = GlyphId::flag_duration(
-                        dur, y > self.middle()).unwrap();
-                    let x = (Stave::MARGIN_X - BARLINE_WIDTH)
-                        + NOTE_MARGIN
-                        + self.width
-                        + ((offset * BAR_WIDTH as f32) as i32);
-
-                    let (ofsx, ofsy) = if y > self.middle() {
-                        (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
-                    } else {
-                        (0, Self::STEM_LENGTH)
-                    };
-
-                    self.add_use(flag_glyph, x + ofsx, y + ofsy);
-                    self.add_stem(x, y, Self::STEM_LENGTH);
+                    self.add_flag(dur, offset, pitch.visual_distance(), y_offset);
                 }
                 Short::Beam(beam) => {
-                    todo!()
+                    self.add_beam(beam)
                 }
             }
         }

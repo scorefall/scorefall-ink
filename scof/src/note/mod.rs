@@ -71,7 +71,7 @@ pub use self::articulation::*;
 pub use self::pitch::*;
 
 /// Number of steps above middle C
-#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
 pub struct Steps(pub i32);
 
 impl std::ops::Add for Steps {

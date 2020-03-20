@@ -40,6 +40,7 @@ const BEAMRULE_4_4: BeamRules = BeamRules {
 };
 
 /// Should there be a beam connecting to previous note?
+#[derive(PartialEq, Debug)]
 pub enum BeamProp {
     None,
     ContinueEighth,
@@ -54,6 +55,14 @@ pub(crate) struct Beams {
     dur: u16,
     // Notes that may be flagged or beamed.
     short: Vec<(BeamProp, u16, f32, (Vec<Pitch>, Steps))>,
+    // Last was short?
+    last_short: bool,
+    // Minimum duration within current beam.
+    min_dur: u16,
+    // Notes in the beamed group.
+    notes: Vec<(u16, f32, (Vec<Pitch>, Steps))>,
+    // For iterator.
+    queued: Option<Short>,
 }
 
 impl Beams {
@@ -64,23 +73,54 @@ impl Beams {
             dur: 128,
             // Start with no discovered flag/beam notes yet.
             short: vec![],
+            //
+            last_short: false,
+            //
+            min_dur: 0,
+            //
+            notes: vec![],
+            //
+            queued: None,
         }
     }
 
     /// Advance duration.
     pub fn advance(&mut self, dur: u16, width: f32, y: Option<(Vec<Pitch>, Steps)>) {
+        let new_dur = self.dur - dur;
         // Not a rest
         if let Some(y) = y {
             // Less than a quarter note
             if dur < 32 {
-                let prop = BeamProp::Flag;
+                let mut prop = BeamProp::Flag;
+
+                // If last note could be beamed to this note
+                if self.last_short && self.dur / BEAMRULE_4_4.eighth == new_dur / BEAMRULE_4_4.eighth
+                {
+                    let mut prev = self.short.pop().unwrap();
+                    if prev.0 == BeamProp::Flag {
+                        prev.0 = BeamProp::None;
+                    }
+                    self.short.push(prev);
+                    prop = if self.dur / BEAMRULE_4_4.sixteenth == new_dur / BEAMRULE_4_4.sixteenth {
+                        if self.dur / BEAMRULE_4_4.inner == new_dur / BEAMRULE_4_4.sixteenth {
+                            BeamProp::ContinueInner
+                        } else {
+                            BeamProp::ContinueSixteenth
+                        }
+                    } else {
+                        BeamProp::ContinueEighth
+                    };
+                }
 
                 self.short.push((prop, dur, width, y));
+                cala::info!("{:?}", self.short);
+                self.last_short = true;
             } else {
+                self.last_short = false;
             }
         }
         // Reduce remaining duration.
-        self.dur -= dur;
+        self.dur = new_dur;
     }
 }
 
@@ -88,18 +128,55 @@ impl Iterator for Beams {
     type Item = Short;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if let Some(ret) = self.queued.take() {
+            return Some(ret);
+        }
         while let Some((prop, dur, width, y)) = self.short.pop() {
             match prop {
-                BeamProp::None => todo!(),
-                BeamProp::ContinueEighth => todo!(),
-                BeamProp::ContinueSixteenth => todo!(),
-                BeamProp::ContinueInner => todo!(),
+                BeamProp::None => { // Start of a beam
+                    let beam = if self.min_dur != 0 {
+                        Some(Beam::new(self))
+                    } else {
+                        None
+                    };
+                    self.notes.push((dur, width, y));
+                    self.min_dur = dur;
+                    if let Some(beam) = beam {
+                        return Some(Short::Beam(beam));
+                    }
+                },
+                BeamProp::ContinueEighth => {
+                    self.notes.push((dur, width, y));
+                    self.min_dur = dur.min(self.min_dur);
+                },
+                BeamProp::ContinueSixteenth => {
+                    self.notes.push((dur, width, y));
+                    self.min_dur = dur.min(self.min_dur);
+                },
+                BeamProp::ContinueInner => {
+                    self.notes.push((dur, width, y));
+                    self.min_dur = dur.min(self.min_dur);
+                },
                 BeamProp::Flag => {
-                    return Some(Short::Flag(dur, width, y));
+                    let old_min_dur = self.min_dur;
+                    self.min_dur = 0;
+                    let flag = Short::Flag(dur, width, y);
+                    if old_min_dur != 0 {
+                        self.queued = Some(flag);
+                        return Some(Short::Beam(Beam::new(self)));
+                    } else {
+                        return Some(flag);
+                    }
                 },
             }
         }
-        None
+        if self.min_dur != 0 {
+            let beam = Beam::new(self);
+            self.min_dur = 0;
+            Some(Short::Beam(beam))
+        } else {
+            None
+        }
     }
 }
 
@@ -111,7 +188,49 @@ pub(crate) enum Short {
     Beam(Beam),
 }
 
-/// A single beam
+/// A beamed group.
 pub(crate) struct Beam {
-    
+    // The number of beams.
+    pub(crate) count: u8,
+    // Notes in the beamed group.
+    pub(crate) notes: Vec<(u16, f32, (Pitch, Steps))>,
+    // Stem direction (false is down).
+    pub(crate) stems_up: bool,
+}
+
+impl Beam {
+    /// Create a new beam object.
+    pub fn new(beams: &mut Beams) -> Self {
+        let count = match beams.min_dur {
+            1 => 5, // Contains 128th note beams
+            2..=3 => 4, // Contains 64th note beams
+            4..=7 => 3, // Contains 32nd note beams
+            8..=15 => 2, // Contains 16th note beams
+            16..=31 => 1, // Contains 8th note beams
+            a => panic!("Invalid {}", a),
+        };
+
+        // Choose stem direction of beamed group.
+        let mut sum = 0i16;
+        for note_i in 0..beams.notes.len() {
+            let vd = beams.notes[note_i].2 .0[0].visual_distance();
+            if vd.0 > 0 {
+                sum += 1;
+            } else if vd.0 < 0 {
+                sum -= 1;
+            }
+        }
+        let stems_up = sum < 0;
+
+        // Select closest notes to the beam.
+        let mut notes = vec![];
+        for note in beams.notes.drain(..) {
+            // FIXME: Choose closest note to beam.
+            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1)));
+        }
+
+        Beam {
+            count, notes, stems_up,
+        }
+    }
 }
