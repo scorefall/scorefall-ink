@@ -22,12 +22,14 @@ mod glyph;
 mod notator;
 mod rhythmic_spacing;
 mod svg;
+mod beaming;
 
 pub use glyph::GlyphId;
 pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
+use beaming::{Beams, Short};
 
 use scof::{Cursor, Scof, Steps};
 use std::fmt;
@@ -157,6 +159,10 @@ impl BarElem {
     const STEM_WIDTH: i32 = 30;
     /// Length of stems
     const STEM_LENGTH: i32 = 7 * Stave::STEP_DY;
+    /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
+    const _STEM_LENGTH_LEDGER: i32 = 2 * Stave::STEP_DY + (Stave::STEP_DY / 2);
+    /// Minimum Shortened Stem Length For Notes On Stave
+    const STEM_LENGTH_SHORT: i32 = 3 * Stave::STEP_DY;
     /// Width of note head
     const HEAD_WIDTH: i32 = 266;
 
@@ -236,112 +242,127 @@ impl BarElem {
         self.elements.push(Element::Rect(rect));
     }
 
+    /// Get Y position from steps and offset
+    fn y_from_steps(&self, steps: Steps, ofs: Steps) -> i32 {
+        let ofs = (ofs * Stave::STEP_DY).0;
+        let y = self.offset_y(steps);
+
+        y + ofs
+    }
+
+    /// Render stems and either flags or beams for short notes.
+    fn add_flags_and_beams(
+        &mut self,
+        beams: Beams,
+    ) {
+        for short in beams {
+            match short {
+                Short::Flag(dur, offset, (pitches, y_offset)) => {
+                    let pitch = pitches[0]; // FIXME: Use closest to beam/flag.
+                    let y = self.y_from_steps(pitch.visual_distance(),
+                        y_offset);
+
+                    let flag_glyph = GlyphId::flag_duration(
+                        dur, y > self.middle()).unwrap();
+                    let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+                        + NOTE_MARGIN
+                        + self.width
+                        + ((offset * BAR_WIDTH as f32) as i32);
+
+                    let (ofsx, ofsy) = if y > self.middle() {
+                        (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
+                    } else {
+                        (0, Self::STEM_LENGTH)
+                    };
+
+                    self.add_use(flag_glyph, x + ofsx, y + ofsy);
+                    self.add_stem(x, y, Self::STEM_LENGTH);
+                }
+                Short::Beam(beam) => {
+                    todo!()
+                }
+            }
+        }
+    }
+
     /// Add elements for a note
     fn add_pitch(
         &mut self,
         dur: u16,
         offset: f32,
-        steps: scof::Steps,
-        ofs: Steps,
+        steps: Steps,
+        y: i32,
     ) {
         let x = (Stave::MARGIN_X - BARLINE_WIDTH)
             + NOTE_MARGIN
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
-        let ofs = (ofs * Stave::STEP_DY).0;
-        let y = self.offset_y(steps);
-        let cp = GlyphId::notehead_duration(dur);
-        self.add_use(cp, x, y + ofs);
-        // Only draw stem if not a whole note or double whole note (breve).
-        match dur {
-            128..=511 => {}
-            _ => self.add_stem(x, y, ofs),
-        }
-        // Draw flag if 8th note or shorter.
-        if let Some(flag_glyph) = GlyphId::flag_duration(dur, y > self.middle())
-        {
-            let (ofsx, ofsy) = if y > self.middle() {
-                (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
-            } else {
-                (0, Self::STEM_LENGTH)
-            };
 
-            self.add_use(flag_glyph, x + ofsx, y + ofsy + ofs);
+        let cp = GlyphId::notehead_duration(dur);
+        self.add_use(cp, x, y);
+        // Only draw stem if not a whole note or double whole note (breve) or
+        // Shorter than quarter note.
+        match dur {
+            1..=31 | 128..=511 => {}
+            _ => self.add_stem(x, y, Self::STEM_LENGTH),
         }
+        // FIXME
+        /*// Draw flag if 8th note or shorter.
+        */
+
         // Draw Ledger Lines if below or above stave.
-        let head_width = if dur >= 128 {
+        let mut head_width = Self::HEAD_WIDTH;
+        if dur >= 128 {
             // Whole note, breve, and longa all have wide noteheads.
-            Self::HEAD_WIDTH + (Self::HEAD_WIDTH / 2)
-        } else {
-            Self::HEAD_WIDTH
-        };
-        let yyy = steps.0; // - self.middle_steps();
-        if yyy > 0 {
-            let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-            for _ in (6..yyy + 1).step_by(2) {
-                let rect = Rect::new(
-                    x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
-                    ofs + y - (Stave::LINE_WIDTH / 2)
-                        + (count * Stave::STEP_DY),
-                    Self::HEAD_WIDTH + head_width,
-                    Stave::LINE_WIDTH,
-                    None,
-                    None,
-                    None,
-                );
-                self.elements.push(Element::Rect(rect));
-                count += 2;
-            }
-        } else {
-            let yyy = -yyy;
-            let mut count = if yyy % 2 == 0 { 0 } else { 1 };
-            for _ in (6..yyy + 1).step_by(2) {
-                let rect = Rect::new(
-                    x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
-                    ofs + y
-                        - (Stave::LINE_WIDTH / 2)
-                        - (count * Stave::STEP_DY),
-                    Self::HEAD_WIDTH + head_width,
-                    Stave::LINE_WIDTH,
-                    None,
-                    None,
-                    None,
-                );
-                self.elements.push(Element::Rect(rect));
-                count += 2;
-            }
+            head_width += Self::HEAD_WIDTH / 2;
+        }
+        let step_dy = if steps.0 > 0 { 1 } else { -1 } * Stave::STEP_DY;
+        let yyy = steps.0.abs();
+        let mut count = if yyy % 2 == 0 { 0 } else { 1 };
+        for _ in (6..yyy + 1).step_by(2) {
+            let rect = Rect::new(
+                x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
+                y - (Stave::LINE_WIDTH / 2) + count * step_dy,
+                Self::HEAD_WIDTH + head_width,
+                Stave::LINE_WIDTH,
+                None,
+                None,
+                None,
+            );
+            self.elements.push(Element::Rect(rect));
+            count += 2;
         }
     }
 
     /// Add a stem
-    fn add_stem(&mut self, x: i32, y: i32, ofs: i32) {
+    fn add_stem(&mut self, x: i32, y: i32, stem_length: i32) {
         if y > self.middle() {
-            self.add_stem_up(x, y + ofs);
+            self.add_stem_up(x, y, stem_length);
         } else {
-            self.add_stem_down(x, y + ofs);
+            self.add_stem_down(x, y, stem_length);
         }
     }
 
     /// Add a stem downwards.
-    fn add_stem_down(&mut self, x: i32, y: i32) {
+    fn add_stem_down(&mut self, x: i32, y: i32, stem_length: i32) {
         // FIXME: stem should always reach the center line of the stave
         let rx = Some(Self::STEM_WIDTH / 2);
         let ry = Some(Self::STEM_WIDTH);
         let rect =
-            Rect::new(x, y, Self::STEM_WIDTH, Self::STEM_LENGTH, rx, ry, None);
+            Rect::new(x, y, Self::STEM_WIDTH, stem_length, rx, ry, None);
         self.elements.push(Element::Rect(rect));
     }
 
     /// Add a stem upwards.
-    fn add_stem_up(&mut self, x: i32, y: i32) {
+    fn add_stem_up(&mut self, x: i32, y: i32, stem_length: i32) {
         // FIXME: stem should always reach the center line of the stave
         let rx = Some(Self::STEM_WIDTH / 2);
         let ry = Some(Self::STEM_WIDTH);
         let rect = Rect::new(
             x + Self::HEAD_WIDTH,
-            y - Self::STEM_LENGTH,
+            y - stem_length,
             Self::STEM_WIDTH,
-            Self::STEM_LENGTH,
+            stem_length,
             rx,
             ry,
             None,

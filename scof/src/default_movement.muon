@@ -8,3 +8,9 @@ bar:
 bar:
   chan: 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/16D4 1/4R 1/4B3
   chan: 1/2B3 1/2B3
+bar:
+  chan: 1/4A3 3/4R
+  chan: 3/8A3 1/4A3 3/8R
+bar: 
+  chan: 1/8B3 1/8B3 1/8B3 1/8B3 1/8B3 1/8B3 1/4A3
+  chan: 3/4R 1/4A3

@@ -24,7 +24,7 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Element, GlyphId, Notator, Stave};
+use crate::{BarElem, Element, GlyphId, Notator, Stave, Beams};
 use scof::Steps;
 
 /// Engraver for a single bar of music (multiple staves)
@@ -41,6 +41,8 @@ pub struct BarEngraver<'a, 'b, 'c> {
     all: u16,
     //
     cursor: Option<(f32, usize)>,
+    // Keep track of which notes to beam, and which to flag.
+    beams: Vec<Beams>,
 }
 
 impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
@@ -50,10 +52,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         notators: &'a mut [Notator<'c>],
     ) -> Self {
         // Add each stave
+        let mut beams = vec![];
         let mut pq = VecDeque::new();
         for i in 0..notators.len() {
             // 128 128ths remaining.
             pq.push_back((128, i));
+            beams.push(Beams::new());
         }
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / super::BAR_WIDTH as f32;
@@ -67,6 +71,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             width,
             all,
             cursor,
+            beams,
         }
     }
 
@@ -125,15 +130,25 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     self.width,
                     ymargin * stave_i as i32,
                 );
+                // Advance beaming
+                self.beams[stave_i].advance(dur, self.width, None);
             } else {
-                for pitch in pitches {
+                // Offset Y, so that the note appears on the correct stave.
+                let y_offset = ymargin * stave_i as i32;
+                // Add chord
+                for pitch in &pitches {
+                    let y = self.bar.y_from_steps(pitch.visual_distance(),
+                        y_offset);
+
                     self.bar.add_pitch(
                         dur,
                         self.width,
                         pitch.visual_distance(),
-                        ymargin * stave_i as i32,
+                        y,
                     );
                 }
+                // Advance beaming (using closest note to the beam)
+                self.beams[stave_i].advance(dur, self.width, Some((pitches.clone(), y_offset)));
             }
             // Add back to queue if time is remaining.
             time -= dur;
@@ -152,6 +167,10 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     }
                 }
             }
+        }
+        // Beam eighth notes and shorter.
+        while let Some(beam) = self.beams.pop() {
+            self.bar.add_flags_and_beams(beam);
         }
         // Add the rest of the width.
         self.width += get_spacing(self.all) / 7.0;
@@ -214,8 +233,8 @@ fn clamp(a: f32, min: f32, max: f32) -> f32 {
 fn get_spacing(duration: u16) -> f32 {
     let dur = duration as f32;
     match duration {
-        1..=7 => lerp(2.25, 2.375, clamp(dur, 1.0, 8.0)), // 128th-16th
-        8..=15 => lerp(2.375, 2.5, clamp(dur, 8.0, 16.0)), // Sixteenth
+        1..=7 => lerp(1.8, 2.0, clamp(dur, 1.0, 8.0)), // 128th-16th
+        8..=15 => lerp(2.0, 2.5, clamp(dur, 8.0, 16.0)), // Sixteenth
         16..=23 => lerp(2.5, 3.0, clamp(dur, 16.0, 24.0)), // Eighth
         24..=31 => lerp(3.0, 3.5, clamp(dur, 24.0, 32.0)), // Dot'd Eighth
         32..=47 => lerp(3.5, 4.0, clamp(dur, 32.0, 48.0)), // Quarter
