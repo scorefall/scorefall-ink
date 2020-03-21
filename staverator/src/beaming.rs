@@ -104,7 +104,7 @@ impl Beams {
                     }
                     self.short.push_back(prev);
                     prop = if self.dur / BEAMRULE_4_4.sixteenth == new_dur / BEAMRULE_4_4.sixteenth {
-                        if self.dur / BEAMRULE_4_4.inner == new_dur / BEAMRULE_4_4.sixteenth {
+                        if self.dur / BEAMRULE_4_4.inner == new_dur / BEAMRULE_4_4.inner {
                             BeamProp::ContinueInner
                         } else {
                             BeamProp::ContinueSixteenth
@@ -206,15 +206,13 @@ pub(crate) struct Beam {
 impl Beam {
     /// Create a new beam object.
     pub fn new(beams: &mut Beams) -> Self {
-        cala::info!("NEW BEAM OF {}", beams.notes.len());
-
         let count = match beams.min_dur {
             1 => 5, // Contains 128th note beams
             2..=3 => 4, // Contains 64th note beams
             4..=7 => 3, // Contains 32nd note beams
             8..=15 => 2, // Contains 16th note beams
             16..=31 => 1, // Contains 8th note beams
-            a => panic!("Invalid {}", a),
+            _ => unreachable!(),
         };
 
         // Choose stem direction of beamed group.

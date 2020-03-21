@@ -29,7 +29,7 @@ pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
-use beaming::{Beams, Beam, Short};
+use beaming::{Beams, Beam, Short, BeamProp};
 
 use scof::{Cursor, Scof, Steps};
 use std::fmt;
@@ -296,14 +296,28 @@ impl BarElem {
             if let Some(old_x) = old_x {
                 let diff: i32 = x - old_x;
 
-                let count = match beam.notes[note_i].0 {
-                    1 => 5, // Contains 128th note beams
-                    2..=3 => 4, // Contains 64th note beams
-                    4..=7 => 3, // Contains 32nd note beams
-                    8..=15 => 2, // Contains 16th note beams
-                    16..=31 => 1, // Contains 8th note beams
+                let mut count = match beam.notes[note_i].0 {
+                    1 => 5, // 128th note beams
+                    2..=3 => 4, // 64th note beams
+                    4..=7 => 3, // 32nd note beams
+                    8..=15 => 2, // 16th note beams
+                    16..=31 => 1, // 8th note beams
                     a => panic!("Invalid {}", a),
                 };
+
+                match beam.notes[note_i].3 {
+                    // A Continue Eighth property results in breaking the beam
+                    // for beam count more than 1.
+                    BeamProp::ContinueEighth => if beam.count > 1 {
+                        count = count.min(0);
+                    },
+                    // A Continue Sixteenth property results in reducing the
+                    // beam to an eighth for beam count more than 2.
+                    BeamProp::ContinueSixteenth => if beam.count > 2 {
+                        count = count.min(1);
+                    },
+                    _ => {}
+                }
 
                 for i in 0..count {
                     d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy - (i * 3 * Stave::STEP_DY) / 2, -diff, 0, 0, beam_w, diff, 0));
