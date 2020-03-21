@@ -120,6 +120,8 @@ impl Beams {
             } else {
                 self.last_short = false;
             }
+        } else {
+            self.last_short = false;
         }
         // Reduce remaining duration.
         self.dur = new_dur;
