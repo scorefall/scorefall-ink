@@ -29,7 +29,7 @@ pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
-use beaming::{Beams, Beam, Short, BeamProp};
+use beaming::{Beams, Beam, Short};
 
 use scof::{Cursor, Scof, Steps};
 use std::fmt;
@@ -305,18 +305,8 @@ impl BarElem {
                     a => panic!("Invalid {}", a),
                 };
 
-                match beam.notes[note_i].3 {
-                    // A Continue Eighth property results in breaking the beam
-                    // for beam count more than 1.
-                    BeamProp::ContinueEighth => if beam.count > 1 {
-                        count = count.min(0);
-                    },
-                    // A Continue Sixteenth property results in reducing the
-                    // beam to an eighth for beam count more than 2.
-                    BeamProp::ContinueSixteenth => if beam.count > 2 {
-                        count = count.min(1);
-                    },
-                    _ => {}
+                if beam.notes[note_i].3 {
+                    count = count.min(1);
                 }
 
                 for i in 0..count {

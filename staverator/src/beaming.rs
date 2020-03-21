@@ -62,7 +62,7 @@ pub(crate) struct Beams {
     // Minimum duration within current beam.
     min_dur: u16,
     // Notes in the beamed group.
-    notes: Vec<(u16, f32, (Vec<Pitch>, Steps), BeamProp)>,
+    notes: Vec<(u16, f32, (Vec<Pitch>, Steps), bool)>,
     // For iterator.
     queued: Option<Short>,
 }
@@ -143,22 +143,30 @@ impl Iterator for Beams {
                     } else {
                         None
                     };
-                    self.notes.push((dur, width, y, prop));
+                    self.notes.push((dur, width, y, false));
                     self.min_dur = dur;
                     if let Some(beam) = beam {
                         return Some(Short::Beam(beam));
                     }
                 },
                 BeamProp::ContinueEighth => {
-                    self.notes.push((dur, width, y, prop));
+                    // If there's more than one beam, break into 2 beam groups.
+                    if self.min_dur < 16 {
+                        let beam = Beam::new(self);
+                        self.notes.push((dur, width, y, false));
+                        self.min_dur = dur;
+                        return Some(Short::Beam(beam));
+                    }
+                    self.notes.push((dur, width, y, false));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::ContinueSixteenth => {
-                    self.notes.push((dur, width, y, prop));
+                    // Set single beam point for 3+ beams to true
+                    self.notes.push((dur, width, y, true));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::ContinueInner => {
-                    self.notes.push((dur, width, y, prop));
+                    self.notes.push((dur, width, y, false));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::Flag => {
@@ -195,10 +203,8 @@ pub(crate) enum Short {
 
 /// A beamed group.
 pub(crate) struct Beam {
-    // The number of beams.
-    pub(crate) count: u8,
     // Notes in the beamed group.
-    pub(crate) notes: Vec<(u16, f32, (Pitch, Steps), BeamProp)>,
+    pub(crate) notes: Vec<(u16, f32, (Pitch, Steps), bool)>,
     // Stem direction (false is down).
     pub(crate) stems_up: bool,
 }
@@ -206,15 +212,6 @@ pub(crate) struct Beam {
 impl Beam {
     /// Create a new beam object.
     pub fn new(beams: &mut Beams) -> Self {
-        let count = match beams.min_dur {
-            1 => 5, // Contains 128th note beams
-            2..=3 => 4, // Contains 64th note beams
-            4..=7 => 3, // Contains 32nd note beams
-            8..=15 => 2, // Contains 16th note beams
-            16..=31 => 1, // Contains 8th note beams
-            _ => unreachable!(),
-        };
-
         // Choose stem direction of beamed group.
         let mut sum = 0i16;
         for note_i in 0..beams.notes.len() {
@@ -226,16 +223,18 @@ impl Beam {
             }
         }
         let stems_up = sum < 0;
+        let uses_three_beams = beams.min_dur < 8; // Less than 16th note
 
         // Select closest notes to the beam.
         let mut notes = vec![];
         for note in beams.notes.drain(..) {
+            let one_beam = note.3 && uses_three_beams;
             // FIXME: Choose closest note to beam.
-            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1), note.3));
+            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1), one_beam));
         }
 
         Beam {
-            count, notes, stems_up,
+            notes, stems_up,
         }
     }
 }
