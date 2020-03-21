@@ -20,6 +20,8 @@
 
 //! Render beams for beamed groups.
 
+use std::collections::VecDeque;
+
 use scof::{Pitch, Steps};
 
 // Beaming rules for a time signature
@@ -54,13 +56,13 @@ pub(crate) struct Beams {
     // Duration not notated yet in the measure.
     dur: u16,
     // Notes that may be flagged or beamed.
-    short: Vec<(BeamProp, u16, f32, (Vec<Pitch>, Steps))>,
+    short: VecDeque<(BeamProp, u16, f32, (Vec<Pitch>, Steps))>,
     // Last was short?
     last_short: bool,
     // Minimum duration within current beam.
     min_dur: u16,
     // Notes in the beamed group.
-    notes: Vec<(u16, f32, (Vec<Pitch>, Steps))>,
+    notes: Vec<(u16, f32, (Vec<Pitch>, Steps), BeamProp)>,
     // For iterator.
     queued: Option<Short>,
 }
@@ -72,7 +74,7 @@ impl Beams {
             // Start with 4 beats left (4/4)
             dur: 128,
             // Start with no discovered flag/beam notes yet.
-            short: vec![],
+            short: VecDeque::new(),
             //
             last_short: false,
             //
@@ -96,11 +98,11 @@ impl Beams {
                 // If last note could be beamed to this note
                 if self.last_short && self.dur / BEAMRULE_4_4.eighth == new_dur / BEAMRULE_4_4.eighth
                 {
-                    let mut prev = self.short.pop().unwrap();
+                    let mut prev = self.short.pop_back().unwrap();
                     if prev.0 == BeamProp::Flag {
                         prev.0 = BeamProp::None;
                     }
-                    self.short.push(prev);
+                    self.short.push_back(prev);
                     prop = if self.dur / BEAMRULE_4_4.sixteenth == new_dur / BEAMRULE_4_4.sixteenth {
                         if self.dur / BEAMRULE_4_4.inner == new_dur / BEAMRULE_4_4.sixteenth {
                             BeamProp::ContinueInner
@@ -112,7 +114,7 @@ impl Beams {
                     };
                 }
 
-                self.short.push((prop, dur, width, y));
+                self.short.push_back((prop, dur, width, y));
                 cala::info!("{:?}", self.short);
                 self.last_short = true;
             } else {
@@ -131,7 +133,7 @@ impl Iterator for Beams {
         if let Some(ret) = self.queued.take() {
             return Some(ret);
         }
-        while let Some((prop, dur, width, y)) = self.short.pop() {
+        while let Some((prop, dur, width, y)) = self.short.pop_front() {
             match prop {
                 BeamProp::None => { // Start of a beam
                     let beam = if self.min_dur != 0 {
@@ -139,22 +141,22 @@ impl Iterator for Beams {
                     } else {
                         None
                     };
-                    self.notes.push((dur, width, y));
+                    self.notes.push((dur, width, y, prop));
                     self.min_dur = dur;
                     if let Some(beam) = beam {
                         return Some(Short::Beam(beam));
                     }
                 },
                 BeamProp::ContinueEighth => {
-                    self.notes.push((dur, width, y));
+                    self.notes.push((dur, width, y, prop));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::ContinueSixteenth => {
-                    self.notes.push((dur, width, y));
+                    self.notes.push((dur, width, y, prop));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::ContinueInner => {
-                    self.notes.push((dur, width, y));
+                    self.notes.push((dur, width, y, prop));
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::Flag => {
@@ -193,7 +195,7 @@ pub(crate) struct Beam {
     // The number of beams.
     pub(crate) count: u8,
     // Notes in the beamed group.
-    pub(crate) notes: Vec<(u16, f32, (Pitch, Steps))>,
+    pub(crate) notes: Vec<(u16, f32, (Pitch, Steps), BeamProp)>,
     // Stem direction (false is down).
     pub(crate) stems_up: bool,
 }
@@ -201,6 +203,8 @@ pub(crate) struct Beam {
 impl Beam {
     /// Create a new beam object.
     pub fn new(beams: &mut Beams) -> Self {
+        cala::info!("NEW BEAM OF {}", beams.notes.len());
+
         let count = match beams.min_dur {
             1 => 5, // Contains 128th note beams
             2..=3 => 4, // Contains 64th note beams
@@ -226,7 +230,7 @@ impl Beam {
         let mut notes = vec![];
         for note in beams.notes.drain(..) {
             // FIXME: Choose closest note to beam.
-            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1)));
+            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1), note.3));
         }
 
         Beam {

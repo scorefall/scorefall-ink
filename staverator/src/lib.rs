@@ -159,10 +159,12 @@ impl BarElem {
     const STEM_WIDTH: i32 = 30;
     /// Length of stems
     const STEM_LENGTH: i32 = 7 * Stave::STEP_DY;
+    /// Maximum stem length for beamed notes on stave lines.
+    const STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP_DY / 2);
     /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
-    const _STEM_LENGTH_LEDGER: i32 = 2 * Stave::STEP_DY + (Stave::STEP_DY / 2);
+    const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP_DY;
     /// Minimum Shortened Stem Length For Notes On Stave
-    const STEM_LENGTH_SHORT: i32 = 3 * Stave::STEP_DY;
+    const STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP_DY;
     /// Width of note head
     const HEAD_WIDTH: i32 = 266;
 
@@ -271,19 +273,43 @@ impl BarElem {
 
     /// Add beam element.
     fn add_beam(&mut self, beam: Beam) {
-        let add_stem = if beam.stems_up { Self::add_stem_up } else { Self::add_stem_down };
+        let beam_w = Stave::SPACE / 2;
+        let (add_stem, ofsx, ofsy): (fn(&mut BarElem, i32, i32, i32), _, _) = if beam.stems_up {
+            (Self::add_stem_up, Self::HEAD_WIDTH, -Self::STEM_LENGTH)
+        } else {
+            (Self::add_stem_down, 0i32, Self::STEM_LENGTH - beam_w)
+        };
 
-        let d = String::new(); // format!("M{} {}m{} {}m{} {}m{} {}z", );
+        let mut d = String::new();
         cala::info!("ADD_BEAM {} notes", beam.notes.len());
-        for note in beam.notes {
-            let (y, y_offset) = note.2;
+        let mut old_x = None;
+        for note_i in 0..beam.notes.len() {
+            let (y, y_offset) = beam.notes[note_i].2;
             let y = self.y_from_steps(y.visual_distance(), y_offset);
             let x = (Stave::MARGIN_X - BARLINE_WIDTH)
                 + NOTE_MARGIN
                 + self.width
-                + ((note.1 * BAR_WIDTH as f32) as i32);
+                + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
 
             add_stem(self, x, y, Self::STEM_LENGTH);
+
+            if let Some(old_x) = old_x {
+                let diff: i32 = x - old_x;
+
+                let count = match beam.notes[note_i].0 {
+                    1 => 5, // Contains 128th note beams
+                    2..=3 => 4, // Contains 64th note beams
+                    4..=7 => 3, // Contains 32nd note beams
+                    8..=15 => 2, // Contains 16th note beams
+                    16..=31 => 1, // Contains 8th note beams
+                    a => panic!("Invalid {}", a),
+                };
+
+                for i in 0..count {
+                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy - (i * 3 * Stave::STEP_DY) / 2, -diff, 0, 0, beam_w, diff, 0));
+                }
+            }
+            old_x = Some(x);
         }
         self.elements.push(Element::Path(Path::new(None, d)));
     }
