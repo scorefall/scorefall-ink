@@ -162,13 +162,14 @@ impl Iterator for Beams {
                     self.min_dur = dur.min(self.min_dur);
                 },
                 BeamProp::Flag => {
-                    let old_min_dur = self.min_dur;
-                    self.min_dur = 0;
                     let flag = Short::Flag(dur, width, y);
-                    if old_min_dur != 0 {
+                    if self.min_dur != 0 {
+                        let beam = Beam::new(self);
                         self.queued = Some(flag);
-                        return Some(Short::Beam(Beam::new(self)));
+                        self.min_dur = 0;
+                        return Some(Short::Beam(beam));
                     } else {
+                        self.min_dur = 0;
                         return Some(flag);
                     }
                 },
