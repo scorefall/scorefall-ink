@@ -57,7 +57,7 @@ use input::*;
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
 const ZOOM_LEVEL: f64 = 1.0;
-const SCALEDOWN: f64 = 50_000.0 / ZOOM_LEVEL;
+const SCALEDOWN: f64 = 40_000.0 / ZOOM_LEVEL;
 const SVGNS: &str = "http://www.w3.org/2000/svg";
 
 struct State {

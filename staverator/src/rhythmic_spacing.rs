@@ -24,8 +24,10 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Element, GlyphId, Notator, Stave, Beams};
+use crate::{BarElem, Element, GlyphId, Notator, Stave, Beams, CURSOR_PADDING, BARLINE_WIDTH, BAR_WIDTH};
 use scof::Steps;
+
+const CURSOR_MARGIN: i32 = BARLINE_WIDTH;
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a, 'b, 'c> {
@@ -60,7 +62,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             beams.push(Beams::new());
         }
         // Beginning of bar margin
-        let width = Stave::SPACE as f32 / super::BAR_WIDTH as f32;
+        let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
         let all = 128;
         let cursor = None;
 
@@ -108,14 +110,14 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             } else if let Some((x, stave_j)) = self.cursor {
                 if stave_i == stave_j {
                     self.cursor = None;
-                    let e = if x == 0.0 { 0 } else { -Stave::STEP };
-                    let f = if x == 0.0 { -Stave::STEP } else { 0 };
-                    let x =
-                        Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;
+                    let e = if x == 0.0 { 0 } else { -CURSOR_PADDING };
+                    let f = if x == 0.0 { -CURSOR_PADDING } else { 0 };
+                    let x = if x == 0.0 { CURSOR_MARGIN } else { 0 } +
+                        Stave::MARGIN_X + (BAR_WIDTH as f32 * x) as i32;
                     cursor_rect = Some((
                         x + e, // X
                         0i32,  // Y
-                        (super::BAR_WIDTH as f32 * self.width) as i32 - x
+                        (BAR_WIDTH as f32 * self.width) as i32 - x
                             + f
                             + Stave::MARGIN_X, // W
                         self.bar.height(),
@@ -175,16 +177,15 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Add the rest of the width.
         self.width += get_spacing(self.all) / 7.0;
         // End of bar margin
-        self.width += Stave::SPACE as f32 / super::BAR_WIDTH as f32;
+        self.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
         for (rest_stave, rest_ic) in rests {
-            self.bar
-                .add_measure_rest(self.width, ymargin * rest_stave as i32);
+            self.bar.add_measure_rest(self.width, ymargin * rest_stave as i32);
             if rest_ic {
                 cursor_rect = Some((
                     crate::Stave::MARGIN_X, // X
                     0i32,                   // Y
-                    (super::BAR_WIDTH as f32 * self.width) as i32, // W
+                    (BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
                 ));
             }
@@ -192,18 +193,18 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
-            let e = if x == 0.0 { 0 } else { -Stave::STEP };
-            let x = (super::BAR_WIDTH as f32 * x) as i32;
+            let e = if x == 0.0 { 0 } else { -CURSOR_PADDING };
+            let x = (BAR_WIDTH as f32 * x) as i32;
             cursor_rect = Some((
                 crate::Stave::MARGIN_X + x + e,                        // X
                 0i32,                                                  // Y
-                (super::BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
+                CURSOR_MARGIN + (BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
                 self.bar.height(),
             ));
         }
         // Calculate physical bar width.
-        let bar_width = ((super::BAR_WIDTH as f32 * self.width) as i32)
-            .max(super::BAR_WIDTH);
+        let bar_width = ((BAR_WIDTH as f32 * self.width) as i32)
+            .max(BAR_WIDTH);
         // Draw barlines
         for i in 0..self.notators.len().try_into().unwrap() {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);

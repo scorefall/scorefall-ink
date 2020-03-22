@@ -38,10 +38,10 @@ use std::fmt;
 const BAR_WIDTH: i32 = 2000;
 /// Width of the barline.
 const BARLINE_WIDTH: i32 = 36;
-/// Space before each note.
-const NOTE_MARGIN: i32 = -Stave::STEP; // 250;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
+/// Cursor padding
+const CURSOR_PADDING: i32 = 36;
 
 /// Get Bravura font paths
 pub fn bravura() -> Vec<Path> {
@@ -257,7 +257,6 @@ impl BarElem {
         let y = self.y_from_steps(y, y_offset);
         let flag_glyph = GlyphId::flag_duration(dur, y > self.middle()).unwrap();
         let x = Stave::MARGIN_X
-            + NOTE_MARGIN
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
 
@@ -287,7 +286,6 @@ impl BarElem {
             let (y, y_offset) = beam.notes[note_i].2;
             let y = self.y_from_steps(y.visual_distance(), y_offset);
             let x = Stave::MARGIN_X
-                + NOTE_MARGIN
                 + self.width
                 + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
 
@@ -345,7 +343,6 @@ impl BarElem {
         y: i32,
     ) {
         let x = Stave::MARGIN_X
-            + NOTE_MARGIN
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
 
