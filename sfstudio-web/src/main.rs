@@ -111,71 +111,67 @@ impl State {
         let _dt = (time - self.time_old) as f32;
         self.time_old = time;
 
+        let left = self.input.press(Key::Left) || self.input.press(Key::H);
+        let right = self.input.press(Key::Right) || self.input.press(Key::L);
+        let up = self.input.press(Key::K) || self.input.press(Key::Up);
+        let down = self.input.press(Key::J) || self.input.press(Key::Down);
+
         if self.input.has_input {
-            if self.input.press(Key::Left) {
+            if left {
                 self.program.left();
                 self.render_measures();
             }
-            if self.input.press(Key::Right) {
+            if right {
                 self.program.right();
                 self.render_measures();
             }
             if self.input.held(Key::LeftShift)
                 || self.input.held(Key::RightShift)
             {
-                if self.input.press(Key::J) {
+                if down {
                     self.program.down_half_step();
                     self.render_measures();
                 }
-                if self.input.press(Key::K) {
+                if up {
                     self.program.up_half_step();
                     self.render_measures();
                 }
             } else {
-                if self.input.press(Key::J) {
+                if down {
                     self.program.down_step();
                     self.render_measures();
                 }
-                if self.input.press(Key::K) {
+                if up {
                     self.program.up_step();
                     self.render_measures();
                 }
             }
             // Note Lengths
-            if self.input.press(Key::Numpad0) {
-                self.program.set_dur(Fraction::new(1, 128));
-                self.render_measures();
-            } else if self.input.press(Key::Numpad1) {
+            if self.input.text == '1' {
                 self.program.set_dur(Fraction::new(1, 64));
                 self.render_measures();
-            } else if self.input.press(Key::Y) || self.input.press(Key::Numpad2)
-            {
+            } else if self.input.text == '2' {
                 self.program.set_dur(Fraction::new(1, 32));
                 self.render_measures();
-            } else if self.input.press(Key::S) || self.input.press(Key::Numpad3)
-            {
+            } else if self.input.text == '3' {
                 self.program.set_dur(Fraction::new(1, 16));
                 self.render_measures();
-            } else if self.input.press(Key::T) || self.input.press(Key::Numpad4)
-            {
+            } else if self.input.text == '4' {
                 self.program.set_dur(Fraction::new(1, 8));
                 self.render_measures();
-            } else if self.input.press(Key::Q) || self.input.press(Key::Numpad5)
-            {
+            } else if self.input.text == '5' {
                 self.program.set_dur(Fraction::new(1, 4));
                 self.render_measures();
-            } else if self.input.press(Key::H) || self.input.press(Key::Numpad6)
-            {
+            } else if self.input.text == '6' {
                 self.program.set_dur(Fraction::new(1, 2));
                 self.render_measures();
-            } else if self.input.press(Key::W) || self.input.press(Key::Numpad7)
-            {
+            } else if self.input.text == '7' {
                 self.program.set_dur(Fraction::new(1, 1));
                 self.render_measures();
-            } else if self.input.press(Key::Numpad8) {
+            } else if self.input.text == '8' {
                 self.program.set_dur(Fraction::new(2, 1));
                 self.render_measures();
-            } else if self.input.press(Key::Numpad9) {
+            } else if self.input.text == '9' {
                 self.program.set_dur(Fraction::new(4, 1));
                 self.render_measures();
             } else if self.input.press(Key::Period)
@@ -361,7 +357,6 @@ fn panic_hook(panic_info: &std::panic::PanicInfo) {
 
     info!("ScoreFall Studio panicked!: {:?}", msg);
     js! { console.trace() }
-
     std::process::exit(0);
 }
 
