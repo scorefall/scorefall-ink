@@ -183,7 +183,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             self.bar.add_measure_rest(self.width, ymargin * rest_stave as i32);
             if rest_ic {
                 cursor_rect = Some((
-                    crate::Stave::MARGIN_X, // X
+                    crate::Stave::MARGIN_X + CURSOR_MARGIN, // X
                     0i32,                   // Y
                     (BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
