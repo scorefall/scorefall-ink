@@ -56,7 +56,7 @@ use input::*;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const ZOOM_LEVEL: f64 = 2.0;
+const ZOOM_LEVEL: f64 = 1.0;
 const SCALEDOWN: f64 = 50_000.0 / ZOOM_LEVEL;
 const SVGNS: &str = "http://www.w3.org/2000/svg";
 
@@ -115,19 +115,20 @@ impl State {
         let right = self.input.press(Key::Right) || self.input.press(Key::L);
         let up = self.input.press(Key::K) || self.input.press(Key::Up);
         let down = self.input.press(Key::J) || self.input.press(Key::Down);
+        // For selecting / alternate commands
+        let shift = self.input.held(Key::LeftShift) || self.input.held(Key::RightShift);
+        let alt = self.input.held(Key::LeftAlt) || self.input.held(Key::RightAlt);
+        let ctr = self.input.held(Key::LeftCtrl) || self.input.held(Key::RightCtrl);
+        let next_chan = (!shift && self.input.press(Key::Enter))
+            || self.input.press(Key::PageDown);
+        let prev_chan = (shift && self.input.press(Key::Enter))
+            || self.input.press(Key::CapsLock)
+            || self.input.press(Key::PageUp);
+        let home = self.input.press(Key::Home);
+        let end = self.input.press(Key::End);
 
         if self.input.has_input {
-            if left {
-                self.program.left();
-                self.render_measures();
-            }
-            if right {
-                self.program.right();
-                self.render_measures();
-            }
-            if self.input.held(Key::LeftShift)
-                || self.input.held(Key::RightShift)
-            {
+            if ctr {
                 if down {
                     self.program.down_half_step();
                     self.render_measures();
@@ -136,6 +137,40 @@ impl State {
                     self.program.up_half_step();
                     self.render_measures();
                 }
+                if right {
+                    // TODO: Double duration
+                }
+                if left {
+                    // TODO: Halve duration
+                }
+            } else if alt {
+                if down {
+                    self.program.down_quarter_step();
+                    self.render_measures();
+                }
+                if up {
+                    self.program.up_quarter_step();
+                    self.render_measures();
+                }
+                if right {
+                    // TODO: Move selection to the right
+                }
+                if left {
+                    // TODO: Move selection to the left
+                }
+            } else if shift {
+                if down {
+                    // TODO: Select down
+                }
+                if up {
+                    // TODO: Select up
+                }
+                if right {
+                    // TODO: Select right
+                }
+                if left {
+                    // TODO: Select left
+                }
             } else {
                 if down {
                     self.program.down_step();
@@ -143,6 +178,14 @@ impl State {
                 }
                 if up {
                     self.program.up_step();
+                    self.render_measures();
+                }
+                if left {
+                    self.program.left();
+                    self.render_measures();
+                }
+                if right {
+                    self.program.right();
                     self.render_measures();
                 }
             }

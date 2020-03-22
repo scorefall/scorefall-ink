@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use scof::{Cursor, Fraction, Marking, Pitch, Scof};
+use scof::{Cursor, Fraction, Marking, Pitch, Scof, Note};
 
 /// This is the entire program context.
 pub struct Program {
@@ -56,7 +56,20 @@ impl Program {
     }
 
     /// Step up or down within the key.
-    fn move_step(&mut self, up: bool) {
+    fn move_step(&mut self, up: bool, gran: u8) {
+        let step_up_fn = match gran {
+            0 => Note::step_up,
+            1 => Note::half_step_up,
+            2 => Note::quarter_step_up,
+            _ => unreachable!()
+        };
+        let step_down_fn = match gran {
+            0 => Note::step_down,
+            1 => Note::half_step_down,
+            2 => Note::quarter_step_down,
+            _ => unreachable!()
+        };
+
         let create = Pitch(
             scof::PitchClass {
                 name: scof::PitchName::C,
@@ -72,9 +85,9 @@ impl Program {
                     &self.cursor,
                     0,
                     if up {
-                        note.step_up(0, create)
+                        step_up_fn(&note, 0, create)
                     } else {
-                        note.step_down(0, create)
+                        step_down_fn(&note, 0, create)
                     }
                     .pitch[0],
                 ),
@@ -82,9 +95,9 @@ impl Program {
                     &self.cursor,
                     0,
                     if up {
-                        note.step_up(0, create)
+                        step_up_fn(&note, 0, create)
                     } else {
-                        note.step_down(0, create)
+                        step_down_fn(&note, 0, create)
                     }
                     .pitch[0],
                 ),
@@ -92,9 +105,9 @@ impl Program {
                     &self.cursor,
                     0,
                     if up {
-                        note.step_up(0, create)
+                        step_up_fn(&note, 0, create)
                     } else {
-                        note.step_down(0, create)
+                        step_down_fn(&note, 0, create)
                     }
                     .pitch[0],
                 ),
@@ -116,24 +129,32 @@ impl Program {
 
     /// Move a note down 1 step within the key.
     pub fn down_step(&mut self) {
-        self.move_step(false);
+        self.move_step(false, 0);
     }
 
     /// Move a note up 1 step within the key.
     pub fn up_step(&mut self) {
-        self.move_step(true);
+        self.move_step(true, 0);
     }
 
     /// Move a note down 1 step within the key.
     pub fn down_half_step(&mut self) {
-        // FIXME
-        self.down_step();
+        self.move_step(false, 1);
     }
 
     /// Move a note up 1 step within the key.
     pub fn up_half_step(&mut self) {
-        // FIXME
-        self.up_step();
+        self.move_step(true, 1);
+    }
+
+    /// Move a note down 1 step within the key.
+    pub fn down_quarter_step(&mut self) {
+        self.move_step(false, 2);
+    }
+
+    /// Move a note up 1 step within the key.
+    pub fn up_quarter_step(&mut self) {
+        self.move_step(true, 2);
     }
 
     /// Set duration of a note.
