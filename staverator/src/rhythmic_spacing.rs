@@ -108,8 +108,8 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             } else if let Some((x, stave_j)) = self.cursor {
                 if stave_i == stave_j {
                     self.cursor = None;
-                    let e = if x == 0.0 { 0 } else { -Stave::SPACE / 2 };
-                    let f = if x == 0.0 { -Stave::SPACE / 2 } else { 0 };
+                    let e = if x == 0.0 { 0 } else { -Stave::STEP };
+                    let f = if x == 0.0 { -Stave::STEP } else { 0 };
                     let x =
                         Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;
                     cursor_rect = Some((
@@ -184,8 +184,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                 cursor_rect = Some((
                     crate::Stave::MARGIN_X, // X
                     0i32,                   // Y
-                    (super::BAR_WIDTH as f32 * self.width) as i32
-                        - crate::Stave::MARGIN_X, // W
+                    (super::BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
                 ));
             }
@@ -193,11 +192,10 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
-            let e = if x == 0.0 { 0 } else { -Stave::SPACE / 2 };
-            let x =
-                crate::Stave::MARGIN_X + (super::BAR_WIDTH as f32 * x) as i32;
+            let e = if x == 0.0 { 0 } else { -Stave::STEP };
+            let x = (super::BAR_WIDTH as f32 * x) as i32;
             cursor_rect = Some((
-                x + e,                                                 // X
+                crate::Stave::MARGIN_X + x + e,                        // X
                 0i32,                                                  // Y
                 (super::BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
                 self.bar.height(),

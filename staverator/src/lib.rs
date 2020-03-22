@@ -35,11 +35,11 @@ use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
-const BAR_WIDTH: i32 = 1200;
+const BAR_WIDTH: i32 = 2000;
 /// Width of the barline.
 const BARLINE_WIDTH: i32 = 36;
 /// Space before each note.
-const NOTE_MARGIN: i32 = BARLINE_WIDTH; // 250;
+const NOTE_MARGIN: i32 = -Stave::STEP; // 250;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
 
@@ -62,9 +62,9 @@ impl Stave {
     /// A stave space
     const SPACE: i32 = 250;
     /// Half or whole step visual distance in the measure (half a stave space)
-    const STEP_DY: i32 = Self::SPACE / 2;
+    const STEP: i32 = Self::SPACE / 2;
     /// Margin X
-    const MARGIN_X: i32 = BARLINE_WIDTH;
+    const MARGIN_X: i32 = Self::SPACE;
     /// Minimum number of steps in top/bottom margins
     const MARGIN_STEPS: Steps = Steps(6);
     /// Width of stave lines (looks best if it matches BARLINE_WIDTH).
@@ -111,11 +111,11 @@ impl Stave {
 
     /// Create a stave path
     pub fn path(&self, top: i32, width: i32, ofs: Steps) -> Path {
-        let width = width + (BARLINE_WIDTH / 2);
-        let ofs = (ofs * Stave::STEP_DY).0;
+        let width = width;
+        let ofs = (ofs * Stave::STEP).0;
         let mut d = String::new();
         for i in 0..self.lines {
-            let x = Self::MARGIN_X - (BARLINE_WIDTH / 2);
+            let x = Self::MARGIN_X;
             let y = top + Stave::SPACE * i - Stave::LINE_WIDTH / 2 + ofs;
             let line = &format!(
                 "M{} {}h{}v{}h-{}v-{}z",
@@ -158,13 +158,13 @@ impl BarElem {
     /// Width of stems
     const STEM_WIDTH: i32 = 30;
     /// Length of stems
-    const STEM_LENGTH: i32 = 7 * Stave::STEP_DY;
+    const STEM_LENGTH: i32 = 7 * Stave::STEP;
     /// Maximum stem length for beamed notes on stave lines.
-    const STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP_DY / 2);
+    const STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP / 2);
     /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
-    const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP_DY;
+    const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP;
     /// Minimum Shortened Stem Length For Notes On Stave
-    const STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP_DY;
+    const STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP;
     /// Width of note head
     const HEAD_WIDTH: i32 = 266;
 
@@ -211,12 +211,12 @@ impl BarElem {
     /// Get the Y offset of a step value
     fn offset_y(&self, steps: Steps) -> i32 {
         debug_assert!(steps.0 <= self.steps_top.0);
-        ((self.steps_top - steps) * Stave::STEP_DY).0
+        ((self.steps_top - steps) * Stave::STEP).0
     }
 
     /// Get the full height
     fn height(&self) -> i32 {
-        ((self.steps_top - self.steps_bottom) * Stave::STEP_DY).0
+        ((self.steps_top - self.steps_bottom) * Stave::STEP).0
     }
 
     /// Get the middle of the stave y position
@@ -228,12 +228,12 @@ impl BarElem {
     /// Add a barline to stave
     fn add_barline(&mut self, x: i32, ofs: Steps) {
         let width = BARLINE_WIDTH;
-        let ofs = (ofs * Stave::STEP_DY).0;
+        let ofs = (ofs * Stave::STEP).0;
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
         let rect = Rect::new(
-            x + (Stave::MARGIN_X - BARLINE_WIDTH),
+            x + Stave::MARGIN_X,
             y,
             width,
             height,
@@ -246,7 +246,7 @@ impl BarElem {
 
     /// Get Y position from steps and offset
     fn y_from_steps(&self, steps: Steps, ofs: Steps) -> i32 {
-        let ofs = (ofs * Stave::STEP_DY).0;
+        let ofs = (ofs * Stave::STEP).0;
         let y = self.offset_y(steps);
 
         y + ofs
@@ -256,7 +256,7 @@ impl BarElem {
     fn add_flag(&mut self, dur: u16, offset: f32, y: Steps, y_offset: Steps) {
         let y = self.y_from_steps(y, y_offset);
         let flag_glyph = GlyphId::flag_duration(dur, y > self.middle()).unwrap();
-        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+        let x = Stave::MARGIN_X
             + NOTE_MARGIN
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
@@ -273,11 +273,11 @@ impl BarElem {
 
     /// Add beam element.
     fn add_beam(&mut self, beam: Beam) {
-        let beam_w = Stave::SPACE / 2;
+        let thickness = Stave::STEP;
         let (add_stem, ofsx, ofsy): (fn(&mut BarElem, i32, i32, i32), _, _) = if beam.stems_up {
             (Self::add_stem_up, Self::HEAD_WIDTH, -Self::STEM_LENGTH)
         } else {
-            (Self::add_stem_down, 0i32, Self::STEM_LENGTH - beam_w)
+            (Self::add_stem_down, 0i32, Self::STEM_LENGTH - thickness)
         };
 
         let mut d = String::new();
@@ -286,7 +286,7 @@ impl BarElem {
         for note_i in 0..beam.notes.len() {
             let (y, y_offset) = beam.notes[note_i].2;
             let y = self.y_from_steps(y.visual_distance(), y_offset);
-            let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+            let x = Stave::MARGIN_X
                 + NOTE_MARGIN
                 + self.width
                 + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
@@ -310,7 +310,7 @@ impl BarElem {
                 }
 
                 for i in 0..count {
-                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy - (i * 3 * Stave::STEP_DY) / 2, -diff, 0, 0, beam_w, diff, 0));
+                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy - (i * 3 * Stave::STEP) / 2, -diff, 0, 0, thickness, diff, 0));
                 }
             }
             old_x = Some(x);
@@ -344,7 +344,7 @@ impl BarElem {
         steps: Steps,
         y: i32,
     ) {
-        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+        let x = Stave::MARGIN_X
             + NOTE_MARGIN
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
@@ -357,9 +357,6 @@ impl BarElem {
             1..=31 | 128..=511 => {}
             _ => self.add_stem(x, y, Self::STEM_LENGTH),
         }
-        // FIXME
-        /*// Draw flag if 8th note or shorter.
-        */
 
         // Draw Ledger Lines if below or above stave.
         let mut head_width = Self::HEAD_WIDTH;
@@ -367,13 +364,13 @@ impl BarElem {
             // Whole note, breve, and longa all have wide noteheads.
             head_width += Self::HEAD_WIDTH / 2;
         }
-        let step_dy = if steps.0 > 0 { 1 } else { -1 } * Stave::STEP_DY;
+        let dir_step = if steps.0 > 0 { 1 } else { -1 } * Stave::STEP;
         let yyy = steps.0.abs();
         let mut count = if yyy % 2 == 0 { 0 } else { 1 };
         for _ in (6..yyy + 1).step_by(2) {
             let rect = Rect::new(
                 x - ((Self::HEAD_WIDTH - (Self::STEM_WIDTH / 2)) / 2),
-                y - (Stave::LINE_WIDTH / 2) + count * step_dy,
+                y - (Stave::LINE_WIDTH / 2) + count * dir_step,
                 Self::HEAD_WIDTH + head_width,
                 Stave::LINE_WIDTH,
                 None,
@@ -423,19 +420,18 @@ impl BarElem {
 
     /// Add `use` element for a whole measure rest
     fn add_measure_rest(&mut self, width: f32, y: Steps) {
-        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
+        let x = Stave::MARGIN_X
             + ((width * BAR_WIDTH as f32) as i32 - WHOLE_REST_WIDTH) / 2;
-        let y = self.middle() + ((y - Steps(2)) * Stave::STEP_DY).0;
+        let y = self.middle() + ((y - Steps(2)) * Stave::STEP).0;
         self.add_use(GlyphId::Rest1, x, y);
     }
 
     /// Add `use` element for a rest.
     fn add_rest(&mut self, glyph: GlyphId, offset: f32, ofs: Steps) {
-        let x = (Stave::MARGIN_X - BARLINE_WIDTH)
-            + NOTE_MARGIN
+        let x = Stave::MARGIN_X
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
-        let ofs = (ofs * Stave::STEP_DY).0;
+        let ofs = (ofs * Stave::STEP).0;
         let mut y = self.middle() + ofs;
         // Position whole rest glyph up 1 stave space.
         if glyph == GlyphId::Rest1 {
@@ -454,7 +450,7 @@ impl BarElem {
     pub fn add_clefs(&mut self, scof: &Scof) {
         for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
             let ymargin =
-                (self.stave.height_steps() + Steps(12)).0 * Stave::STEP_DY;
+                (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
             self.add_use(
                 GlyphId::ClefC,
                 Stave::MARGIN_X + 150,
@@ -468,7 +464,7 @@ impl BarElem {
     pub fn add_times(&mut self, scof: &Scof) {
         for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
             let ymargin =
-                (self.stave.height_steps() + Steps(12)).0 * Stave::STEP_DY;
+                (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
             // width=421
             self.add_use(
                 GlyphId::TimeSig3,
