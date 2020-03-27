@@ -321,11 +321,13 @@ impl BarElem {
                     count = count.min(1);
                 }
 
+                let beam_distance = if beam.stems_up { -1 } else { 1 }
+                    * (3 * Stave::STEP) / 2;
                 for i in 0..count {
                     d.push_str(&format!(
                         "M{} {}l{} {}l{} {}l{} {}z",
                         x + ofsx + (meta.stem_thickness / 2),
-                        y + ofsy + beamy - (i * 3 * Stave::STEP) / 2,
+                        y + ofsy + beamy - i * beam_distance,
                         -diff,
                         0,
                         0,
