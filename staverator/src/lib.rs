@@ -324,7 +324,7 @@ impl BarElem {
                 for i in 0..count {
                     d.push_str(&format!(
                         "M{} {}l{} {}l{} {}l{} {}z",
-                        x + ofsx,
+                        x + ofsx + (meta.stem_thickness / 2),
                         y + ofsy + beamy - (i * 3 * Stave::STEP) / 2,
                         -diff,
                         0,
