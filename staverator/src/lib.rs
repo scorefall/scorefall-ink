@@ -26,7 +26,7 @@ mod beaming;
 mod notehead;
 
 pub use svg::{Element, Group, Path, Rect, Use};
-pub use sfff::SfFontMetadata;
+pub use sfff::{SfFontMetadata, STAVE_SPACE};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
@@ -38,7 +38,7 @@ use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
-const BAR_WIDTH: i32 = 8 * sfff::STAVE_SPACE;
+const BAR_WIDTH: i32 = 8 * STAVE_SPACE;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
 
@@ -69,11 +69,9 @@ pub struct Stave {
 
 impl Stave {
     /// A stave space
-    const SPACE: i32 = sfff::STAVE_SPACE;
+    const SPACE: i32 = STAVE_SPACE;
     /// Half or whole step visual distance in the measure (half a stave space)
     const STEP: i32 = Self::SPACE / 2;
-    /// Margin X
-    const MARGIN_X: i32 = Self::SPACE;
     /// Minimum number of steps in top/bottom margins
     const MARGIN_STEPS: Steps = Steps(6);
 
@@ -122,7 +120,7 @@ impl Stave {
         let ofs = (ofs * Stave::STEP).0;
         let mut d = String::new();
         for i in 0..self.lines {
-            let x = Self::MARGIN_X;
+            let x = 0;
             let y = top + Stave::SPACE * i - meta.stave_line_thickness / 2 + ofs;
             let line = &format!(
                 "M{} {}h{}v{}h-{}v-{}z",
@@ -237,7 +235,7 @@ impl BarElem {
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
         let rect = Rect::new(
-            x + Stave::MARGIN_X,
+            x,
             y,
             width,
             height,
@@ -260,8 +258,7 @@ impl BarElem {
     fn add_flag(&mut self, meta: &SfFontMetadata, dur: u16, offset: f32, y: Steps, y_offset: Steps) {
         let y = self.y_from_steps(y, y_offset);
         let flag_glyph = glyph::flag_duration(dur, y > self.middle()).unwrap();
-        let x = Stave::MARGIN_X
-            + self.width
+        let x = self.width
             + ((offset * BAR_WIDTH as f32) as i32);
         let [left, right] = notehead::stems(Notehead::Normal, meta, dur);
 
@@ -298,8 +295,7 @@ impl BarElem {
         for note_i in 0..beam.notes.len() {
             let (y, y_offset) = beam.notes[note_i].2;
             let y = self.y_from_steps(y.visual_distance(), y_offset);
-            let x = Stave::MARGIN_X
-                + self.width
+            let x = self.width
                 + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
 
             self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH);
@@ -357,8 +353,7 @@ impl BarElem {
         steps: Steps,
         y: i32,
     ) {
-        let x = Stave::MARGIN_X
-            + self.width
+        let x = self.width
             + ((offset * BAR_WIDTH as f32) as i32);
 
         let cp = notehead::duration(dur);
@@ -409,16 +404,14 @@ impl BarElem {
 
     /// Add `use` element for a whole measure rest
     fn add_measure_rest(&mut self, width: f32, y: Steps) {
-        let x = Stave::MARGIN_X
-            + ((width * BAR_WIDTH as f32) as i32 - WHOLE_REST_WIDTH) / 2;
+        let x = ((width * BAR_WIDTH as f32) as i32 - WHOLE_REST_WIDTH) / 2;
         let y = self.middle() + ((y - Steps(2)) * Stave::STEP).0;
         self.add_use(Glyph::Rest1, x, y);
     }
 
     /// Add `use` element for a rest.
     fn add_rest(&mut self, glyph: Glyph, offset: f32, ofs: Steps) {
-        let x = Stave::MARGIN_X
-            + self.width
+        let x = self.width
             + ((offset * BAR_WIDTH as f32) as i32);
         let ofs = (ofs * Stave::STEP).0;
         let mut y = self.middle() + ofs;
@@ -441,7 +434,7 @@ impl BarElem {
                 (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
             self.add_use(
                 Glyph::ClefC,
-                Stave::MARGIN_X + 150,
+                150,
                 self.middle() + ymargin * i,
             );
         }
@@ -456,13 +449,13 @@ impl BarElem {
             // width=421
             self.add_use(
                 Glyph::TimeSig3,
-                Stave::MARGIN_X + self.width + 50,
+                self.width + 50,
                 self.middle() - Stave::SPACE + ymargin * i,
             );
             // width=470
             self.add_use(
                 Glyph::TimeSig4,
-                Stave::MARGIN_X + self.width + 50 - ((470 - 421) / 2),
+                self.width + 50 - ((470 - 421) / 2),
                 self.middle() + Stave::SPACE + ymargin * i,
             );
         }

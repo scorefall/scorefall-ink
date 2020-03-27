@@ -112,13 +112,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
                     let f = if x == 0.0 { -meta.barline_thickness } else { 0 };
                     let x = if x == 0.0 { meta.barline_thickness } else { 0 } +
-                        Stave::MARGIN_X + (BAR_WIDTH as f32 * x) as i32;
+                        (BAR_WIDTH as f32 * x) as i32;
                     cursor_rect = Some((
                         x + e, // X
                         0i32,  // Y
                         (BAR_WIDTH as f32 * self.width) as i32 - x
-                            + f
-                            + Stave::MARGIN_X, // W
+                            + f, // W
                         self.bar.height(),
                     ));
                 }
@@ -183,7 +182,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             self.bar.add_measure_rest(self.width, ymargin * rest_stave as i32);
             if rest_ic {
                 cursor_rect = Some((
-                    crate::Stave::MARGIN_X + meta.barline_thickness, // X
+                    meta.barline_thickness, // X
                     0i32,                   // Y
                     (BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
@@ -196,7 +195,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
             let x = (BAR_WIDTH as f32 * x) as i32;
             cursor_rect = Some((
-                crate::Stave::MARGIN_X + x + e,                        // X
+                x + e,                        // X
                 0i32,                                                  // Y
                 meta.barline_thickness + (BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
                 self.bar.height(),

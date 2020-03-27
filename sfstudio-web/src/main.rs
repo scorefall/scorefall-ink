@@ -48,7 +48,9 @@ use std::rc::Rc;
 
 use scof::{Cursor, Fraction, Pitch, Steps};
 use scorefall_studio::Program;
-use staverator::{BarElem, Element, Stave, SfFontMetadata};
+use staverator::{BarElem, Element, Stave, SfFontMetadata, STAVE_SPACE};
+
+use std::convert::TryInto;
 
 mod input;
 
@@ -56,8 +58,10 @@ use input::*;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const ZOOM_LEVEL: f64 = 10.0;
-const SCALEDOWN: f64 = 40_000.0 / ZOOM_LEVEL;
+const ZOOM_LEVEL: f64 = 1.0;
+// Stave spaces for window height.
+const WINDOW_HEIGHT_SS: i32 = 64;
+const SCALEDOWN: f64 = (STAVE_SPACE * WINDOW_HEIGHT_SS) as f64 / ZOOM_LEVEL;
 const SVGNS: &str = "http://www.w3.org/2000/svg";
 
 struct State {
@@ -68,6 +72,8 @@ struct State {
     input: InputState,
     svg: stdweb::web::Element,
     meta: SfFontMetadata,
+    // Window width in Stave Spaces.
+    width: f32,
 }
 
 impl State {
@@ -93,20 +99,24 @@ impl State {
             input: InputState::new(),
             svg,
             meta,
+            width: 0.0,
         })
     }
 
     /// Resize the SVG
-    fn resize(&self) -> Result<()> {
+    fn resize(&mut self) -> Result<()> {
         note!("resize");
         let svg = &self.svg;
+        let height: stdweb::Value = js! { return "" + @{svg}.clientHeight; };
+        let width: stdweb::Value = js! { return "" + @{svg}.clientWidth; };
+        let height: f32 = height.as_str().unwrap().parse().unwrap();
+        let width: f32 = width.as_str().unwrap().parse().unwrap();
+        let ratio: f32 = width as f32 / height as f32;
         let viewbox = js! {
-            var ratio = @{svg}.clientHeight / @{svg}.clientWidth;
-            return "0 0 " + @{SCALEDOWN} + " " + @{SCALEDOWN} * ratio;
+            return "0 0 " + @{SCALEDOWN} * @{ratio} + " " + @{SCALEDOWN};
         };
-        if let Some(vb) = viewbox.as_str() {
-            svg.set_attribute("viewBox", vb)?;
-        }
+        svg.set_attribute("viewBox", viewbox.as_str().unwrap())?;
+        self.width = ratio * WINDOW_HEIGHT_SS as f32;
         Ok(())
     }
 
@@ -254,7 +264,7 @@ impl State {
     }
 
     /// Render the score
-    fn render_score(&self) -> Result<()> {
+    fn render_score(&mut self) -> Result<()> {
         self.initialize_score()?;
         self.resize()?;
         self.render_measures();
@@ -270,13 +280,13 @@ impl State {
             page.innerHTML = "";
         };
 
-        let mut offset_x = 0;
+        let mut offset_x = STAVE_SPACE; // Stave Margin
         let mut measure = 0;
         'render_measures: loop {
             let width = self.render_measure(measure, offset_x);
             note!("measure: {} width {}", measure, width);
             offset_x += width;
-            if offset_x >= SCALEDOWN as i32 {
+            if offset_x >= (self.width * STAVE_SPACE as f32) as i32 {
                 break 'render_measures;
             }
             measure += 1;
@@ -404,7 +414,7 @@ fn main() {
         document().get_element_by_id("prompt").unwrap();
 
     window().add_event_listener(enclose!( (state) move |_: ResizeEvent| {
-        state.borrow().resize().unwrap();
+        state.borrow_mut().resize().unwrap();
     }));
 
     window().add_event_listener(
@@ -448,7 +458,7 @@ fn main() {
         }),
     );
 
-    state.borrow().render_score().unwrap();
+    state.borrow_mut().render_score().unwrap();
 
     State::run(0.0, state);
     stdweb::event_loop();
