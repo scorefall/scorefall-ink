@@ -23,6 +23,7 @@ mod notator;
 mod rhythmic_spacing;
 mod svg;
 mod beaming;
+mod notehead;
 
 pub use svg::{Element, Group, Path, Rect, Use};
 pub use sfff::SfFontMetadata;
@@ -30,6 +31,7 @@ pub use sfff::SfFontMetadata;
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
 use beaming::{Beams, Beam, Short};
+use notehead::Notehead;
 
 use sfff::Glyph;
 use scof::{Cursor, Scof, Steps};
@@ -269,15 +271,23 @@ impl BarElem {
         let x = Stave::MARGIN_X
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
+        let [left, right] = notehead::stems(Notehead::Normal, meta, dur);
 
-        let (ofsx, ofsy) = if y > self.middle() {
-            (Self::HEAD_WIDTH, -(Self::STEM_LENGTH))
+        if y > self.middle() {
+            // Right Stem
+            let ofsx = right[0] - meta.stem_thickness;
+            let ofsy = -Self::STEM_LENGTH;
+
+            self.add_use(flag_glyph, x + ofsx, y + ofsy);
+            self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH);
         } else {
-            (0, Self::STEM_LENGTH)
-        };
+            // Left Stem
+            let ofsx = left[0];
+            let ofsy = Self::STEM_LENGTH;
 
-        self.add_use(flag_glyph, x + ofsx, y + ofsy);
-        self.add_stem(meta, x, y, Self::STEM_LENGTH);
+            self.add_use(flag_glyph, x + ofsx, y + ofsy);
+            self.add_stem2(meta, x + ofsx, y, Self::STEM_LENGTH);
+        };
     }
 
     /// Add beam element.
@@ -358,7 +368,7 @@ impl BarElem {
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
 
-        let cp = glyph::notehead_duration(dur);
+        let cp = notehead::duration(dur);
         self.add_use(cp, x, y);
         // Only draw stem if not a whole note or double whole note (breve) or
         // Shorter than quarter note.
@@ -378,7 +388,7 @@ impl BarElem {
         let mut count = if yyy % 2 == 0 { 0 } else { 1 };
         for _ in (6..yyy + 1).step_by(2) {
             let rect = Rect::new(
-                x - ((Self::HEAD_WIDTH - (meta.stem_thickness / 2)) / 2),
+                x - (Self::HEAD_WIDTH / 2 - (meta.stem_thickness / 4)),
                 y - (Stave::LINE_WIDTH / 2) + count * dir_step,
                 Self::HEAD_WIDTH + head_width,
                 Stave::LINE_WIDTH,
@@ -398,6 +408,15 @@ impl BarElem {
         } else {
             self.add_stem_down(meta, x, y, stem_length);
         }
+    }
+    
+    /// Add a stem FIXME: Replace add_stem with this.
+    fn add_stem2(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
+        let rx = Some(meta.stem_thickness / 2);
+        let ry = Some(meta.stem_thickness);
+        let rect =
+            Rect::new(x, y, meta.stem_thickness, stem_length, rx, ry, None);
+        self.elements.push(Element::Rect(rect));
     }
 
     /// Add a stem downwards.
