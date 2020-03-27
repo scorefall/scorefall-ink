@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use scof::{Cursor, Fraction, Marking, Pitch, Scof, Note};
+use scof::{Cursor, Fraction, Marking, Note, Pitch, Scof};
 
 /// This is the entire program context.
 pub struct Program {
@@ -61,13 +61,13 @@ impl Program {
             0 => Note::step_up,
             1 => Note::half_step_up,
             2 => Note::quarter_step_up,
-            _ => unreachable!()
+            _ => unreachable!(),
         };
         let step_down_fn = match gran {
             0 => Note::step_down,
             1 => Note::half_step_down,
             2 => Note::quarter_step_down,
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         let create = Pitch(

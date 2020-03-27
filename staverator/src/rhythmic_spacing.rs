@@ -24,7 +24,7 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Element, Notator, Stave, Beams, BAR_WIDTH};
+use crate::{BarElem, Beams, Element, Notator, Stave, BAR_WIDTH};
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -77,7 +77,10 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 
     /// Engrave the bar of music.
-    pub fn engrave(&mut self, meta: &SfFontMetadata) -> (i32, Option<(i32, i32, i32, i32)>) {
+    pub fn engrave(
+        &mut self,
+        meta: &SfFontMetadata,
+    ) -> (i32, Option<(i32, i32, i32, i32)>) {
         let ymargin = self.bar.stave.height_steps() + Steps(12);
         let mut cursor_rect = None;
         let mut rests = vec![];
@@ -111,13 +114,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     self.cursor = None;
                     let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
                     let f = if x == 0.0 { -meta.barline_thickness } else { 0 };
-                    let x = if x == 0.0 { meta.barline_thickness } else { 0 } +
-                        (BAR_WIDTH as f32 * x) as i32;
+                    let x = if x == 0.0 { meta.barline_thickness } else { 0 }
+                        + (BAR_WIDTH as f32 * x) as i32;
                     cursor_rect = Some((
-                        x + e, // X
-                        0i32,  // Y
-                        (BAR_WIDTH as f32 * self.width) as i32 - x
-                            + f, // W
+                        x + e,                                          // X
+                        0i32,                                           // Y
+                        (BAR_WIDTH as f32 * self.width) as i32 - x + f, // W
                         self.bar.height(),
                     ));
                 }
@@ -137,8 +139,9 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                 let y_offset = ymargin * stave_i as i32;
                 // Add chord
                 for pitch in &pitches {
-                    let y = self.bar.y_from_steps(pitch.visual_distance(),
-                        y_offset);
+                    let y = self
+                        .bar
+                        .y_from_steps(pitch.visual_distance(), y_offset);
 
                     self.bar.add_pitch(
                         meta,
@@ -149,7 +152,11 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                     );
                 }
                 // Advance beaming (using closest note to the beam)
-                self.beams[stave_i].advance(dur, self.width, Some((pitches.clone(), y_offset)));
+                self.beams[stave_i].advance(
+                    dur,
+                    self.width,
+                    Some((pitches.clone(), y_offset)),
+                );
             }
             // Add back to queue if time is remaining.
             time -= dur;
@@ -179,11 +186,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         self.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
         for (rest_stave, rest_ic) in rests {
-            self.bar.add_measure_rest(self.width, ymargin * rest_stave as i32);
+            self.bar
+                .add_measure_rest(self.width, ymargin * rest_stave as i32);
             if rest_ic {
                 cursor_rect = Some((
-                    meta.barline_thickness, // X
-                    0i32,                   // Y
+                    meta.barline_thickness,                 // X
+                    0i32,                                   // Y
                     (BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
                 ));
@@ -195,15 +203,16 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
             let x = (BAR_WIDTH as f32 * x) as i32;
             cursor_rect = Some((
-                x + e,                        // X
-                0i32,                                                  // Y
-                meta.barline_thickness + (BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
+                x + e, // X
+                0i32,  // Y
+                meta.barline_thickness + (BAR_WIDTH as f32 * self.width) as i32
+                    - x
+                    - e, // W
                 self.bar.height(),
             ));
         }
         // Calculate physical bar width.
-        let bar_width = ((BAR_WIDTH as f32 * self.width) as i32)
-            .max(BAR_WIDTH);
+        let bar_width = ((BAR_WIDTH as f32 * self.width) as i32).max(BAR_WIDTH);
         // Draw barlines
         for i in 0..self.notators.len().try_into().unwrap() {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
@@ -242,7 +251,7 @@ fn get_spacing(duration: u16) -> f32 {
         128..=255 => lerp(7.0, 8.0, clamp(dur, 128.0, 256.0)), // Whole
         256..=383 => lerp(8.0, 9.0, clamp(dur, 256.0, 384.0)), // Dot'd Whole
         384..=511 => lerp(9.0, 10.0, clamp(dur, 384.0, 512.0)), // Breve
-        512 => 10.0,                                      // Longa
+        512 => 10.0,                                   // Longa
         _ => panic!("Bug in Notator, no glyph for ({})", duration),
     }
 }

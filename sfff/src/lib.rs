@@ -1,7 +1,7 @@
 //! ScoreFall Font Format
 
-use std::io::{Read, Write};
 use std::convert::TryInto;
+use std::io::{Read, Write};
 
 /// The number of units per stave space in this format.
 pub const STAVE_SPACE: i32 = 100;
@@ -258,21 +258,21 @@ pub struct SfFontMetadata {
     pub font_name: String,
 
     // Non-glyph components (in thousandths of stave space)
-    /// 
+    ///
     pub stave_line_thickness: i32,
-    /// 
+    ///
     pub stem_thickness: i32,
-    /// 
+    ///
     pub ledger_line_thickness: i32,
-    /// 
+    ///
     pub ledger_line_extension: i32,
     /// Also used for ties
-    pub slur_endpoint_thickness: i32, 
+    pub slur_endpoint_thickness: i32,
     /// Also used for ties
     pub slur_midpoint_thickness: i32,
-    /// 
+    ///
     pub barline_thickness: i32,
-    /// 
+    ///
     pub thick_barline_thickness: i32,
     /// Space between two barlines
     pub barlines_space: i32,
@@ -285,7 +285,7 @@ pub struct SfFontMetadata {
     /// Cresc., Dim., hairpin thickness (pedal, octave, ending, lyric melisma,
     /// tuple brackets)
     pub hairpin_thickness: i32,
-    /// 
+    ///
     pub rehearsal_box_thickness: i32,
 
     // Glyph metadata (Notehead & Stem Positions)
@@ -316,392 +316,802 @@ pub struct SfFontMetadata {
 
 impl SfFontMetadata {
     /// Write font data.
-    pub fn write<T: Write>(&self, writer: &mut T, glyph_paths: &str) -> Result<(), WriteError> {
+    pub fn write<T: Write>(
+        &self,
+        writer: &mut T,
+        glyph_paths: &str,
+    ) -> Result<(), WriteError> {
         // Header
-        writer.write(&self.sffonts_version.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.sffonts_version.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
         // FIXME: Start Compression
-        writer.write(&[self.font_name.len().try_into().map_err(|_| WriteError::FontNameTooLong)?]).map_err(|_| WriteError::Prevented)?;
-        writer.write(self.font_name.as_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&[self
+                .font_name
+                .len()
+                .try_into()
+                .map_err(|_| WriteError::FontNameTooLong)?])
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(self.font_name.as_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
         // Non-glyph components (in thousandths of stave space)
-        writer.write(&self.stave_line_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.stem_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.ledger_line_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.ledger_line_extension.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.slur_endpoint_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.slur_midpoint_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.barline_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.thick_barline_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.barlines_space.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.barline_repeatdot_space.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.bracket_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.subbracket_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.hairpin_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.rehearsal_box_thickness.to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.stave_line_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.stem_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.ledger_line_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.ledger_line_extension.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.slur_endpoint_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.slur_midpoint_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.barline_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.thick_barline_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.barlines_space.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.barline_repeatdot_space.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.bracket_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.subbracket_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.hairpin_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.rehearsal_box_thickness.to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
         // Glyph
-        writer.write(&self.notehead[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_x[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_x[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_x[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_x[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_diamond[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_diamond[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_diamond[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_diamond[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_triangle[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_triangle[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_triangle[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_triangle[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_slash[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_slash[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_slash[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_slash[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_x[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_x[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_x[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_x[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_diamond[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_diamond[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_diamond[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_diamond[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_triangle[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_triangle[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_triangle[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_triangle[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_slash[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_slash[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_slash[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_slash[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
-        writer.write(&self.notehead_half[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_x[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_x[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_x[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_x[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_diamond[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_diamond[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_diamond[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_diamond[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_triangle[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_triangle[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_triangle[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_triangle[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_slash[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_slash[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_slash[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_half_slash[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_x[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_x[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_x[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_x[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_diamond[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_diamond[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_diamond[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_diamond[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_triangle[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_triangle[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_triangle[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_triangle[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_slash[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_slash[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_slash[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_half_slash[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
-        writer.write(&self.notehead_whole[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_x[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_x[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_x[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_x[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_diamond[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_diamond[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_diamond[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_diamond[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_triangle[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_triangle[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_triangle[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_triangle[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_slash[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_slash[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_slash[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_whole_slash[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_x[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_x[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_x[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_x[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_diamond[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_diamond[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_diamond[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_diamond[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_triangle[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_triangle[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_triangle[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_triangle[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_slash[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_slash[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_slash[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_whole_slash[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
-        writer.write(&self.notehead_double[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_x[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_x[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_x[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_x[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_diamond[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_diamond[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_diamond[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_diamond[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_triangle[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_triangle[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_triangle[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_triangle[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_slash[0][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_slash[0][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_slash[1][0].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
-        writer.write(&self.notehead_double_slash[1][1].to_le_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_x[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_x[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_x[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_x[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_diamond[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_diamond[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_diamond[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_diamond[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_triangle[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_triangle[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_triangle[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_triangle[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_slash[0][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_slash[0][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_slash[1][0].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(&self.notehead_double_slash[1][1].to_le_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
         // Glyph SVG paths
-        writer.write(glyph_paths.as_bytes()).map_err(|_| WriteError::Prevented)?;
+        writer
+            .write(glyph_paths.as_bytes())
+            .map_err(|_| WriteError::Prevented)?;
 
         // Make sure everything was written.
         writer.flush().map_err(|_| WriteError::Prevented)
     }
 
     /// Read a font into a metadata struct and a defs section of an SVG.
-    pub fn from_buf_reader<T: Read>(mut reader: T) -> Result<(Self, String), ReadError> {
+    pub fn from_buf_reader<T: Read>(
+        mut reader: T,
+    ) -> Result<(Self, String), ReadError> {
         let mut byte = [0u8; 1];
         let mut word = [0u8; 2];
         let mut long = [0u8; 4];
 
         // Header
-        reader.read_exact(&mut word).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut word)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let sffonts_version = u16::from_le_bytes(word);
 
         // FIXME: Start De-Compression
-        reader.read_exact(&mut byte).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut byte)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let mut font_name = vec![0; byte[0] as usize];
-        reader.read_exact(&mut font_name).map_err(|_| ReadError::UnexpectedEOF)?;
-        let font_name = String::from_utf8(font_name).map_err(|_| ReadError::InvalidText)?;
+        reader
+            .read_exact(&mut font_name)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let font_name =
+            String::from_utf8(font_name).map_err(|_| ReadError::InvalidText)?;
 
         // Non-glyph components (in thousandths of stave space)
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let stave_line_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let stem_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let ledger_line_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let ledger_line_extension = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let slur_endpoint_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let slur_midpoint_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let ledger_line_thickness =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let ledger_line_extension =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let slur_endpoint_thickness =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let slur_midpoint_thickness =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let barline_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let thick_barline_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let thick_barline_thickness =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let barlines_space = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let barline_repeatdot_space = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let barline_repeatdot_space =
+            u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let bracket_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let subbracket_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let hairpin_thickness = u32::from_le_bytes(long).try_into().unwrap();
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let rehearsal_box_thickness = u32::from_le_bytes(long).try_into().unwrap();
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
+        let rehearsal_box_thickness =
+            u32::from_le_bytes(long).try_into().unwrap();
 
         // Glyph Metadata (Quarter)
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_x = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_diamond = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_triangle = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_slash = [[x1, y1], [x2, y2]];
 
         // Glyph Metadata (Half)
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_half = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_half_x = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_half_diamond = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_half_triangle = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_half_slash = [[x1, y1], [x2, y2]];
 
         // Glyph Metadata (Whole)
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_whole = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_whole_x = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_whole_diamond = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_whole_triangle = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_whole_slash = [[x1, y1], [x2, y2]];
 
         // Glyph Metadata (Double Whole Notes)
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_double = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_double_x = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_double_diamond = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_double_triangle = [[x1, y1], [x2, y2]];
 
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y1 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let x2 = i32::from_le_bytes(long);
-        reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
+        reader
+            .read_exact(&mut long)
+            .map_err(|_| ReadError::UnexpectedEOF)?;
         let y2 = i32::from_le_bytes(long);
         let notehead_double_slash = [[x1, y1], [x2, y2]];
 
         // Glyph SVG paths
         let mut glyph_paths = String::new();
-        reader.read_to_string(&mut glyph_paths).map_err(|_| ReadError::Prevented)?;
+        reader
+            .read_to_string(&mut glyph_paths)
+            .map_err(|_| ReadError::Prevented)?;
 
         let new = Self {
             sffonts_version,
             font_name,
             stave_line_thickness,
-        	stem_thickness,
-        	ledger_line_thickness,
-        	ledger_line_extension,
-        	slur_endpoint_thickness,
-        	slur_midpoint_thickness,
-        	barline_thickness,
-        	thick_barline_thickness,
-        	barlines_space,
-        	barline_repeatdot_space,
-        	bracket_thickness,
-        	subbracket_thickness,
-        	hairpin_thickness,
-        	rehearsal_box_thickness,
+            stem_thickness,
+            ledger_line_thickness,
+            ledger_line_extension,
+            slur_endpoint_thickness,
+            slur_midpoint_thickness,
+            barline_thickness,
+            thick_barline_thickness,
+            barlines_space,
+            barline_repeatdot_space,
+            bracket_thickness,
+            subbracket_thickness,
+            hairpin_thickness,
+            rehearsal_box_thickness,
             notehead, // also includes slashed notehead
             notehead_x,
             notehead_diamond,

@@ -18,23 +18,23 @@
 
 #![allow(clippy::blacklisted_name)] // bar is a useful musical term
 
+mod beaming;
 mod glyph;
 mod notator;
+mod notehead;
 mod rhythmic_spacing;
 mod svg;
-mod beaming;
-mod notehead;
 
-pub use svg::{Element, Group, Path, Rect, Use};
 pub use sfff::{SfFontMetadata, STAVE_SPACE};
+pub use svg::{Element, Group, Path, Rect, Use};
 
+use beaming::{Beam, Beams, Short};
 use notator::Notator;
-use rhythmic_spacing::BarEngraver;
-use beaming::{Beams, Beam, Short};
 use notehead::Notehead;
+use rhythmic_spacing::BarEngraver;
 
-use sfff::Glyph;
 use scof::{Cursor, Scof, Steps};
+use sfff::Glyph;
 use std::fmt;
 
 /// Width of one bar (measure)
@@ -115,13 +115,20 @@ impl Stave {
     }
 
     /// Create a stave path
-    pub fn path(&self, meta: &SfFontMetadata, top: i32, width: i32, ofs: Steps) -> Path {
+    pub fn path(
+        &self,
+        meta: &SfFontMetadata,
+        top: i32,
+        width: i32,
+        ofs: Steps,
+    ) -> Path {
         let width = width;
         let ofs = (ofs * Stave::STEP).0;
         let mut d = String::new();
         for i in 0..self.lines {
             let x = 0;
-            let y = top + Stave::SPACE * i - meta.stave_line_thickness / 2 + ofs;
+            let y =
+                top + Stave::SPACE * i - meta.stave_line_thickness / 2 + ofs;
             let line = &format!(
                 "M{} {}h{}v{}h-{}v-{}z",
                 x,
@@ -234,15 +241,7 @@ impl BarElem {
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
-        let rect = Rect::new(
-            x,
-            y,
-            width,
-            height,
-            None,
-            None,
-            None,
-        );
+        let rect = Rect::new(x, y, width, height, None, None, None);
         self.elements.push(Element::Rect(rect));
     }
 
@@ -255,11 +254,17 @@ impl BarElem {
     }
 
     /// Add elements for flag and stem.
-    fn add_flag(&mut self, meta: &SfFontMetadata, dur: u16, offset: f32, y: Steps, y_offset: Steps) {
+    fn add_flag(
+        &mut self,
+        meta: &SfFontMetadata,
+        dur: u16,
+        offset: f32,
+        y: Steps,
+        y_offset: Steps,
+    ) {
         let y = self.y_from_steps(y, y_offset);
         let flag_glyph = glyph::flag_duration(dur, y > self.middle()).unwrap();
-        let x = self.width
-            + ((offset * BAR_WIDTH as f32) as i32);
+        let x = self.width + ((offset * BAR_WIDTH as f32) as i32);
         let [left, right] = notehead::stems(Notehead::Normal, meta, dur);
 
         if y > self.middle() {
@@ -295,8 +300,8 @@ impl BarElem {
         for note_i in 0..beam.notes.len() {
             let (y, y_offset) = beam.notes[note_i].2;
             let y = self.y_from_steps(y.visual_distance(), y_offset);
-            let x = self.width
-                + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
+            let x =
+                self.width + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
 
             self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH);
 
@@ -304,10 +309,10 @@ impl BarElem {
                 let diff: i32 = x - old_x;
 
                 let mut count = match beam.notes[note_i].0 {
-                    1 => 5, // 128th note beams
-                    2..=3 => 4, // 64th note beams
-                    4..=7 => 3, // 32nd note beams
-                    8..=15 => 2, // 16th note beams
+                    1 => 5,       // 128th note beams
+                    2..=3 => 4,   // 64th note beams
+                    4..=7 => 3,   // 32nd note beams
+                    8..=15 => 2,  // 16th note beams
                     16..=31 => 1, // 8th note beams
                     a => panic!("Invalid {}", a),
                 };
@@ -317,7 +322,17 @@ impl BarElem {
                 }
 
                 for i in 0..count {
-                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy + beamy - (i * 3 * Stave::STEP) / 2, -diff, 0, 0, thickness, diff, 0));
+                    d.push_str(&format!(
+                        "M{} {}l{} {}l{} {}l{} {}z",
+                        x + ofsx,
+                        y + ofsy + beamy - (i * 3 * Stave::STEP) / 2,
+                        -diff,
+                        0,
+                        0,
+                        thickness,
+                        diff,
+                        0
+                    ));
                 }
             }
             old_x = Some(x);
@@ -326,20 +341,20 @@ impl BarElem {
     }
 
     /// Add stems and either flags or beam elements for short notes.
-    fn add_flags_and_beams(
-        &mut self,
-        meta: &SfFontMetadata,
-        beams: Beams,
-    ) {
+    fn add_flags_and_beams(&mut self, meta: &SfFontMetadata, beams: Beams) {
         for short in beams {
             match short {
                 Short::Flag(dur, offset, (pitches, y_offset)) => {
                     let pitch = pitches[0]; // FIXME: Use closest to beam/flag.
-                    self.add_flag(meta, dur, offset, pitch.visual_distance(), y_offset);
+                    self.add_flag(
+                        meta,
+                        dur,
+                        offset,
+                        pitch.visual_distance(),
+                        y_offset,
+                    );
                 }
-                Short::Beam(beam) => {
-                    self.add_beam(meta, beam)
-                }
+                Short::Beam(beam) => self.add_beam(meta, beam),
             }
         }
     }
@@ -353,8 +368,7 @@ impl BarElem {
         steps: Steps,
         y: i32,
     ) {
-        let x = self.width
-            + ((offset * BAR_WIDTH as f32) as i32);
+        let x = self.width + ((offset * BAR_WIDTH as f32) as i32);
 
         let cp = notehead::duration(dur);
         self.add_use(cp, x, y);
@@ -363,14 +377,15 @@ impl BarElem {
         match dur {
             1..=31 | 128..=511 => {}
             _ => {
-                let [left, right] = notehead::stems(Notehead::Normal, meta, dur);
+                let [left, right] =
+                    notehead::stems(Notehead::Normal, meta, dur);
                 let (ofsx, ofsy) = if y > self.middle() {
                     (right[0] - meta.stem_thickness, -Self::STEM_LENGTH)
                 } else {
                     (left[0], 0)
                 };
                 self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH)
-            },
+            }
         }
 
         // Draw Ledger Lines if below or above stave.
@@ -394,7 +409,13 @@ impl BarElem {
     }
 
     /// Add a stem FIXME: Replace add_stem with this.
-    fn add_stem2(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
+    fn add_stem2(
+        &mut self,
+        meta: &SfFontMetadata,
+        x: i32,
+        y: i32,
+        stem_length: i32,
+    ) {
         let rx = Some(meta.stem_thickness / 2);
         let ry = Some(meta.stem_thickness);
         let rect =
@@ -411,8 +432,7 @@ impl BarElem {
 
     /// Add `use` element for a rest.
     fn add_rest(&mut self, glyph: Glyph, offset: f32, ofs: Steps) {
-        let x = self.width
-            + ((offset * BAR_WIDTH as f32) as i32);
+        let x = self.width + ((offset * BAR_WIDTH as f32) as i32);
         let ofs = (ofs * Stave::STEP).0;
         let mut y = self.middle() + ofs;
         // Position whole rest glyph up 1 stave space.
@@ -424,7 +444,8 @@ impl BarElem {
 
     /// Add use element
     fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
-        self.elements.push(Element::Use(Use::new(x, y, glyph.into())));
+        self.elements
+            .push(Element::Use(Use::new(x, y, glyph.into())));
     }
 
     /// Add clef
@@ -432,11 +453,7 @@ impl BarElem {
         for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
             let ymargin =
                 (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
-            self.add_use(
-                Glyph::ClefC,
-                150,
-                self.middle() + ymargin * i,
-            );
+            self.add_use(Glyph::ClefC, 150, self.middle() + ymargin * i);
         }
         self.width += 1000;
     }

@@ -28,13 +28,21 @@ pub enum Notehead {
 }
 
 /// Get width of the notehead.
-pub(super) fn width(notehead: Notehead, meta: &SfFontMetadata, duration: u16) -> i32 {
+pub(super) fn width(
+    notehead: Notehead,
+    meta: &SfFontMetadata,
+    duration: u16,
+) -> i32 {
     let [[left_x, _], [right_x, _]] = stems(notehead, meta, duration);
     right_x - left_x
 }
 
 /// Get left and right stem positions
-pub(super) fn stems(notehead: Notehead, meta: &SfFontMetadata, duration: u16) -> [[i32; 2]; 2] {
+pub(super) fn stems(
+    notehead: Notehead,
+    meta: &SfFontMetadata,
+    duration: u16,
+) -> [[i32; 2]; 2] {
     use Notehead::*;
 
     let double;
@@ -126,13 +134,7 @@ pub(super) fn slash_duration(duration: u16) -> Glyph {
 }
 
 /// Given a duration and set of notehead glyphs, choose appropriate glyph
-fn variants<T>(
-    double: T,
-    whole: T,
-    half: T,
-    fill: T,
-    duration: u16,
-) -> T {
+fn variants<T>(double: T, whole: T, half: T, fill: T, duration: u16) -> T {
     match duration {
         1..=63 => fill,
         64..=127 => half,

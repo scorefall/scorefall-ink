@@ -212,8 +212,8 @@ impl fmt::Display for Element {
 
 #[cfg(test)]
 mod tests {
-    use sfff::Glyph;
     use super::*;
+    use sfff::Glyph;
 
     #[test]
     fn rect() {

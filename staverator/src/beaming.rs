@@ -87,7 +87,12 @@ impl Beams {
     }
 
     /// Advance duration.
-    pub fn advance(&mut self, dur: u16, width: f32, y: Option<(Vec<Pitch>, Steps)>) {
+    pub fn advance(
+        &mut self,
+        dur: u16,
+        width: f32,
+        y: Option<(Vec<Pitch>, Steps)>,
+    ) {
         let new_dur = self.dur - dur;
         // Not a rest
         if let Some(y) = y {
@@ -96,15 +101,21 @@ impl Beams {
                 let mut prop = BeamProp::Flag;
 
                 // If last note could be beamed to this note
-                if self.last_short && self.dur / BEAMRULE_4_4.eighth == new_dur / BEAMRULE_4_4.eighth
+                if self.last_short
+                    && self.dur / BEAMRULE_4_4.eighth
+                        == new_dur / BEAMRULE_4_4.eighth
                 {
                     let mut prev = self.short.pop_back().unwrap();
                     if prev.0 == BeamProp::Flag {
                         prev.0 = BeamProp::None;
                     }
                     self.short.push_back(prev);
-                    prop = if self.dur / BEAMRULE_4_4.sixteenth == new_dur / BEAMRULE_4_4.sixteenth {
-                        if self.dur / BEAMRULE_4_4.inner == new_dur / BEAMRULE_4_4.inner {
+                    prop = if self.dur / BEAMRULE_4_4.sixteenth
+                        == new_dur / BEAMRULE_4_4.sixteenth
+                    {
+                        if self.dur / BEAMRULE_4_4.inner
+                            == new_dur / BEAMRULE_4_4.inner
+                        {
                             BeamProp::ContinueInner
                         } else {
                             BeamProp::ContinueSixteenth
@@ -137,7 +148,8 @@ impl Iterator for Beams {
         }
         while let Some((prop, dur, width, y)) = self.short.pop_front() {
             match prop {
-                BeamProp::None => { // Start of a beam
+                BeamProp::None => {
+                    // Start of a beam
                     let beam = if self.min_dur != 0 {
                         Some(Beam::new(self))
                     } else {
@@ -148,7 +160,7 @@ impl Iterator for Beams {
                     if let Some(beam) = beam {
                         return Some(Short::Beam(beam));
                     }
-                },
+                }
                 BeamProp::ContinueEighth => {
                     // If there's more than one beam, break into 2 beam groups.
                     if self.min_dur < 16 {
@@ -159,16 +171,16 @@ impl Iterator for Beams {
                     }
                     self.notes.push((dur, width, y, false));
                     self.min_dur = dur.min(self.min_dur);
-                },
+                }
                 BeamProp::ContinueSixteenth => {
                     // Set single beam point for 3+ beams to true
                     self.notes.push((dur, width, y, true));
                     self.min_dur = dur.min(self.min_dur);
-                },
+                }
                 BeamProp::ContinueInner => {
                     self.notes.push((dur, width, y, false));
                     self.min_dur = dur.min(self.min_dur);
-                },
+                }
                 BeamProp::Flag => {
                     let flag = Short::Flag(dur, width, y);
                     if self.min_dur != 0 {
@@ -180,7 +192,7 @@ impl Iterator for Beams {
                         self.min_dur = 0;
                         return Some(flag);
                     }
-                },
+                }
             }
         }
         if self.min_dur != 0 {
@@ -233,8 +245,6 @@ impl Beam {
             notes.push((note.0, note.1, (note.2 .0[0], note.2 .1), one_beam));
         }
 
-        Beam {
-            notes, stems_up,
-        }
+        Beam { notes, stems_up }
     }
 }

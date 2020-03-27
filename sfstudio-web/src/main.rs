@@ -48,7 +48,7 @@ use std::rc::Rc;
 
 use scof::{Cursor, Fraction, Pitch, Steps};
 use scorefall_studio::Program;
-use staverator::{BarElem, Element, Stave, SfFontMetadata, STAVE_SPACE};
+use staverator::{BarElem, Element, SfFontMetadata, Stave, STAVE_SPACE};
 
 use std::convert::TryInto;
 
@@ -129,9 +129,12 @@ impl State {
         let up = self.input.press(Key::K) || self.input.press(Key::Up);
         let down = self.input.press(Key::J) || self.input.press(Key::Down);
         // For selecting / alternate commands
-        let shift = self.input.held(Key::LeftShift) || self.input.held(Key::RightShift);
-        let alt = self.input.held(Key::LeftAlt) || self.input.held(Key::RightAlt);
-        let ctr = self.input.held(Key::LeftCtrl) || self.input.held(Key::RightCtrl);
+        let shift =
+            self.input.held(Key::LeftShift) || self.input.held(Key::RightShift);
+        let alt =
+            self.input.held(Key::LeftAlt) || self.input.held(Key::RightAlt);
+        let ctr =
+            self.input.held(Key::LeftCtrl) || self.input.held(Key::RightCtrl);
         let next_chan = (!shift && self.input.press(Key::Enter))
             || self.input.press(Key::PageDown);
         let prev_chan = (shift && self.input.press(Key::Enter))
