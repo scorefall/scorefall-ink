@@ -79,8 +79,9 @@ impl State {
         cursor.set_attribute("height", "1024")?;
         cursor.set_attribute("fill", "#FF9AF0")?;
         cursor.set_attribute("id", "cursor")?;
+        let (meta, defs) = staverator::modern();
         js! {
-            @{&svg}.innerHTML = "";
+            @{&svg}.innerHTML = @{&defs};
             @{&svg}.appendChild(@{&cursor});
         }
 
@@ -270,9 +271,9 @@ impl State {
 
     /// Render the score
     fn render_score(&self) -> Result<()> {
+        // self.render_defs()?;
         self.initialize_score()?;
         self.resize()?;
-        self.render_defs()?;
         self.render_measures();
         Ok(())
     }

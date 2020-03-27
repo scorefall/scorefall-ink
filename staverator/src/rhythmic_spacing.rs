@@ -24,7 +24,7 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Element, GlyphId, Notator, Stave, Beams, CURSOR_PADDING, BARLINE_WIDTH, BAR_WIDTH};
+use crate::{BarElem, Element, Notator, Stave, Beams, CURSOR_PADDING, BARLINE_WIDTH, BAR_WIDTH};
 use scof::Steps;
 
 const CURSOR_MARGIN: i32 = BARLINE_WIDTH;
@@ -128,7 +128,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             if pitches.is_empty() {
                 // Add rest
                 self.bar.add_rest(
-                    GlyphId::rest_duration(dur),
+                    crate::glyph::rest_duration(dur),
                     self.width,
                     ymargin * stave_i as i32,
                 );

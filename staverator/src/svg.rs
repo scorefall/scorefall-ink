@@ -90,7 +90,7 @@ pub struct Use {
     /// Y position
     pub y: i32,
     /// Element ID
-    pub id: u32,
+    pub id: u16,
 }
 
 impl fmt::Display for Use {
@@ -105,7 +105,7 @@ impl fmt::Display for Use {
 
 impl Use {
     /// Create a new SVG `use` element
-    pub fn new(x: i32, y: i32, id: u32) -> Self {
+    pub fn new(x: i32, y: i32, id: u16) -> Self {
         Use { x, y, id }
     }
 }

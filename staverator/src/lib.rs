@@ -24,13 +24,13 @@ mod rhythmic_spacing;
 mod svg;
 mod beaming;
 
-pub use glyph::GlyphId;
 pub use svg::{Element, Group, Path, Rect, Use};
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;
 use beaming::{Beams, Beam, Short};
 
+use sfff::Glyph;
 use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
@@ -43,9 +43,19 @@ const WHOLE_REST_WIDTH: i32 = 230;
 /// Cursor padding
 const CURSOR_PADDING: i32 = 36;
 
-/// Get Bravura font paths
+/// FIXME: REMOVE - Get Bravura font paths
 pub fn bravura() -> Vec<Path> {
     include!("vfont/bravura.vfont")
+}
+
+/// Get Modern font data as SVG defs.
+pub fn modern() -> (sfff::SfFontMetadata, String) {
+    let data: &[u8] = include_bytes!("../modern.sfff");
+    let data = std::io::Cursor::new(data);
+    let (meta, glyphs) = sfff::SfFontMetadata::from_buf_reader(data).unwrap();
+    let glyphs = sfff::generate_defs(&glyphs);
+
+    (meta, glyphs)
 }
 
 /// Stave lines
@@ -255,7 +265,7 @@ impl BarElem {
     /// Add elements for flag and stem.
     fn add_flag(&mut self, dur: u16, offset: f32, y: Steps, y_offset: Steps) {
         let y = self.y_from_steps(y, y_offset);
-        let flag_glyph = GlyphId::flag_duration(dur, y > self.middle()).unwrap();
+        let flag_glyph = glyph::flag_duration(dur, y > self.middle()).unwrap();
         let x = Stave::MARGIN_X
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
@@ -346,7 +356,7 @@ impl BarElem {
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
 
-        let cp = GlyphId::notehead_duration(dur);
+        let cp = glyph::notehead_duration(dur);
         self.add_use(cp, x, y);
         // Only draw stem if not a whole note or double whole note (breve) or
         // Shorter than quarter note.
@@ -420,25 +430,25 @@ impl BarElem {
         let x = Stave::MARGIN_X
             + ((width * BAR_WIDTH as f32) as i32 - WHOLE_REST_WIDTH) / 2;
         let y = self.middle() + ((y - Steps(2)) * Stave::STEP).0;
-        self.add_use(GlyphId::Rest1, x, y);
+        self.add_use(Glyph::Rest1, x, y);
     }
 
     /// Add `use` element for a rest.
-    fn add_rest(&mut self, glyph: GlyphId, offset: f32, ofs: Steps) {
+    fn add_rest(&mut self, glyph: Glyph, offset: f32, ofs: Steps) {
         let x = Stave::MARGIN_X
             + self.width
             + ((offset * BAR_WIDTH as f32) as i32);
         let ofs = (ofs * Stave::STEP).0;
         let mut y = self.middle() + ofs;
         // Position whole rest glyph up 1 stave space.
-        if glyph == GlyphId::Rest1 {
+        if glyph == Glyph::Rest1 {
             y -= Stave::SPACE;
         }
         self.add_use(glyph, x, y);
     }
 
     /// Add use element
-    fn add_use(&mut self, glyph: GlyphId, x: i32, y: i32) {
+    fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
         self.elements
             .push(Element::Use(Use::new(x, y, glyph.into())));
     }
@@ -449,7 +459,7 @@ impl BarElem {
             let ymargin =
                 (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
             self.add_use(
-                GlyphId::ClefC,
+                Glyph::ClefC,
                 Stave::MARGIN_X + 150,
                 self.middle() + ymargin * i,
             );
@@ -464,13 +474,13 @@ impl BarElem {
                 (self.stave.height_steps() + Steps(12)).0 * Stave::STEP;
             // width=421
             self.add_use(
-                GlyphId::TimeSig3,
+                Glyph::TimeSig3,
                 Stave::MARGIN_X + self.width + 50,
                 self.middle() - Stave::SPACE + ymargin * i,
             );
             // width=470
             self.add_use(
-                GlyphId::TimeSig4,
+                Glyph::TimeSig4,
                 Stave::MARGIN_X + self.width + 50 - ((470 - 421) / 2),
                 self.middle() + Stave::SPACE + ymargin * i,
             );

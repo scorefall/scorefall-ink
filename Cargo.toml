@@ -26,4 +26,6 @@ members = [
     "sfstudio-web",
     # ScoreFall Studio's render engine
     "staverator",
+    # ScoreFall Studio's font format parser
+    "sfff",
 ]
