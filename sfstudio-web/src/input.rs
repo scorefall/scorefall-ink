@@ -212,9 +212,11 @@ impl InputState {
         state: KeyState,
         ic: bool,
     ) {
-        if key.len() == 1 && !ic {
-            self.text = key.chars().next().unwrap();
-        }
+        self.text = if key.len() == 1 && !ic {
+            key.chars().next().unwrap()
+        } else {
+            '\0'
+        };
 
         // A unicode character has been typed.
         self.keys[match code.as_str() {

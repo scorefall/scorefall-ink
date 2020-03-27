@@ -25,6 +25,7 @@ mod svg;
 mod beaming;
 
 pub use svg::{Element, Group, Path, Rect, Use};
+pub use sfff::SfFontMetadata;
 
 use notator::Notator;
 use rhythmic_spacing::BarEngraver;

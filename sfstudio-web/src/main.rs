@@ -48,7 +48,7 @@ use std::rc::Rc;
 
 use scof::{Cursor, Fraction, Pitch, Steps};
 use scorefall_studio::Program;
-use staverator::{BarElem, Element, Stave};
+use staverator::{BarElem, Element, Stave, SfFontMetadata};
 
 mod input;
 
@@ -67,6 +67,7 @@ struct State {
     command: String,
     input: InputState,
     svg: stdweb::web::Element,
+    meta: SfFontMetadata,
 }
 
 impl State {
@@ -91,6 +92,7 @@ impl State {
             command: "".to_string(),
             input: InputState::new(),
             svg,
+            meta,
         })
     }
 
@@ -251,27 +253,8 @@ impl State {
         Ok(())
     }
 
-    /// Render the defs to the SVG
-    fn render_defs(&self) -> Result<()> {
-        let svg = &self.svg;
-        let defs = document().create_element_ns(SVGNS, "defs")?;
-
-        for path in staverator::bravura() {
-            let id = path.id.unwrap();
-            let shape = document().create_element_ns(SVGNS, "path")?;
-            shape.set_attribute("d", &path.d)?;
-            shape.set_attribute("id", &id)?;
-            defs.append_child(&shape);
-        }
-        js! {
-            @{svg}.appendChild(@{&defs});
-        }
-        Ok(())
-    }
-
     /// Render the score
     fn render_score(&self) -> Result<()> {
-        // self.render_defs()?;
         self.initialize_score()?;
         self.resize()?;
         self.render_measures();
