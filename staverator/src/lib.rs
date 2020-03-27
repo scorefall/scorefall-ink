@@ -291,7 +291,7 @@ impl BarElem {
         let (ofsx, ofsy, beamy) = if beam.stems_up {
             (right[0] - meta.stem_thickness, -Self::STEM_LENGTH, 0)
         } else {
-            (left[0], 0, Self::STEM_LENGTH)
+            (left[0], 0, Self::STEM_LENGTH - thickness)
         };
 
         let mut d = String::new();
