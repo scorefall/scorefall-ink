@@ -26,6 +26,7 @@ use std::convert::TryInto;
 
 use crate::{BarElem, Element, Notator, Stave, Beams, CURSOR_PADDING, BARLINE_WIDTH, BAR_WIDTH};
 use scof::Steps;
+use sfff::SfFontMetadata;
 
 const CURSOR_MARGIN: i32 = BARLINE_WIDTH;
 
@@ -78,7 +79,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 
     /// Engrave the bar of music.
-    pub fn engrave(&mut self) -> (i32, Option<(i32, i32, i32, i32)>) {
+    pub fn engrave(&mut self, meta: &SfFontMetadata) -> (i32, Option<(i32, i32, i32, i32)>) {
         let ymargin = self.bar.stave.height_steps() + Steps(12);
         let mut cursor_rect = None;
         let mut rests = vec![];
@@ -143,6 +144,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
                         y_offset);
 
                     self.bar.add_pitch(
+                        meta,
                         dur,
                         self.width,
                         pitch.visual_distance(),
@@ -172,7 +174,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         }
         // Beam eighth notes and shorter.
         while let Some(beam) = self.beams.pop() {
-            self.bar.add_flags_and_beams(beam);
+            self.bar.add_flags_and_beams(meta, beam);
         }
         // Add the rest of the width.
         self.width += get_spacing(self.all) / 7.0;
@@ -208,7 +210,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Draw barlines
         for i in 0..self.notators.len().try_into().unwrap() {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
-            let path = self.bar.stave.path(y, bar_width, ymargin * i);
+            let path = self.bar.stave.path(meta, y, bar_width, ymargin * i);
             self.bar.elements.push(Element::Path(path));
             self.bar.add_barline(bar_width, ymargin * i);
         }

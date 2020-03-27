@@ -56,7 +56,7 @@ use input::*;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
-const ZOOM_LEVEL: f64 = 1.0;
+const ZOOM_LEVEL: f64 = 10.0;
 const SCALEDOWN: f64 = 40_000.0 / ZOOM_LEVEL;
 const SVGNS: &str = "http://www.w3.org/2000/svg";
 
@@ -315,6 +315,7 @@ impl State {
         let mut bar =
             BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
         if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(
+            &self.meta,
             &self.program.scof,
             &self.program.cursor,
             &mut curs,

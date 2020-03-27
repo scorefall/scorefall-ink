@@ -3,6 +3,9 @@
 use std::io::{Read, Write};
 use std::convert::TryInto;
 
+/// The number of units per stave space in this format.
+pub const STAVE_SPACE: i32 = 100;
+
 /// Indices of each glyph (grouping most common ones at the beginning to help
 /// with caching.
 #[repr(u16)]
@@ -256,34 +259,34 @@ pub struct SfFontMetadata {
 
     // Non-glyph components (in thousandths of stave space)
     /// 
-    pub stave_line_thickness: u32,
+    pub stave_line_thickness: i32,
     /// 
-    pub stem_thickness: u32,
+    pub stem_thickness: i32,
     /// 
-    pub ledger_line_thickness: u32,
+    pub ledger_line_thickness: i32,
     /// 
-    pub ledger_line_extension: u32,
+    pub ledger_line_extension: i32,
     /// Also used for ties
-    pub slur_endpoint_thickness: u32, 
+    pub slur_endpoint_thickness: i32, 
     /// Also used for ties
-    pub slur_midpoint_thickness: u32,
+    pub slur_midpoint_thickness: i32,
     /// 
-    pub barline_thickness: u32,
+    pub barline_thickness: i32,
     /// 
-    pub thick_barline_thickness: u32,
+    pub thick_barline_thickness: i32,
     /// Space between two barlines
-    pub barlines_space: u32,
+    pub barlines_space: i32,
     /// Space between barline and repeat dots
-    pub barline_repeatdot_space: u32,
+    pub barline_repeatdot_space: i32,
     /// Instrument grouping
-    pub bracket_thickness: u32,
+    pub bracket_thickness: i32,
     /// Instrument subgrouping
-    pub subbracket_thickness: u32,
+    pub subbracket_thickness: i32,
     /// Cresc., Dim., hairpin thickness (pedal, octave, ending, lyric melisma,
     /// tuple brackets)
-    pub hairpin_thickness: u32,
+    pub hairpin_thickness: i32,
     /// 
-    pub rehearsal_box_thickness: u32,
+    pub rehearsal_box_thickness: i32,
 }
 
 impl SfFontMetadata {
@@ -336,33 +339,33 @@ impl SfFontMetadata {
 
         // Non-glyph components (in thousandths of stave space)
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let stave_line_thickness = u32::from_le_bytes(long);
+        let stave_line_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let stem_thickness = u32::from_le_bytes(long);
+        let stem_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let ledger_line_thickness = u32::from_le_bytes(long);
+        let ledger_line_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let ledger_line_extension = u32::from_le_bytes(long);
+        let ledger_line_extension = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let slur_endpoint_thickness = u32::from_le_bytes(long);
+        let slur_endpoint_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let slur_midpoint_thickness = u32::from_le_bytes(long);
+        let slur_midpoint_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let barline_thickness = u32::from_le_bytes(long);
+        let barline_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let thick_barline_thickness = u32::from_le_bytes(long);
+        let thick_barline_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let barlines_space = u32::from_le_bytes(long);
+        let barlines_space = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let barline_repeatdot_space = u32::from_le_bytes(long);
+        let barline_repeatdot_space = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let bracket_thickness = u32::from_le_bytes(long);
+        let bracket_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let subbracket_thickness = u32::from_le_bytes(long);
+        let subbracket_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let hairpin_thickness = u32::from_le_bytes(long);
+        let hairpin_thickness = u32::from_le_bytes(long).try_into().unwrap();
         reader.read_exact(&mut long).map_err(|_| ReadError::UnexpectedEOF)?;
-        let rehearsal_box_thickness = u32::from_le_bytes(long);
+        let rehearsal_box_thickness = u32::from_le_bytes(long).try_into().unwrap();
 
         // Glyph SVG paths
         let mut glyph_paths = String::new();
