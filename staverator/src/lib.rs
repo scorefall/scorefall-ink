@@ -80,8 +80,6 @@ impl Stave {
     const MARGIN_X: i32 = Self::SPACE;
     /// Minimum number of steps in top/bottom margins
     const MARGIN_STEPS: Steps = Steps(6);
-    /// Width of stave lines (looks best if it matches BARLINE_WIDTH).
-    const LINE_WIDTH: i32 = BARLINE_WIDTH;
 
     /// Create a new stave
     pub fn new(lines: i32, steps_middle_c: Steps, ypos: Steps) -> Self {
@@ -176,8 +174,6 @@ impl BarElem {
     const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP;
     /// Minimum Shortened Stem Length For Notes On Stave
     const STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP;
-    /// Width of note head
-    const HEAD_WIDTH: i32 = 266;
 
     /// Create a new bar element
     pub fn new(stave: Stave, high: Steps, low: Steps) -> Self {
@@ -293,10 +289,11 @@ impl BarElem {
     /// Add beam element.
     fn add_beam(&mut self, meta: &SfFontMetadata, beam: Beam) {
         let thickness = Stave::STEP;
-        let (add_stem, ofsx, ofsy): (fn(&mut BarElem, &SfFontMetadata, i32, i32, i32), _, _) = if beam.stems_up {
-            (Self::add_stem_up, Self::HEAD_WIDTH, -Self::STEM_LENGTH)
+        let [left, right] = notehead::stems(Notehead::Normal, meta, 32);
+        let (ofsx, ofsy, beamy) = if beam.stems_up {
+            (right[0] - meta.stem_thickness, -Self::STEM_LENGTH, 0)
         } else {
-            (Self::add_stem_down, 0i32, Self::STEM_LENGTH - thickness)
+            (left[0], 0, Self::STEM_LENGTH)
         };
 
         let mut d = String::new();
@@ -309,7 +306,7 @@ impl BarElem {
                 + self.width
                 + ((beam.notes[note_i].1 * BAR_WIDTH as f32) as i32);
 
-            add_stem(self, meta, x, y, Self::STEM_LENGTH);
+            self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH);
 
             if let Some(old_x) = old_x {
                 let diff: i32 = x - old_x;
@@ -328,7 +325,7 @@ impl BarElem {
                 }
 
                 for i in 0..count {
-                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy - (i * 3 * Stave::STEP) / 2, -diff, 0, 0, thickness, diff, 0));
+                    d.push_str(&format!("M{} {}l{} {}l{} {}l{} {}z", x + ofsx, y + ofsy + beamy - (i * 3 * Stave::STEP) / 2, -diff, 0, 0, thickness, diff, 0));
                 }
             }
             old_x = Some(x);
@@ -374,24 +371,28 @@ impl BarElem {
         // Shorter than quarter note.
         match dur {
             1..=31 | 128..=511 => {}
-            _ => self.add_stem(meta, x, y, Self::STEM_LENGTH),
+            _ => {
+                let [left, right] = notehead::stems(Notehead::Normal, meta, dur);
+                let (ofsx, ofsy) = if y > self.middle() {
+                    (right[0] - meta.stem_thickness, -Self::STEM_LENGTH)
+                } else {
+                    (left[0], 0)
+                };
+                self.add_stem2(meta, x + ofsx, y + ofsy, Self::STEM_LENGTH)
+            },
         }
 
         // Draw Ledger Lines if below or above stave.
-        let mut head_width = Self::HEAD_WIDTH;
-        if dur >= 128 {
-            // Whole note, breve, and longa all have wide noteheads.
-            head_width += Self::HEAD_WIDTH / 2;
-        }
+        let head_width = notehead::width(Notehead::Normal, meta, dur);
         let dir_step = if steps.0 > 0 { 1 } else { -1 } * Stave::STEP;
         let yyy = steps.0.abs();
         let mut count = if yyy % 2 == 0 { 0 } else { 1 };
         for _ in (6..yyy + 1).step_by(2) {
             let rect = Rect::new(
-                x - (Self::HEAD_WIDTH / 2 - (meta.stem_thickness / 4)),
-                y - (Stave::LINE_WIDTH / 2) + count * dir_step,
-                Self::HEAD_WIDTH + head_width,
-                Stave::LINE_WIDTH,
+                x - (meta.ledger_line_extension - (meta.stem_thickness / 4)),
+                y - (meta.stave_line_thickness / 2) + count * dir_step,
+                head_width + meta.ledger_line_extension * 2,
+                meta.stave_line_thickness,
                 None,
                 None,
                 None,
@@ -401,48 +402,12 @@ impl BarElem {
         }
     }
 
-    /// Add a stem
-    fn add_stem(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
-        if y > self.middle() {
-            self.add_stem_up(meta, x, y, stem_length);
-        } else {
-            self.add_stem_down(meta, x, y, stem_length);
-        }
-    }
-    
     /// Add a stem FIXME: Replace add_stem with this.
     fn add_stem2(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
         let rx = Some(meta.stem_thickness / 2);
         let ry = Some(meta.stem_thickness);
         let rect =
             Rect::new(x, y, meta.stem_thickness, stem_length, rx, ry, None);
-        self.elements.push(Element::Rect(rect));
-    }
-
-    /// Add a stem downwards.
-    fn add_stem_down(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
-        // FIXME: stem should always reach the center line of the stave
-        let rx = Some(meta.stem_thickness / 2);
-        let ry = Some(meta.stem_thickness);
-        let rect =
-            Rect::new(x, y, meta.stem_thickness, stem_length, rx, ry, None);
-        self.elements.push(Element::Rect(rect));
-    }
-
-    /// Add a stem upwards.
-    fn add_stem_up(&mut self, meta: &SfFontMetadata, x: i32, y: i32, stem_length: i32) {
-        // FIXME: stem should always reach the center line of the stave
-        let rx = Some(meta.stem_thickness / 2);
-        let ry = Some(meta.stem_thickness);
-        let rect = Rect::new(
-            x + Self::HEAD_WIDTH,
-            y - stem_length,
-            meta.stem_thickness,
-            stem_length,
-            rx,
-            ry,
-            None,
-        );
         self.elements.push(Element::Rect(rect));
     }
 
@@ -470,8 +435,7 @@ impl BarElem {
 
     /// Add use element
     fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
-        self.elements
-            .push(Element::Use(Use::new(x, y, glyph.into())));
+        self.elements.push(Element::Use(Use::new(x, y, glyph.into())));
     }
 
     /// Add clef
