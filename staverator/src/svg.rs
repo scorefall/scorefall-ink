@@ -212,7 +212,7 @@ impl fmt::Display for Element {
 
 #[cfg(test)]
 mod tests {
-    use super::super::glyph::GlyphId;
+    use sfff::Glyph;
     use super::*;
 
     #[test]
@@ -226,18 +226,18 @@ mod tests {
     #[test]
     fn glyph() {
         assert_eq!(
-            Use::new(37, 21, GlyphId::StemHarpStringNoise.into()).to_string(),
-            "<use x='37' y='21' xlink:href='#e21f'/>"
+            Use::new(37, 21, Glyph::HarpStringNoise.into()).to_string(),
+            "<use x='37' y='21' xlink:href='#68'/>"
         );
     }
 
     #[test]
     fn group() {
         let mut group = Group::new(0, 0, None);
-        group.push(Element::Use(Use::new(2, 3, GlyphId::NoteheadWhole.into())));
+        group.push(Element::Use(Use::new(2, 3, Glyph::NoteheadWhole.into())));
         assert_eq!(
             group.to_string(),
-            "<g><use x='2' y='3' xlink:href='#e0a2'/></g>"
+            "<g><use x='2' y='3' xlink:href='#3'/></g>"
         );
     }
 }

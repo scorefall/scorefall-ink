@@ -179,7 +179,7 @@ pub fn generate_defs(glyphs: &str) -> String {
     let mut id = 0;
     for glyph in glyphs.split('\0') {
         // Write to Vec should always succeed except on out of memory.
-        let _ = write!(writer, "<path id=\"{:X}\" d=\"{}\"/>", id, glyph);
+        let _ = write!(writer, "<path id=\"{:x}\" d=\"{}\"/>", id, glyph);
         id += 1;
     }
 
