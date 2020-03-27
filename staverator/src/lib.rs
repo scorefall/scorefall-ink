@@ -38,13 +38,9 @@ use scof::{Cursor, Scof, Steps};
 use std::fmt;
 
 /// Width of one bar (measure)
-const BAR_WIDTH: i32 = 2000;
-/// Width of the barline.
-const BARLINE_WIDTH: i32 = 36;
+const BAR_WIDTH: i32 = 8 * sfff::STAVE_SPACE;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
-/// Cursor padding
-const CURSOR_PADDING: i32 = 36;
 
 /// FIXME: REMOVE - Get Bravura font paths
 pub fn bravura() -> Vec<Path> {
@@ -234,8 +230,8 @@ impl BarElem {
     }
 
     /// Add a barline to stave
-    fn add_barline(&mut self, x: i32, ofs: Steps) {
-        let width = BARLINE_WIDTH;
+    fn add_barline(&mut self, meta: &SfFontMetadata, x: i32, ofs: Steps) {
+        let width = meta.barline_thickness;
         let ofs = (ofs * Stave::STEP).0;
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;

@@ -24,11 +24,9 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Element, Notator, Stave, Beams, CURSOR_PADDING, BARLINE_WIDTH, BAR_WIDTH};
+use crate::{BarElem, Element, Notator, Stave, Beams, BAR_WIDTH};
 use scof::Steps;
 use sfff::SfFontMetadata;
-
-const CURSOR_MARGIN: i32 = BARLINE_WIDTH;
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a, 'b, 'c> {
@@ -111,9 +109,9 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             } else if let Some((x, stave_j)) = self.cursor {
                 if stave_i == stave_j {
                     self.cursor = None;
-                    let e = if x == 0.0 { 0 } else { -CURSOR_PADDING };
-                    let f = if x == 0.0 { -CURSOR_PADDING } else { 0 };
-                    let x = if x == 0.0 { CURSOR_MARGIN } else { 0 } +
+                    let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
+                    let f = if x == 0.0 { -meta.barline_thickness } else { 0 };
+                    let x = if x == 0.0 { meta.barline_thickness } else { 0 } +
                         Stave::MARGIN_X + (BAR_WIDTH as f32 * x) as i32;
                     cursor_rect = Some((
                         x + e, // X
@@ -185,7 +183,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             self.bar.add_measure_rest(self.width, ymargin * rest_stave as i32);
             if rest_ic {
                 cursor_rect = Some((
-                    crate::Stave::MARGIN_X + CURSOR_MARGIN, // X
+                    crate::Stave::MARGIN_X + meta.barline_thickness, // X
                     0i32,                   // Y
                     (BAR_WIDTH as f32 * self.width) as i32, // W
                     self.bar.height(),
@@ -195,12 +193,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
-            let e = if x == 0.0 { 0 } else { -CURSOR_PADDING };
+            let e = if x == 0.0 { 0 } else { -meta.barline_thickness };
             let x = (BAR_WIDTH as f32 * x) as i32;
             cursor_rect = Some((
                 crate::Stave::MARGIN_X + x + e,                        // X
                 0i32,                                                  // Y
-                CURSOR_MARGIN + (BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
+                meta.barline_thickness + (BAR_WIDTH as f32 * self.width) as i32 - x - e, // W
                 self.bar.height(),
             ));
         }
@@ -212,7 +210,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
             let path = self.bar.stave.path(meta, y, bar_width, ymargin * i);
             self.bar.elements.push(Element::Path(path));
-            self.bar.add_barline(bar_width, ymargin * i);
+            self.bar.add_barline(meta, bar_width, ymargin * i);
         }
         // Return calculated physical bar width.
         (bar_width, cursor_rect)
