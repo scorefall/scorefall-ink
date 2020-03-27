@@ -95,22 +95,20 @@ impl Beams {
     ) {
         let new_dur = self.dur - dur;
         // Not a rest
-        if let Some(y) = y {
+        self.last_short = if let Some(y) = y {
             // Less than a quarter note
             if dur < 32 {
-                let mut prop = BeamProp::Flag;
-
-                // If last note could be beamed to this note
-                if self.last_short
+                let prop = if self.last_short
                     && self.dur / BEAMRULE_4_4.eighth
                         == new_dur / BEAMRULE_4_4.eighth
                 {
+                    // If last note could be beamed to this note
                     let mut prev = self.short.pop_back().unwrap();
                     if prev.0 == BeamProp::Flag {
                         prev.0 = BeamProp::None;
                     }
                     self.short.push_back(prev);
-                    prop = if self.dur / BEAMRULE_4_4.sixteenth
+                    if self.dur / BEAMRULE_4_4.sixteenth
                         == new_dur / BEAMRULE_4_4.sixteenth
                     {
                         if self.dur / BEAMRULE_4_4.inner
@@ -122,18 +120,20 @@ impl Beams {
                         }
                     } else {
                         BeamProp::ContinueEighth
-                    };
-                }
+                    }
+                } else {
+                    BeamProp::Flag
+                };
 
                 self.short.push_back((prop, dur, width, y));
                 cala::info!("{:?}", self.short);
-                self.last_short = true;
+                true
             } else {
-                self.last_short = false;
+                false
             }
         } else {
-            self.last_short = false;
-        }
+            false
+        };
         // Reduce remaining duration.
         self.dur = new_dur;
     }
@@ -228,10 +228,10 @@ impl Beam {
         let mut sum = 0i16;
         for note_i in 0..beams.notes.len() {
             let vd = beams.notes[note_i].2 .0[0].visual_distance();
-            if vd.0 > 0 {
-                sum += 1;
-            } else if vd.0 < 0 {
-                sum -= 1;
+            match vd.0 {
+                _a if _a > 0 => sum += 1,
+                _a if _a < 0 => sum -= 1,
+                _ => {}
             }
         }
         let stems_up = sum < 0;

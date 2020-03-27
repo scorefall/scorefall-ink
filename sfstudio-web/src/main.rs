@@ -206,42 +206,52 @@ impl State {
                 }
             }
             // Note Lengths
-            if self.input.text == '1' {
-                self.program.set_dur(Fraction::new(1, 64));
+            match self.input.text {
+                '1' => {
+                    self.program.set_dur(Fraction::new(1, 64));
+                    self.render_measures();
+                }
+                '2' => {
+                    self.program.set_dur(Fraction::new(1, 32));
+                    self.render_measures();
+                }
+                '3' => {
+                    self.program.set_dur(Fraction::new(1, 16));
+                    self.render_measures();
+                }
+                '4' => {
+                    self.program.set_dur(Fraction::new(1, 8));
+                    self.render_measures();
+                }
+                '5' => {
+                    self.program.set_dur(Fraction::new(1, 4));
+                    self.render_measures();
+                }
+                '6' => {
+                    self.program.set_dur(Fraction::new(1, 2));
+                    self.render_measures();
+                }
+                '7' => {
+                    self.program.set_dur(Fraction::new(1, 1));
+                    self.render_measures();
+                }
+                '8' => {
+                    self.program.set_dur(Fraction::new(2, 1));
+                    self.render_measures();
+                }
+                '9' => {
+                    self.program.set_dur(Fraction::new(4, 1));
+                    self.render_measures();
+                }
+                '.' => {
+                    self.program.dotted();
+                    self.render_measures();
+                } /*else if self.input.press(Key::T)  || self.input.press(Key::Numpad0) {
+                self.program.tuplet();
                 self.render_measures();
-            } else if self.input.text == '2' {
-                self.program.set_dur(Fraction::new(1, 32));
-                self.render_measures();
-            } else if self.input.text == '3' {
-                self.program.set_dur(Fraction::new(1, 16));
-                self.render_measures();
-            } else if self.input.text == '4' {
-                self.program.set_dur(Fraction::new(1, 8));
-                self.render_measures();
-            } else if self.input.text == '5' {
-                self.program.set_dur(Fraction::new(1, 4));
-                self.render_measures();
-            } else if self.input.text == '6' {
-                self.program.set_dur(Fraction::new(1, 2));
-                self.render_measures();
-            } else if self.input.text == '7' {
-                self.program.set_dur(Fraction::new(1, 1));
-                self.render_measures();
-            } else if self.input.text == '8' {
-                self.program.set_dur(Fraction::new(2, 1));
-                self.render_measures();
-            } else if self.input.text == '9' {
-                self.program.set_dur(Fraction::new(4, 1));
-                self.render_measures();
-            } else if self.input.press(Key::Period)
-                || self.input.press(Key::NumpadDot)
-            {
-                self.program.dotted();
-                self.render_measures();
-            } /*else if self.input.press(Key::T)  || self.input.press(Key::Numpad0) {
-                  self.program.tuplet();
-                  self.render_measures();
-              } */
+                } */
+                _ => {}
+            }
         }
 
         self.input.reset();

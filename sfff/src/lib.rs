@@ -200,6 +200,12 @@ pub struct GlyphsBuilder {
     glyphs: Vec<Option<String>>,
 }
 
+impl Default for GlyphsBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GlyphsBuilder {
     pub fn new() -> Self {
         Self {
@@ -215,11 +221,9 @@ impl GlyphsBuilder {
     pub fn into_string(self) -> String {
         let mut output = String::new();
 
-        let mut count = 0;
         for glyph in self.glyphs.iter() {
-            output.push_str(glyph.as_ref().expect(&format!("!! {:X}", count)));
+            output.push_str(glyph.as_ref().unwrap());
             output.push('\0');
-            count += 1;
         }
         // Leave off the last null byte.
         output.pop();
