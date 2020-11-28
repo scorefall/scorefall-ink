@@ -1,5 +1,5 @@
-# ScoreFall Ink
-Music composition program.
+# ScoreFall™ Ink
+Music composition, arrangement, engraving, and notation program.
 
 ## Crates In This Repository
 - [scorefall-ink-web](https://github.com/scorefall/scorefall-ink/tree/master/sfink-web)
