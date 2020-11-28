@@ -1,0 +1,31 @@
+on: [pull_request]
+name: Deploy to Firebase Hosting on PR
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        tc: [stable, beta, nightly]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.tc }}
+        override: true
+    - uses: actions-rs/cargo@v1
+      with:
+        command: test
+        args: --all --all-features
+  build_and_preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SCOREFALL_STUDIO }}'
+          projectId: scorefall-studio
+        env:
+          FIREBASE_CLI_PREVIEWS: hostingchannels
