@@ -1,13 +1,13 @@
-# ScoreFall Studio
+# ScoreFall Ink
 Music composition program.
 
 ## Crates In This Repository
-- [sfstudio-web](https://github.com/scorefall/scorefall-studio/tree/master/sfstudio-web)
+- [scorefall-ink-web](https://github.com/scorefall/scorefall-ink/tree/master/sfink-web)
   the actual program (putting everything together).
-- [scof](https://github.com/scorefall/scorefall-studio/tree/master/scof)
+- [scof](https://github.com/scorefall/scorefall-ink/tree/master/scof)
   structs of musical notation.
-- [staverator](https://github.com/scorefall/scorefall-studio/tree/master/staverator) music scores in [scof](https://github.com/scorefall/scorefall-studio/tree/master/scof) structs into SVG files.
-- [scorefall-studio](https://github.com/scorefall/scorefall-studio/tree/master/scorefall-studio)
+- [staverator](https://github.com/scorefall/scorefall-ink/tree/master/staverator) music scores in [scof](https://github.com/scorefall/scorefall-ink/tree/master/scof) structs into SVG files.
+- [scorefall-ink](https://github.com/scorefall/scorefall-ink/tree/master/scorefall-ink)
 
 ## Developing
 cargo-web can automatically build and run the web GUI as a server on
@@ -20,6 +20,6 @@ cargo install cargo-web
 
 ### Start Webserver
 ```bash
-cd sfstudio-web
+cd scorefall-ink-web
 cargo web start --target=wasm32-unknown-unknown --release
 ```

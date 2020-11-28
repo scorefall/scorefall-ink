@@ -1,5 +1,5 @@
 [package]
-name = "sfstudio-web"
+name = "scorefall-ink-web"
 version = "0.0.1"
 authors = [
     "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
@@ -13,4 +13,4 @@ cala = "0.7"
 stdweb = "0.4"
 scof = { path = "../scof" }
 staverator = { path = "../staverator" }
-scorefall-studio = { path = "../scorefall-studio" }
+scorefall-ink = { path = "../scorefall-ink" }

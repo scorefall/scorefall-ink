@@ -1,5 +1,5 @@
 [package]
-name = "scorefall-studio"
+name = "scorefall-ink"
 version = "0.0.1"
 authors = [
     "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
@@ -10,8 +10,8 @@ edition = "2018"
 license = "GPL"
 description = "Music composition software."
 documentation = "https://docs.rs/scorefall"
-homepage = "https://app.scorefall.com/"
-repository = "https://github.com/scorefall/scorefall"
+homepage = "https://ink.scorefall.com/"
+repository = "https://github.com/scorefall/scorefall-ink"
 readme = "README.md"
 keywords = ["cross-platform", "gui", "scorefall", "music", "composition"]
 categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio", "multimedia"]

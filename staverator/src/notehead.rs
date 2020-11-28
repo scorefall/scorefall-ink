@@ -1,4 +1,4 @@
-// ScoreFall Studio - Music Composition Software
+// ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 // Copyright (C) 2019-2020 Doug P. Lau

@@ -1,4 +1,4 @@
-// ScoreFall Studio - Music Composition Software
+// ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
 // Copyright (C) 2019-2020 Doug P. Lau
@@ -47,7 +47,7 @@ use std::panic;
 use std::rc::Rc;
 
 use scof::{Cursor, Fraction, Pitch, Steps};
-use scorefall_studio::Program;
+use scorefall_ink::Program;
 use staverator::{BarElem, Element, SfFontMetadata, Stave, STAVE_SPACE};
 
 use std::convert::TryInto;
@@ -406,7 +406,7 @@ fn create_elem(elem: Element) -> Option<stdweb::Value> {
 fn panic_hook(panic_info: &std::panic::PanicInfo) {
     let msg = panic_info.to_string();
 
-    info!("ScoreFall Studio panicked!: {:?}", msg);
+    info!("ScoreFall Ink panicked!: {:?}", msg);
     js! { console.trace() }
     std::process::exit(0);
 }
