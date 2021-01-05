@@ -19,11 +19,12 @@
 // bar is a useful musical term
 #![allow(clippy::blacklisted_name)]
 
+// Glue code to run the main function on WASM.
+cala::glue!();
+
 mod screen;
 
 use screen::{Screen, Rect};
-
-include!("glue.rs");
 
 use cala::log::{Tag, log};
 use cala::input::{Input, Key};

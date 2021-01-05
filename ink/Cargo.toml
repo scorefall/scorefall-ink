@@ -18,4 +18,3 @@ categories = ["api-bindings", "data-structures", "encoding", "multimedia::audio"
 
 [dependencies]
 scof = { path = "../scof" }
-cala = { path = "../../cala", default-features = false }

@@ -13,5 +13,5 @@ sfff = { path = "../sfff" }
 scof = { path = "../scof" }
 
 [dependencies.cala]
-path = "../../cala"
+version = "0.9"
 features = ["log"]
