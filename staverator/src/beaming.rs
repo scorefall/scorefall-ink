@@ -24,6 +24,10 @@ use std::collections::VecDeque;
 
 use scof::{Pitch, Steps};
 
+use cala::log::{Tag, log};
+
+const INFO: Tag = Tag::new("Beaming");
+
 // Beaming rules for a time signature
 struct BeamRules {
     // 8ths
@@ -126,7 +130,7 @@ impl Beams {
                 };
 
                 self.short.push_back((prop, dur, width, y));
-                cala::info!("{:?}", self.short);
+                log!(INFO, "{:?}", self.short);
                 true
             } else {
                 false

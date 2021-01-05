@@ -23,7 +23,9 @@ use serde_derive::{Deserialize, Serialize};
 use std::convert::TryInto;
 use std::str::FromStr;
 
-use cala;
+use cala::log::{Tag, log};
+
+const SCOF: Tag = Tag::new("SCOF");
 
 mod fraction;
 pub mod note;
@@ -721,7 +723,7 @@ impl Scof {
         let mut i = 0;
         i = loop {
             if i == notes.len() {
-                cala::note!("END {} {}", note.duration, quota);
+                log!(SCOF, "END {} {}", note.duration, quota);
                 note.duration -= quota;
                 new_notes.push(Marking::Note(note));
                 *notes = new_notes;
@@ -788,7 +790,7 @@ impl Scof {
             let mut cursor = cursor.clone();
 
             while let Some(rem) = self.set_part_measure(&cursor, &note) {
-                cala::note!("Remainder {}", rem);
+                log!(SCOF, "Remainder {}", rem);
                 cursor.bar += 1;
                 cursor.marking = 0;
                 self.new_measure();

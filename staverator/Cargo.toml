@@ -9,6 +9,9 @@ edition = "2018"
 license = "GPL"
 
 [dependencies]
-cala = "0.7"
 sfff = { path = "../sfff" }
 scof = { path = "../scof" }
+
+[dependencies.cala]
+path = "../../cala"
+features = ["log"]

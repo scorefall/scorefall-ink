@@ -1,0 +1,60 @@
+# ScoreFall Ink - Music Composition Software
+#
+# Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+# Copyright © 2019-2021 Doug P. Lau
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+[package]
+name = "scorefall-ink-web"
+version = "0.0.1"
+authors = [
+    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
+    "Douglas Lau <doug.p.lau@gmail.com>",
+]
+edition = "2018"
+license = "GPL"
+repository = "https://github.com/scorefall/scorefall-ink"
+homepage = "https://ink.scorefall.com"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/main.rs"
+
+[dependencies]
+wasm-bindgen = "0.2" # for glue code
+scof = { path = "../scof" }
+staverator = { path = "../staverator" }
+scorefall-ink = { path = "../ink" }
+
+[dependencies.web-sys] # for building the GUI.
+version = "0.3"
+features = [
+    "Window",
+    "Document",
+    "Element",
+    "UiEvent",
+    "console",
+]
+
+[dependencies.cala]
+path = "../../cala" # "0.7"
+features = [
+    "input",
+    "log",
+    "task"
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.13"

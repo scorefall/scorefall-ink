@@ -36,6 +36,9 @@ use rhythmic_spacing::BarEngraver;
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
 use std::fmt;
+use cala::log::{Tag, log};
+
+const INFO: Tag = Tag::new("Staverator");
 
 /// Width of one bar (measure)
 const BAR_WIDTH: i32 = 8 * STAVE_SPACE;
@@ -295,7 +298,7 @@ impl BarElem {
         };
 
         let mut d = String::new();
-        cala::info!("ADD_BEAM {} notes", beam.notes.len());
+        log!(INFO, "ADD_BEAM {} notes", beam.notes.len());
         let mut old_x = None;
         for note_i in 0..beam.notes.len() {
             let (y, y_offset) = beam.notes[note_i].2;

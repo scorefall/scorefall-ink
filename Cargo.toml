@@ -19,13 +19,17 @@
 [workspace]
 members = [
     # ScoreFall Ink's "Backend"
-    "scorefall-ink",
+    "ink",
     # ScoreFall Ink's native file format (*.scof)
     "scof",
     # ScoreFall Ink's web-based GUI
-    "scorefall-ink-web",
+    "web",
     # ScoreFall Ink's render engine
     "staverator",
     # ScoreFall Ink's font format parser
     "sfff",
 ]
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"

@@ -10,16 +10,9 @@ Music composition, arrangement, engraving, and notation program.
 - [scorefall-ink](https://github.com/scorefall/scorefall-ink/tree/master/scorefall-ink)
 
 ## Developing
-cargo-web can automatically build and run the web GUI as a server on
-your machine for testing.
 
-### Install
+### Build and Start Webserver
 ```bash
-cargo install cargo-web
-```
-
-### Start Webserver
-```bash
-cd scorefall-ink-web
-cargo web start --target=wasm32-unknown-unknown --release
+cd web
+./run.sh
 ```
