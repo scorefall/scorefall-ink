@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright © 2019-2021 Doug P. Lau
+// Copyright © 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -109,17 +109,6 @@ impl Screen {
     pub fn viewbox(&mut self, vbox: &str) {
         self.svg.set_attribute("viewBox", vbox).expect("Failed to set attrib");
     }
-    
-    /// Create a rectangle object.
-    pub fn new_rect(&self, x: f32, y: f32, w: f32, h: f32) -> Rect {
-        let rect = self.document.create_element_ns(SVGNS, "rect").unwrap();
-        rect.set_attribute_ns(None, "x", &x.to_string()).unwrap();
-        rect.set_attribute_ns(None, "y", &y.to_string()).unwrap();
-        rect.set_attribute_ns(None, "width", &w.to_string()).unwrap();
-        rect.set_attribute_ns(None, "height", &h.to_string()).unwrap();
-    
-        Rect(rect)
-    }
 
     /// Create a new group.
     pub fn new_group(&self) -> Group {
@@ -143,8 +132,6 @@ impl Screen {
 
 pub struct Group(pub web_sys::Element);
 
-pub struct Rect(pub web_sys::Element);
-
 impl Group {
     pub fn set_id(&mut self, id: &str) {
         self.0.set_attribute_ns(None, "id", &id.to_string()).unwrap();
@@ -152,32 +139,6 @@ impl Group {
     
     pub fn set_transform(&mut self, trans: &str) {
         self.0.set_attribute_ns(None, "transform", trans).unwrap();
-    }
-}
-
-impl Rect {
-    pub fn set_id(&mut self, id: &str) {
-        self.0.set_attribute_ns(None, "id", &id.to_string()).unwrap();
-    }
-
-    pub fn set_fill(&mut self, v: &str) {
-        self.0.set_attribute_ns(None, "fill", v).unwrap();
-    }
-
-    pub fn set_x(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "x", &v.to_string()).unwrap();
-    }
-
-    pub fn set_y(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "y", &v.to_string()).unwrap();
-    }
-
-    pub fn set_width(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "width", &v.to_string()).unwrap();
-    }
-
-    pub fn set_height(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "height", &v.to_string()).unwrap();
     }
 }
 

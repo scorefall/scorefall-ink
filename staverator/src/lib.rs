@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -203,21 +203,33 @@ impl BarElem {
         meta: &SfFontMetadata,
         scof: &Scof,
         cursor: &Cursor,
-        curs: &mut Cursor,
-    ) -> Option<(i32, i32, i32, i32)> {
+        measure: u16,
+        offset_x: i32,
+    ) {
+        let mut curs = Cursor::new(
+            0, /*mvmt*/
+            measure, 0, /*i chan*/
+            0, /*marking*/
+        );
         let reset_cursor = curs.clone();
 
         // Make notators for each stave.
         let mut notators = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
-            *curs = reset_cursor.chan(chan);
+            curs = reset_cursor.chan(chan);
             notators.push(Notator::new(scof, cursor.clone(), curs.clone()));
         }
 
         // Engrave the music.
         let (width, rect) = BarEngraver::new(self, &mut notators).engrave(meta);
         self.width += width;
-        rect
+
+        // Insert cursor if necessary
+        if let Some((x, y, w, h)) = rect {
+            // TODO: set id to "cursor"
+            let rect = Rect::new(x, y, w, h, None, None, Some(0xFF9AF0));
+            self.elements.insert(0, Element::Rect(rect));
+        }
     }
 
     /// Get the Y offset of a step value

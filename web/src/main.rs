@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright © 2019-2021 Doug P. Lau
+// Copyright © 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ cala::glue!();
 
 mod screen;
 
-use screen::{Screen, Rect};
+use screen::Screen;
 
 use cala::log::{Tag, log};
 use cala::input::{Input, Key};
@@ -32,9 +32,9 @@ use cala::task::{exec, wait};
 
 use std::panic;
 
-use scof::{Cursor, Fraction, Pitch, Steps};
+use scof::{Fraction, Pitch, Steps};
 use scorefall_ink::Program;
-use staverator::{BarElem, Element, SfFontMetadata, Stave, STAVE_SPACE};
+use staverator::{BarElem, SfFontMetadata, Stave, STAVE_SPACE};
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -67,13 +67,8 @@ impl State {
     /// Create a new state
     fn new() -> State {
         let screen = Screen::new().expect("Failed to create screen");
-        let mut cursor = screen.new_rect(0.0, 0.0, 1024.0, 1024.0);
-        cursor.set_id("cursor");
-        cursor.set_fill("#FF9AF0");
         let (meta, defs) = staverator::modern();
         screen.set_svg(&defs);
-        screen.append_child(cursor.0);
-
         State {
             screen,
             program: Program::new(),
@@ -81,7 +76,7 @@ impl State {
             width: 0.0,
         }
     }
-    
+
     /// Event loop.
     fn event(&mut self, event: Event) {
         match event {
@@ -89,7 +84,7 @@ impl State {
             Event::Resize(size) => self.resize(size).unwrap(),
         }
     }
-    
+
     /// Input handler.
     fn event_input(&mut self, input: Input) {
         match input {
@@ -256,26 +251,16 @@ impl State {
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
 
-        let mut curs = Cursor::new(
-            0, /*mvmt*/
-            measure, 0, /*i chan*/
-            0, /*marking*/
-        );
         // Alto clef has 0 steps offset
         let mut bar =
             BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
-        if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(
+        bar.add_markings(
             &self.meta,
             &self.program.scof,
             &self.program.cursor,
-            &mut curs,
-        ) {
-            let mut cur = Rect(self.screen.element_by_id("cursor").unwrap());
-            cur.set_x((cx + offset_x) as f32);
-            cur.set_y(cy as f32);
-            cur.set_width(cwidth as f32);
-            cur.set_height(cheight as f32);
-        }
+            measure,
+            offset_x,
+        );
         bar_g.0.set_inner_html(&format!("{bar}"));
         bar.width
     }
