@@ -26,7 +26,7 @@ mod rhythmic_spacing;
 mod svg;
 
 pub use sfff::{SfFontMetadata, STAVE_SPACE};
-pub use svg::{Element, Group, Path, Rect, Use};
+use svg::Path;
 
 use beaming::{Beam, Beams, Short};
 use notator::Notator;
@@ -34,6 +34,7 @@ use notehead::Notehead;
 use rhythmic_spacing::BarEngraver;
 
 use cala::log::{log, Tag};
+use hatmil::{Html, Svg};
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
 use std::fmt;
@@ -124,7 +125,7 @@ impl Stave {
         top: i32,
         width: i32,
         ofs: Steps,
-    ) -> Path {
+    ) -> String {
         let width = width;
         let ofs = (ofs * Stave::STEP).0;
         let mut d = String::new();
@@ -143,7 +144,7 @@ impl Stave {
             );
             d.push_str(line);
         }
-        Path::new(None, d)
+        d
     }
 }
 
@@ -157,13 +158,13 @@ pub struct BarElem {
     /// Width of measure
     pub width: i32,
     /// SVG Elements
-    elements: Vec<Element>,
+    elements: Vec<Html>,
 }
 
 impl fmt::Display for BarElem {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for elem in &self.elements {
-            write!(f, "{}", elem)?;
+            write!(f, "{elem}")?;
         }
         Ok(())
     }
@@ -249,8 +250,15 @@ impl BarElem {
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
-        let rect = Rect::new(x, y, width, height, None, None, None);
-        self.elements.push(Element::Rect(rect));
+        let mut html = Html::new();
+        Svg::new(&mut html)
+            .rect()
+            .x(format!("{x}"))
+            .y(format!("{y}"))
+            .width(format!("{width}"))
+            .height(format!("{height}"))
+            .end();
+        self.elements.push(html);
     }
 
     /// Get Y position from steps and offset
@@ -347,7 +355,9 @@ impl BarElem {
             }
             old_x = Some(x);
         }
-        self.elements.push(Element::Path(Path::new(None, d)));
+        let mut html = Html::new();
+        Svg::new(&mut html).path().d(d).end();
+        self.elements.push(html);
     }
 
     /// Add stems and either flags or beam elements for short notes.
@@ -404,16 +414,20 @@ impl BarElem {
         let yyy = steps.0.abs();
         let mut count = if yyy % 2 == 0 { 0 } else { 1 };
         for _ in (6..yyy + 1).step_by(2) {
-            let rect = Rect::new(
-                x - (meta.ledger_line_extension - (meta.stem_thickness / 4)),
-                y - (meta.stave_line_thickness / 2) + count * dir_step,
-                head_width + meta.ledger_line_extension * 2,
-                meta.stave_line_thickness,
-                None,
-                None,
-                None,
-            );
-            self.elements.push(Element::Rect(rect));
+            let x =
+                x - (meta.ledger_line_extension - (meta.stem_thickness / 4));
+            let y = y - (meta.stave_line_thickness / 2) + count * dir_step;
+            let width = head_width + meta.ledger_line_extension * 2;
+            let height = meta.stave_line_thickness;
+            let mut html = Html::new();
+            Svg::new(&mut html)
+                .rect()
+                .x(format!("{x}"))
+                .y(format!("{y}"))
+                .width(format!("{width}"))
+                .height(format!("{height}"))
+                .end();
+            self.elements.push(html);
             count += 2;
         }
     }
@@ -426,11 +440,21 @@ impl BarElem {
         y: i32,
         stem_length: i32,
     ) {
-        let rx = Some(meta.stem_thickness / 2);
-        let ry = Some(meta.stem_thickness);
-        let rect =
-            Rect::new(x, y, meta.stem_thickness, stem_length, rx, ry, None);
-        self.elements.push(Element::Rect(rect));
+        let width = meta.stem_thickness;
+        let height = stem_length;
+        let rx = meta.stem_thickness / 2;
+        let ry = meta.stem_thickness;
+        let mut html = Html::new();
+        Svg::new(&mut html)
+            .rect()
+            .x(format!("{x}"))
+            .y(format!("{y}"))
+            .width(format!("{width}"))
+            .height(format!("{height}"))
+            .rx(format!("{rx}"))
+            .ry(format!("{ry}"))
+            .end();
+        self.elements.push(html);
     }
 
     /// Add `use` element for a whole measure rest
@@ -454,8 +478,14 @@ impl BarElem {
 
     /// Add use element
     fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
-        self.elements
-            .push(Element::Use(Use::new(x, y, glyph.into())));
+        let mut html = Html::new();
+        Svg::new(&mut html)
+            .r#use()
+            .x(format!("{x}"))
+            .y(format!("{y}"))
+            .attr("xlink:href", format!("#{:x}", u16::from(glyph)))
+            .end();
+        self.elements.push(html);
     }
 
     /// Add clef

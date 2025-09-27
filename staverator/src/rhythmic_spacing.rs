@@ -24,7 +24,8 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Beams, Element, Notator, Rect, Stave, BAR_WIDTH};
+use crate::{BarElem, Beams, Notator, Stave, BAR_WIDTH};
+use hatmil::{Html, Svg};
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -213,15 +214,25 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Draw barlines
         for i in 0..self.notators.len().try_into().unwrap() {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
-            let path = self.bar.stave.path(meta, y, bar_width, ymargin * i);
-            self.bar.elements.push(Element::Path(path));
+            let d = self.bar.stave.path(meta, y, bar_width, ymargin * i);
+            let mut html = Html::new();
+            Svg::new(&mut html).path().d(d).end();
+            self.bar.elements.push(html);
             self.bar.add_barline(meta, bar_width, ymargin * i);
         }
 
         if let Some((x, y, w, h)) = cursor_rect {
             // TODO: set id to "cursor"
-            let rect = Rect::new(x, y, w, h, None, None, Some(0xFF9AF0));
-            self.bar.elements.insert(0, Element::Rect(rect));
+            let mut html = Html::new();
+            Svg::new(&mut html)
+                .rect()
+                .x(format!("{x}"))
+                .y(format!("{y}"))
+                .width(format!("{w}"))
+                .height(format!("{h}"))
+                .fill("#FF9AF0")
+                .end();
+            self.bar.elements.insert(0, html);
         }
 
         // Return calculated physical bar width.
