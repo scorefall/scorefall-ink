@@ -65,11 +65,6 @@ impl Screen {
         })
     }
 
-    /// Set the screen title
-    pub fn set_title(&mut self, _title: &str) {
-        todo!()
-    }
-
     /// Get a future that returns resize events.
     pub fn resize(&mut self) -> impl Future<Output=(u32, u32)> + Unpin {
         let svg = self.svg.clone();
@@ -126,38 +121,21 @@ impl Screen {
         Rect(rect)
     }
 
-    /// Create a new path.
-    pub fn new_path(&self, data: &str) -> Path {
-        let path = self.document.create_element_ns(SVGNS, "path").unwrap();
-        path.set_attribute_ns(None, "d", data).unwrap();
-        Path(path)
-    }
-
-    /// Create a new use.
-    pub fn new_use(&self, x: f32, y: f32, id: &str) -> Use {
-        let stamp = self.document.create_element_ns(SVGNS, "use").unwrap();
-        stamp.set_attribute_ns(None, "x", &x.to_string()).unwrap();
-        stamp.set_attribute_ns(None, "y", &y.to_string()).unwrap();
-        stamp.set_attribute_ns(None, "href", id).unwrap();
-
-        Use(stamp)
-    }
-    
     /// Create a new group.
     pub fn new_group(&self) -> Group {
         let group = self.document.create_element_ns(SVGNS, "g").unwrap();
         Group(group)
     }
-    
+
     /// Add SVG element.
     pub fn append_child(&self, element: web_sys::Element) {
         self.svg.append_child(&element).expect("Failed to append child");
     }
-    
+
     pub fn set_svg(&self, svg: &str) {
         self.svg.set_inner_html(&svg);
     }
-    
+
     pub fn element_by_id(&self, id: &str) -> Option<web_sys::Element> {
         self.document.get_element_by_id(id)
     }
@@ -166,10 +144,6 @@ impl Screen {
 pub struct Group(pub web_sys::Element);
 
 pub struct Rect(pub web_sys::Element);
-
-pub struct Path(pub web_sys::Element);
-
-pub struct Use(pub web_sys::Element);
 
 impl Group {
     pub fn set_id(&mut self, id: &str) {
@@ -184,14 +158,6 @@ impl Group {
 impl Rect {
     pub fn set_id(&mut self, id: &str) {
         self.0.set_attribute_ns(None, "id", &id.to_string()).unwrap();
-    }
-
-    pub fn set_rx(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "rx", &v.to_string()).unwrap();
-    }
-
-    pub fn set_ry(&mut self, v: f32) {
-        self.0.set_attribute_ns(None, "ry", &v.to_string()).unwrap();
     }
 
     pub fn set_fill(&mut self, v: &str) {

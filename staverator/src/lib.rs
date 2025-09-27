@@ -157,7 +157,7 @@ pub struct BarElem {
     /// Width of measure
     pub width: i32,
     /// SVG Elements
-    pub elements: Vec<Element>,
+    elements: Vec<Element>,
 }
 
 impl fmt::Display for BarElem {

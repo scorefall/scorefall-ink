@@ -47,35 +47,6 @@ const INFO: Tag = Tag::new("Info");
 const RENDER: Tag = Tag::new("Render");
 const GUI: Tag = Tag::new("Gui");
 
-/// Create DOM element from a staverator Element
-fn create_elem(screen: &Screen, elem: Element) -> Option<web_sys::Element> {
-    Some(match elem {
-        Element::Rect(r) => {
-            let mut rect = screen.new_rect(r.x as f32, r.y as f32, r.width as f32, r.height as f32);
-            if let Some(v) = r.rx {
-                rect.set_rx(v as f32);
-            }
-            if let Some(v) = r.ry {
-                rect.set_ry(v as f32);
-            }
-            if let Some(fill) = r.fill {
-                rect.set_fill(&fill);
-            }
-            rect.0
-        },
-        Element::Use(u) => {
-            let id = format!("#{:x}", u.id);
-            let stamp = screen.new_use(u.x as f32, u.y as f32, &id);
-            stamp.0
-        }
-        Element::Path(p) => {
-            let path = screen.new_path(&p.d);
-            path.0
-        }
-        _ => return None,
-    })
-}
-
 /// Event handled by the event loop.
 enum Event {
     Input(Input),
@@ -277,17 +248,10 @@ impl State {
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
         let page = self.screen.element_by_id("page").unwrap();
-        let old_g = self.screen.element_by_id(bar_id);
         let mut bar_g = self.screen.new_group();
         bar_g.set_id(bar_id);
         bar_g.set_transform(trans);
-        let bar_g = if let Some(old_g) = old_g {
-            old_g.replace_with_with_node_1(&bar_g.0).unwrap();
-            bar_g
-        } else {
-            page.append_child(&bar_g.0).unwrap();
-            bar_g
-        };
+        page.append_child(&bar_g.0).unwrap();
 
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
@@ -312,13 +276,7 @@ impl State {
             cur.set_width(cwidth as f32);
             cur.set_height(cheight as f32);
         }
-
-        for elem in bar.elements {
-            if let Some(e) = create_elem(&self.screen, elem) {
-                bar_g.0.append_child(&e).unwrap();
-            }
-        }
-
+        bar_g.0.set_inner_html(&format!("{bar}"));
         bar.width
     }
 }
