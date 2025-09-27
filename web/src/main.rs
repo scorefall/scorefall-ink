@@ -26,8 +26,8 @@ mod screen;
 
 use screen::Screen;
 
-use cala::log::{Tag, log};
 use cala::input::{Input, Key};
+use cala::log::{log, Tag};
 use cala::task::{exec, wait};
 
 use std::panic;
@@ -88,61 +88,93 @@ impl State {
     /// Input handler.
     fn event_input(&mut self, input: Input) {
         match input {
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Halve duration
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_half_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_half_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Double duration
             }
 
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Move selection to the left
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_quarter_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_quarter_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Move selection to the right
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Select left
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::J | Key::Down) =>
+            {
                 // TODO: Select down
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::K | Key::Up) =>
+            {
                 // TODO: Select up
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Select right
             }
 
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::H | Key::Left) =>
+            {
                 self.program.left();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::L | Key::Right) =>
+            {
                 self.program.right();
                 self.render_measures();
             }
@@ -186,7 +218,7 @@ impl State {
                 self.program.dotted();
                 self.render_measures();
             }
-            _ => { /* ignore all other input */ },
+            _ => { /* ignore all other input */ }
         }
     }
 

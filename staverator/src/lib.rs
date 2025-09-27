@@ -33,10 +33,10 @@ use notator::Notator;
 use notehead::Notehead;
 use rhythmic_spacing::BarEngraver;
 
+use cala::log::{log, Tag};
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
 use std::fmt;
-use cala::log::{Tag, log};
 
 const INFO: Tag = Tag::new("Staverator");
 
@@ -336,8 +336,8 @@ impl BarElem {
                     count = count.min(1);
                 }
 
-                let beam_distance = if beam.stems_up { -1 } else { 1 }
-                    * (3 * Stave::STEP) / 2;
+                let beam_distance =
+                    if beam.stems_up { -1 } else { 1 } * (3 * Stave::STEP) / 2;
                 for i in 0..count {
                     d.push_str(&format!(
                         "M{} {}l{} {}l{} {}l{} {}z",

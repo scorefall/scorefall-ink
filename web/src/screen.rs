@@ -16,15 +16,15 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::future::Future;
-use std::task::{Waker, Context, Poll};
 use std::cell::RefCell;
+use std::future::Future;
 use std::pin::Pin;
-use std::sync::atomic::{AtomicU32, Ordering, AtomicBool};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::task::{Context, Poll, Waker};
 
 use wasm_bindgen::closure::Closure;
-use wasm_bindgen::JsCast;
 use wasm_bindgen::convert::FromWasmAbi;
+use wasm_bindgen::JsCast;
 use web_sys::UiEvent;
 
 const SVGNS: Option<&str> = Some("http://www.w3.org/2000/svg");
@@ -66,7 +66,7 @@ impl Screen {
     }
 
     /// Get a future that returns resize events.
-    pub fn resize(&mut self) -> impl Future<Output=(u32, u32)> + Unpin {
+    pub fn resize(&mut self) -> impl Future<Output = (u32, u32)> + Unpin {
         let svg = self.svg.clone();
 
         self.on_event("resize", move |_ui_event: UiEvent| {
@@ -90,12 +90,17 @@ impl Screen {
 
     /// Get the size.
     pub fn size(&self) -> (u32, u32) {
-        (self.svg.client_width() as u32, self.svg.client_height() as u32)
+        (
+            self.svg.client_width() as u32,
+            self.svg.client_height() as u32,
+        )
     }
 
     /// Register a javascript global event handler.
     fn on_event<E, F>(&mut self, name: &str, closure: F)
-        where E: FromWasmAbi + 'static, F: Fn(E) + 'static
+    where
+        E: FromWasmAbi + 'static,
+        F: Fn(E) + 'static,
     {
         #[allow(trivial_casts)] // Actually needed here.
         let e: Closure<dyn Fn(E)> = Closure::wrap(Box::new(closure));
@@ -104,10 +109,12 @@ impl Screen {
             .expect("Failed to register event");
         e.forget();
     }
-    
+
     /// Set SVG viewbox.
     pub fn viewbox(&mut self, vbox: &str) {
-        self.svg.set_attribute("viewBox", vbox).expect("Failed to set attrib");
+        self.svg
+            .set_attribute("viewBox", vbox)
+            .expect("Failed to set attrib");
     }
 
     /// Create a new group.
@@ -118,7 +125,9 @@ impl Screen {
 
     /// Add SVG element.
     pub fn append_child(&self, element: web_sys::Element) {
-        self.svg.append_child(&element).expect("Failed to append child");
+        self.svg
+            .append_child(&element)
+            .expect("Failed to append child");
     }
 
     pub fn set_svg(&self, svg: &str) {
@@ -134,9 +143,11 @@ pub struct Group(pub web_sys::Element);
 
 impl Group {
     pub fn set_id(&mut self, id: &str) {
-        self.0.set_attribute_ns(None, "id", &id.to_string()).unwrap();
+        self.0
+            .set_attribute_ns(None, "id", &id.to_string())
+            .unwrap();
     }
-    
+
     pub fn set_transform(&mut self, trans: &str) {
         self.0.set_attribute_ns(None, "transform", trans).unwrap();
     }
