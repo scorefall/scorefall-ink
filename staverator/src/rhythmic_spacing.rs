@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Beams, Element, Notator, Stave, BAR_WIDTH};
+use crate::{BarElem, Beams, Element, Notator, Rect, Stave, BAR_WIDTH};
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -77,10 +77,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 
     /// Engrave the bar of music.
-    pub fn engrave(
-        &mut self,
-        meta: &SfFontMetadata,
-    ) -> (i32, Option<(i32, i32, i32, i32)>) {
+    pub fn engrave(&mut self, meta: &SfFontMetadata) -> i32 {
         let ymargin = self.bar.stave.height_steps() + Steps(12);
         let mut cursor_rect = None;
         let mut rests = vec![];
@@ -220,8 +217,15 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             self.bar.elements.push(Element::Path(path));
             self.bar.add_barline(meta, bar_width, ymargin * i);
         }
+
+        if let Some((x, y, w, h)) = cursor_rect {
+            // TODO: set id to "cursor"
+            let rect = Rect::new(x, y, w, h, None, None, Some(0xFF9AF0));
+            self.bar.elements.insert(0, Element::Rect(rect));
+        }
+
         // Return calculated physical bar width.
-        (bar_width, cursor_rect)
+        bar_width
     }
 }
 

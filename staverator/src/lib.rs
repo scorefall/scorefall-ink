@@ -221,15 +221,8 @@ impl BarElem {
         }
 
         // Engrave the music.
-        let (width, rect) = BarEngraver::new(self, &mut notators).engrave(meta);
+        let width = BarEngraver::new(self, &mut notators).engrave(meta);
         self.width += width;
-
-        // Insert cursor if necessary
-        if let Some((x, y, w, h)) = rect {
-            // TODO: set id to "cursor"
-            let rect = Rect::new(x, y, w, h, None, None, Some(0xFF9AF0));
-            self.elements.insert(0, Element::Rect(rect));
-        }
     }
 
     /// Get the Y offset of a step value
