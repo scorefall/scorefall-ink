@@ -226,10 +226,10 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             let mut html = Html::new();
             Svg::new(&mut html)
                 .rect()
-                .x(format!("{x}"))
-                .y(format!("{y}"))
-                .width(format!("{w}"))
-                .height(format!("{h}"))
+                .x(x.to_string())
+                .y(y.to_string())
+                .width(w.to_string())
+                .height(h.to_string())
                 .fill("#FF9AF0")
                 .end();
             self.bar.elements.insert(0, html);
