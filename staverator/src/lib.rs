@@ -422,10 +422,10 @@ impl BarElem {
             let mut html = Html::new();
             Svg::new(&mut html)
                 .rect()
-                .x(format!("{x}"))
-                .y(format!("{y}"))
-                .width(format!("{width}"))
-                .height(format!("{height}"))
+                .x(x.to_string())
+                .y(y.to_string())
+                .width(width.to_string())
+                .height(height.to_string())
                 .end();
             self.elements.push(html);
             count += 2;
