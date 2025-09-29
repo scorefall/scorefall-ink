@@ -481,8 +481,8 @@ impl BarElem {
         let mut html = Html::new();
         Svg::new(&mut html)
             .r#use()
-            .x(format!("{x}"))
-            .y(format!("{y}"))
+            .x(x.to_string())
+            .y(y.to_string())
             .attr("xlink:href", format!("#{:x}", u16::from(glyph)))
             .end();
         self.elements.push(html);
