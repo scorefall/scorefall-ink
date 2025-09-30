@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@
 use std::collections::VecDeque;
 use std::convert::TryInto;
 
-use crate::{BarElem, Beams, Element, Notator, Stave, BAR_WIDTH};
+use crate::{BarElem, Beams, Notator, Stave, BAR_WIDTH};
+use hatmil::{Html, Svg};
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -77,10 +78,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 
     /// Engrave the bar of music.
-    pub fn engrave(
-        &mut self,
-        meta: &SfFontMetadata,
-    ) -> (i32, Option<(i32, i32, i32, i32)>) {
+    pub fn engrave(&mut self, meta: &SfFontMetadata) -> i32 {
         let ymargin = self.bar.stave.height_steps() + Steps(12);
         let mut cursor_rect = None;
         let mut rests = vec![];
@@ -216,12 +214,29 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         // Draw barlines
         for i in 0..self.notators.len().try_into().unwrap() {
             let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
-            let path = self.bar.stave.path(meta, y, bar_width, ymargin * i);
-            self.bar.elements.push(Element::Path(path));
+            let d = self.bar.stave.path(meta, y, bar_width, ymargin * i);
+            let mut html = Html::new();
+            Svg::new(&mut html).path().d(d).end();
+            self.bar.elements.push(html);
             self.bar.add_barline(meta, bar_width, ymargin * i);
         }
+
+        if let Some((x, y, w, h)) = cursor_rect {
+            // TODO: set id to "cursor"
+            let mut html = Html::new();
+            Svg::new(&mut html)
+                .rect()
+                .x(x.to_string())
+                .y(y.to_string())
+                .width(w.to_string())
+                .height(h.to_string())
+                .fill("#FF9AF0")
+                .end();
+            self.bar.elements.insert(0, html);
+        }
+
         // Return calculated physical bar width.
-        (bar_width, cursor_rect)
+        bar_width
     }
 }
 

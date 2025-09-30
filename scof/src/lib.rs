@@ -23,7 +23,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::convert::TryInto;
 use std::str::FromStr;
 
-use cala::log::{Tag, log};
+use cala::log::{log, Tag};
 
 const SCOF: Tag = Tag::new("SCOF");
 

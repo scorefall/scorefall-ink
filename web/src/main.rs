@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright © 2019-2021 Doug P. Lau
+// Copyright © 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -24,17 +24,17 @@ cala::glue!();
 
 mod screen;
 
-use screen::{Screen, Rect};
+use screen::Screen;
 
-use cala::log::{Tag, log};
 use cala::input::{Input, Key};
+use cala::log::{log, Tag};
 use cala::task::{exec, wait};
 
 use std::panic;
 
-use scof::{Cursor, Fraction, Pitch, Steps};
+use scof::{Fraction, Pitch, Steps};
 use scorefall_ink::Program;
-use staverator::{BarElem, Element, SfFontMetadata, Stave, STAVE_SPACE};
+use staverator::{BarElem, SfFontMetadata, Stave, STAVE_SPACE};
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -46,35 +46,6 @@ const SCALEDOWN: f32 = (STAVE_SPACE * WINDOW_HEIGHT_SS) as f32 / ZOOM_LEVEL;
 const INFO: Tag = Tag::new("Info");
 const RENDER: Tag = Tag::new("Render");
 const GUI: Tag = Tag::new("Gui");
-
-/// Create DOM element from a staverator Element
-fn create_elem(screen: &Screen, elem: Element) -> Option<web_sys::Element> {
-    Some(match elem {
-        Element::Rect(r) => {
-            let mut rect = screen.new_rect(r.x as f32, r.y as f32, r.width as f32, r.height as f32);
-            if let Some(v) = r.rx {
-                rect.set_rx(v as f32);
-            }
-            if let Some(v) = r.ry {
-                rect.set_ry(v as f32);
-            }
-            if let Some(fill) = r.fill {
-                rect.set_fill(&fill);
-            }
-            rect.0
-        },
-        Element::Use(u) => {
-            let id = format!("#{:x}", u.id);
-            let stamp = screen.new_use(u.x as f32, u.y as f32, &id);
-            stamp.0
-        }
-        Element::Path(p) => {
-            let path = screen.new_path(&p.d);
-            path.0
-        }
-        _ => return None,
-    })
-}
 
 /// Event handled by the event loop.
 enum Event {
@@ -96,13 +67,8 @@ impl State {
     /// Create a new state
     fn new() -> State {
         let screen = Screen::new().expect("Failed to create screen");
-        let mut cursor = screen.new_rect(0.0, 0.0, 1024.0, 1024.0);
-        cursor.set_id("cursor");
-        cursor.set_fill("#FF9AF0");
         let (meta, defs) = staverator::modern();
         screen.set_svg(&defs);
-        screen.append_child(cursor.0);
-
         State {
             screen,
             program: Program::new(),
@@ -110,7 +76,7 @@ impl State {
             width: 0.0,
         }
     }
-    
+
     /// Event loop.
     fn event(&mut self, event: Event) {
         match event {
@@ -118,65 +84,97 @@ impl State {
             Event::Resize(size) => self.resize(size).unwrap(),
         }
     }
-    
+
     /// Input handler.
     fn event_input(&mut self, input: Input) {
         match input {
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Halve duration
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_half_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_half_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.ctrl() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Double duration
             }
 
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Move selection to the left
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_quarter_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_quarter_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.alt() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Move selection to the right
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::H | Key::Left) =>
+            {
                 // TODO: Select left
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::J | Key::Down) =>
+            {
                 // TODO: Select down
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::K | Key::Up) =>
+            {
                 // TODO: Select up
             }
-            Input::Key(mods, key, true) if mods.shift() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::L | Key::Right) =>
+            {
                 // TODO: Select right
             }
 
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::H | Key::Left) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::H | Key::Left) =>
+            {
                 self.program.left();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::J | Key::Down) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::J | Key::Down) =>
+            {
                 self.program.down_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::K | Key::Up) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::K | Key::Up) =>
+            {
                 self.program.up_step();
                 self.render_measures();
             }
-            Input::Key(mods, key, true) if mods.none() && matches!(key, Key::L | Key::Right) => {
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::L | Key::Right) =>
+            {
                 self.program.right();
                 self.render_measures();
             }
@@ -220,7 +218,7 @@ impl State {
                 self.program.dotted();
                 self.render_measures();
             }
-            _ => { /* ignore all other input */ },
+            _ => { /* ignore all other input */ }
         }
     }
 
@@ -277,48 +275,25 @@ impl State {
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
         let page = self.screen.element_by_id("page").unwrap();
-        let old_g = self.screen.element_by_id(bar_id);
         let mut bar_g = self.screen.new_group();
         bar_g.set_id(bar_id);
         bar_g.set_transform(trans);
-        let bar_g = if let Some(old_g) = old_g {
-            old_g.replace_with_with_node_1(&bar_g.0).unwrap();
-            bar_g
-        } else {
-            page.append_child(&bar_g.0).unwrap();
-            bar_g
-        };
+        page.append_child(&bar_g.0).unwrap();
 
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
 
-        let mut curs = Cursor::new(
-            0, /*mvmt*/
-            measure, 0, /*i chan*/
-            0, /*marking*/
-        );
         // Alto clef has 0 steps offset
         let mut bar =
             BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
-        if let Some((cx, cy, cwidth, cheight)) = bar.add_markings(
+        bar.add_markings(
             &self.meta,
             &self.program.scof,
             &self.program.cursor,
-            &mut curs,
-        ) {
-            let mut cur = Rect(self.screen.element_by_id("cursor").unwrap());
-            cur.set_x((cx + offset_x) as f32);
-            cur.set_y(cy as f32);
-            cur.set_width(cwidth as f32);
-            cur.set_height(cheight as f32);
-        }
-
-        for elem in bar.elements {
-            if let Some(e) = create_elem(&self.screen, elem) {
-                bar_g.0.append_child(&e).unwrap();
-            }
-        }
-
+            measure,
+            offset_x,
+        );
+        bar_g.0.set_inner_html(&format!("{bar}"));
         bar.width
     }
 }

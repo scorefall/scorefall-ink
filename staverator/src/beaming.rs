@@ -24,7 +24,7 @@ use std::collections::VecDeque;
 
 use scof::{Pitch, Steps};
 
-use cala::log::{Tag, log};
+use cala::log::{log, Tag};
 
 const INFO: Tag = Tag::new("Beaming");
 

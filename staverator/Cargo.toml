@@ -9,6 +9,7 @@ edition = "2018"
 license = "GPL"
 
 [dependencies]
+hatmil = "0.7"
 sfff = { path = "../sfff" }
 scof = { path = "../scof" }
 
