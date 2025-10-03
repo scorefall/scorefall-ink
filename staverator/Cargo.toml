@@ -13,6 +13,5 @@ hatmil = "0.9"
 sfff = { path = "../sfff" }
 scof = { path = "../scof" }
 
-[dependencies.cala]
-version = "0.9"
-features = ["log"]
+[dependencies.devout]
+version = "0.2"
