@@ -214,8 +214,8 @@ impl GlyphsBuilder {
     }
 
     /// Add an SVG path.  Must be added in order.
-    pub fn push(&mut self, glyph: Glyph, path: String) {
-        self.glyphs[glyph as usize] = Some(path);
+    pub fn push(&mut self, glyph: Glyph, path: &str) {
+        self.glyphs[glyph as usize] = Some(path.to_string());
     }
 
     pub fn into_string(self) -> String {

@@ -251,10 +251,10 @@ impl BarElem {
         let mut html = Html::new();
         Svg::new(&mut html)
             .rect()
-            .x(x.to_string())
-            .y(y.to_string())
-            .width(width.to_string())
-            .height(height.to_string())
+            .x(x)
+            .y(y)
+            .width(width)
+            .height(height)
             .end();
         self.elements.push(html);
     }
@@ -420,10 +420,10 @@ impl BarElem {
             let mut html = Html::new();
             Svg::new(&mut html)
                 .rect()
-                .x(x.to_string())
-                .y(y.to_string())
-                .width(width.to_string())
-                .height(height.to_string())
+                .x(x)
+                .y(y)
+                .width(width)
+                .height(height)
                 .end();
             self.elements.push(html);
             count += 2;
@@ -445,12 +445,12 @@ impl BarElem {
         let mut html = Html::new();
         Svg::new(&mut html)
             .rect()
-            .x(x.to_string())
-            .y(y.to_string())
-            .width(width.to_string())
-            .height(height.to_string())
-            .rx(rx.to_string())
-            .ry(ry.to_string())
+            .x(x)
+            .y(y)
+            .width(width)
+            .height(height)
+            .rx(rx)
+            .ry(ry)
             .end();
         self.elements.push(html);
     }
@@ -479,8 +479,8 @@ impl BarElem {
         let mut html = Html::new();
         Svg::new(&mut html)
             .r#use()
-            .x(x.to_string())
-            .y(y.to_string())
+            .x(x)
+            .y(y)
             .attr("xlink:href", format!("#{:x}", u16::from(glyph)))
             .end();
         self.elements.push(html);

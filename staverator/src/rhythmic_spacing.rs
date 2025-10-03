@@ -222,14 +222,14 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         }
 
         if let Some((x, y, w, h)) = cursor_rect {
-            // TODO: set id to "cursor"
             let mut html = Html::new();
             Svg::new(&mut html)
                 .rect()
-                .x(x.to_string())
-                .y(y.to_string())
-                .width(w.to_string())
-                .height(h.to_string())
+                .id("cursor")
+                .x(x)
+                .y(y)
+                .width(w)
+                .height(h)
                 .fill("#FF9AF0")
                 .end();
             self.bar.elements.insert(0, html);
