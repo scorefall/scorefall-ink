@@ -23,10 +23,8 @@ mod glyph;
 mod notator;
 mod notehead;
 mod rhythmic_spacing;
-mod svg;
 
 pub use sfff::{SfFontMetadata, STAVE_SPACE};
-use svg::Path;
 
 use beaming::{Beam, Beams, Short};
 use notator::Notator;
@@ -46,9 +44,9 @@ const BAR_WIDTH: i32 = 8 * STAVE_SPACE;
 /// Width of a whole rest (in font units).
 const WHOLE_REST_WIDTH: i32 = 230;
 
-/// FIXME: REMOVE - Get Bravura font paths
-pub fn bravura() -> Vec<Path> {
-    include!("vfont/bravura.vfont")
+/// Get Bravura font data as SVG defs
+pub fn bravura() -> (sfff::SfFontMetadata, String) {
+    todo!("FIXME: get Bravura font defs");
 }
 
 /// Get Modern font data as SVG defs.
