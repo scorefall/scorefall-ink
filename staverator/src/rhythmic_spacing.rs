@@ -241,7 +241,13 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
 }
 
 /// Map a value from range `in_min..=in_max` to range `out_min..=out_max`
-fn map_range(value: u16, in_min: u16, in_max: u16, out_min: f32, out_max: f32) -> f32 {
+fn map_range(
+    value: u16,
+    in_min: u16,
+    in_max: u16,
+    out_min: f32,
+    out_max: f32,
+) -> f32 {
     let slope = (out_max - out_min) / f32::from(in_max - in_min);
     out_min + slope * f32::from(value - in_min)
 }
@@ -261,7 +267,7 @@ fn get_spacing(duration: u16) -> f32 {
         128..=255 => map_range(duration, 128, 256, 7.0, 8.0), // Whole
         256..=383 => map_range(duration, 256, 384, 8.0, 9.0), // Dot'd Whole
         384..=511 => map_range(duration, 384, 512, 9.0, 10.0), // Breve
-        512 => 10.0,                                   // Longa
+        512 => 10.0,                                  // Longa
         _ => panic!("Bug in Notator, no glyph for ({})", duration),
     }
 }
