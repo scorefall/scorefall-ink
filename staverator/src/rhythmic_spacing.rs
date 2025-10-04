@@ -240,10 +240,10 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 }
 
-/// Map a value from input range `imn..=imx` to output range `omn..=omx`
-fn map_range(i: u16, imn: u16, imx: u16, omn: f32, omx: f32) -> f32 {
-    let slope = (omx - omn) / f32::from(imx - imn);
-    omn + slope * f32::from(i - imn)
+/// Map a value from range `in_min..=in_max` to range `out_min..=out_max`
+fn map_range(value: u16, in_min: u16, in_max: u16, out_min: f32, out_max: f32) -> f32 {
+    let slope = (out_max - out_min) / f32::from(in_max - in_min);
+    out_min + slope * f32::from(value - in_min)
 }
 
 /// Get the fraction of the spacing of a whole note that this note needs based
