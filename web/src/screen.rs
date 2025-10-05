@@ -66,7 +66,7 @@ impl Screen {
     }
 
     /// Get a future that returns resize events.
-    pub fn resize(&mut self) -> impl Future<Output = (u32, u32)> + Unpin {
+    pub fn resize(&mut self) -> impl Future<Output = (u32, u32)> + Unpin + use<> {
         let svg = self.svg.clone();
 
         self.on_event("resize", move |_ui_event: UiEvent| {
