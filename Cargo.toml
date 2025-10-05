@@ -31,5 +31,8 @@ members = [
 ]
 
 [profile.release]
-# Tell `rustc` to optimize for small code size.
-opt-level = "s"
+panic = "abort"
+opt-level = 's'
+lto = true
+strip = "debuginfo"
+codegen-units = 1

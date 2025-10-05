@@ -1,6 +1,6 @@
 // ScoreFall Ink - Music Composition Software
 //
-// Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright © 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 // Copyright © 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -19,18 +19,20 @@
 // bar is a useful musical term
 #![allow(clippy::blacklisted_name)]
 
-// Glue code to run the main function on WASM.
-cala::glue!();
-
 mod screen;
 
 use screen::Screen;
 
-use cala::input::{Input, Key};
-use cala::log::{log, Tag};
-use cala::task::{exec, wait};
+use async_main::LocalSpawner;
+use devout::{log, Tag};
+use human::{Input, Key};
+use pasts::{
+    notify::Notify,
+    prelude::{Future, Pin, Poll},
+    Executor, Loop,
+};
 
-use std::panic;
+use std::{panic, task::Context};
 
 use scof::{Fraction, Pitch, Steps};
 use scorefall_ink::Program;
@@ -47,10 +49,23 @@ const INFO: Tag = Tag::new("Info");
 const RENDER: Tag = Tag::new("Render");
 const GUI: Tag = Tag::new("Gui");
 
-/// Event handled by the event loop.
-enum Event {
-    Input(Input),
-    Resize((u32, u32)),
+/// Adapter for using a repeating future as a pasts notify
+struct Adapter<F>(F)
+where
+    F: Future + Unpin;
+
+impl<F> Notify for Adapter<F>
+where
+    F: Future + Unpin,
+{
+    type Event = F::Output;
+
+    fn poll_next(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Self::Event> {
+        Pin::new(&mut self.0).poll(cx)
+    }
 }
 
 struct State {
@@ -61,32 +76,34 @@ struct State {
     meta: SfFontMetadata,
     // Window width in Stave Spaces.
     width: f32,
+    // Event sources
+    input: Adapter<Pin<Box<dyn Future<Output = Input>>>>,
+    resize: Adapter<Pin<Box<dyn Future<Output = (u32, u32)>>>>,
 }
 
 impl State {
     /// Create a new state
     fn new() -> State {
-        let screen = Screen::new().expect("Failed to create screen");
+        let mut screen = Screen::new().expect("Failed to create screen");
         let (meta, defs) = staverator::modern();
+        let input: Pin<Box<dyn Future<Output = Input>>> =
+            Box::pin(Input::listener());
+        let resize: Pin<Box<dyn Future<Output = (u32, u32)>>> =
+            Box::pin(screen.resize());
+
         screen.set_svg(&defs);
         State {
             screen,
             program: Program::new(),
             meta,
             width: 0.0,
-        }
-    }
-
-    /// Event loop.
-    fn event(&mut self, event: Event) {
-        match event {
-            Event::Input(input) => self.event_input(input),
-            Event::Resize(size) => self.resize(size).unwrap(),
+            input: Adapter(input),
+            resize: Adapter(resize),
         }
     }
 
     /// Input handler.
-    fn event_input(&mut self, input: Input) {
+    fn event_input(&mut self, input: Input) -> Poll {
         match input {
             Input::Key(mods, key, true)
                 if mods.ctrl() && matches!(key, Key::H | Key::Left) =>
@@ -220,6 +237,14 @@ impl State {
             }
             _ => { /* ignore all other input */ }
         }
+
+        Poll::Pending
+    }
+
+    /// Resisize handler.
+    fn event_resize(&mut self, size: (u32, u32)) -> Poll {
+        self.resize(size).ok();
+        Poll::Pending
     }
 
     /// Resize the SVG
@@ -298,8 +323,9 @@ impl State {
     }
 }
 
-fn main() {
+fn init() -> State {
     let hook = panic::take_hook();
+
     panic::set_hook(Box::new(move |p| {
         hook(p);
         log!(INFO, "ScoreFall Ink panicked!: {:?}", p.to_string());
@@ -308,13 +334,18 @@ fn main() {
     }));
 
     let mut state = State::new();
+
     state.render_score().unwrap();
+    state
+}
 
-    let mut input = Input::listener();
-    let mut resize = state.screen.resize();
 
-    exec!(state.event(wait! {
-        Event::Input((&mut input).await),
-        Event::Resize((&mut resize).await),
-    }));
+#[async_main::async_main]
+async fn main(_spawner: LocalSpawner) {
+    let mut state = init();
+
+    Loop::new(&mut state)
+        .on(|s| &mut s.input, State::event_input)
+        .on(|s| &mut s.resize, State::event_resize)
+        .await;
 }

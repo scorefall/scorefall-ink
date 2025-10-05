@@ -1,6 +1,6 @@
 // ScoreFall Ink - Music Composition Software
 //
-// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 // Copyright (C) 2019-2020 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::convert::TryInto;
 use std::str::FromStr;
 
-use cala::log::{log, Tag};
+use devout::{log, Tag};
 
 const SCOF: Tag = Tag::new("SCOF");
 

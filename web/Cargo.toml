@@ -1,6 +1,6 @@
 # ScoreFall Ink - Music Composition Software
 #
-# Copyright © 2019-2021 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+# Copyright © 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 # Copyright © 2019-2021 Doug P. Lau
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -28,12 +28,12 @@ license = "GPL"
 repository = "https://github.com/scorefall/scorefall-ink"
 homepage = "https://ink.scorefall.com"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-path = "src/main.rs"
+[[bin]]
+name = "ink"
+path = "src/mod.rs"
 
 [dependencies]
-wasm-bindgen = "0.2" # for glue code
+wasm-bindgen = "0.2.104"
 scof = { path = "../scof" }
 staverator = { path = "../staverator" }
 scorefall-ink = { path = "../ink" }
@@ -48,13 +48,19 @@ features = [
     "console",
 ]
 
-[dependencies.cala]
-version = "0.9"
-features = [
-    "input",
-    "log",
-    "task"
-]
+[dependencies.devout]
+version = "0.2.0"
+
+[dependencies.human]
+version = "0.2.0"
+
+[dependencies.pasts]
+version = "0.14.3"
+features = ["web"]
+
+[dependencies.async_main]
+version = "0.4.0"
+features = ["pasts"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"

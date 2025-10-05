@@ -1,6 +1,6 @@
 // ScoreFall Ink - Music Composition Software
 //
-// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 // Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ use notator::Notator;
 use notehead::Notehead;
 use rhythmic_spacing::BarEngraver;
 
-use cala::log::{log, Tag};
+use devout::{log, Tag};
 use hatmil::{Html, Svg};
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
