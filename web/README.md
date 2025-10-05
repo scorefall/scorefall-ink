@@ -1,2 +1,3 @@
-# ScoreFall™ Ink
-Web User interface for ScoreFall™ Ink.
+# ScoreFall™ Ink Web
+
+Web UI for ScoreFall™ Ink.

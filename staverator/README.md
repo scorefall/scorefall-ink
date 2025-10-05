@@ -1,10 +1,14 @@
-# score2svg
-Rust library for converting a music xml score to an SVG.
+# Staverator
+
+Rust library for converting a scof score to SVG.
 
 ## Fonts
-- Scorlatti default
-- Gonville
-- Beethoven
-- Profondo
-- Paganini
-- Improviso
+
+These are some fonts that will be tested / verified to work with staverator:
+
+ - Scorlatti default
+ - Gonville
+ - Beethoven
+ - Profondo
+ - Paganini
+ - Improviso
