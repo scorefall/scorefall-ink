@@ -1,6 +1,6 @@
 // ScoreFall Ink - Music Composition Software
 //
-// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 // Copyright (C) 2019-2020 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ use std::collections::VecDeque;
 
 use scof::{Pitch, Steps};
 
-use cala::log::{log, Tag};
+use devout::{log, Tag};
 
 const INFO: Tag = Tag::new("Beaming");
 
