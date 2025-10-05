@@ -14,5 +14,5 @@ Music composition, arrangement, engraving, and notation program.
 ### Build and Start Webserver
 ```bash
 cd web
-./run.sh
+./debug.sh
 ```
