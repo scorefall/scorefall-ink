@@ -240,34 +240,57 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
     }
 }
 
-/// Map a value from range `in_min..=in_max` to range `out_min..=out_max`
-fn map_range(
+/// Map a value from range `in_min..=in_max` to range `out_min..=out_max`.
+fn map_range<const IN_MIN: u16, const IN_MAX: u16>(
     value: u16,
-    in_min: u16,
-    in_max: u16,
     out_min: f32,
     out_max: f32,
 ) -> f32 {
-    let slope = (out_max - out_min) / f32::from(in_max - in_min);
-    out_min + slope * f32::from(value - in_min)
+    let slope = (out_max - out_min) / f32::from(IN_MAX - IN_MIN);
+
+    f32::from(value - IN_MIN).mul_add(slope, out_min)
 }
 
 /// Get the fraction of the spacing of a whole note that this note needs based
 /// on duration (in 128th notes).
 fn get_spacing(duration: u16) -> f32 {
     match duration {
-        1..=7 => map_range(duration, 1, 8, 1.8, 2.0), // 128th-16th
-        8..=15 => map_range(duration, 8, 16, 2.0, 2.5), // Sixteenth
-        16..=23 => map_range(duration, 16, 24, 2.5, 3.0), // Eighth
-        24..=31 => map_range(duration, 24, 32, 3.0, 3.5), // Dot'd Eighth
-        32..=47 => map_range(duration, 32, 48, 3.5, 4.0), // Quarter
-        48..=63 => map_range(duration, 48, 64, 4.0, 5.0), // Dot'd Quarter
-        64..=95 => map_range(duration, 64, 96, 5.0, 6.0), // Half
-        96..=127 => map_range(duration, 96, 128, 6.0, 7.0), // Dotted Half
-        128..=255 => map_range(duration, 128, 256, 7.0, 8.0), // Whole
-        256..=383 => map_range(duration, 256, 384, 8.0, 9.0), // Dot'd Whole
-        384..=511 => map_range(duration, 384, 512, 9.0, 10.0), // Breve
-        512 => 10.0,                                  // Longa
+        // 128th-16th
+        1..=7 => map_range::<1, 8>(duration, 1.8, 2.0),
+        // Sixteenth
+        8..=15 => map_range::<8, 16>(duration, 2.0, 2.5),
+        // Eighth
+        16..=23 => map_range::<16, 24>(duration, 2.5, 3.0),
+        // Dot'd Eighth
+        24..=31 => map_range::<24, 32>(duration, 3.0, 3.5),
+        // Quarter
+        32..=47 => map_range::<32, 48>(duration, 3.5, 4.0),
+        // Dot'd Quarter
+        48..=63 => map_range::<48, 64>(duration, 4.0, 5.0),
+        // Half
+        64..=95 => map_range::<64, 96>(duration, 5.0, 6.0),
+        // Dotted Half
+        96..=127 => map_range::<96, 128>(duration, 6.0, 7.0),
+        // Whole
+        128..=255 => map_range::<128, 256>(duration, 7.0, 8.0),
+        // Dot'd Whole
+        256..=383 => map_range::<256, 384>(duration, 8.0, 9.0),
+        // Breve
+        384..=511 => map_range::<384, 512>(duration, 9.0, 10.0),
+        // Longa
+        512 => 10.0,
         _ => panic!("Bug in Notator, no glyph for ({})", duration),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn map_range_works() {
+        assert_eq!(2.0, map_range::<3, 5>(3, 2.0, 3.0));
+        assert_eq!(2.5, map_range::<3, 5>(4, 2.0, 3.0));
+        assert_eq!(3.0, map_range::<3, 5>(5, 2.0, 3.0));
     }
 }
