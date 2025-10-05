@@ -23,7 +23,7 @@ authors = [
     "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
     "Douglas Lau <doug.p.lau@gmail.com>",
 ]
-edition = "2018"
+edition = "2021"
 license = "GPL"
 repository = "https://github.com/scorefall/scorefall-ink"
 homepage = "https://ink.scorefall.com"

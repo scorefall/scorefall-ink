@@ -2,7 +2,7 @@
 name = "sfff"
 version = "0.1.0"
 authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
-edition = "2018"
+edition = "2021"
 
 [dev-dependencies]
 serde_json = "1.0"
