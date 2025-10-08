@@ -14,12 +14,3 @@ Music composition, arrangement, engraving, and notation program.
   SVG.
 - [scorefall-ink](https://github.com/scorefall/scorefall-ink/tree/v0/ink)
   the core software logic
-
-## Developing
-
-### Build and Start Webserver
-
-```bash
-cd web
-./debug.sh
-```
