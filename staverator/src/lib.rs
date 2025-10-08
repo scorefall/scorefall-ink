@@ -222,7 +222,7 @@ impl BarElem {
         }
 
         // Engrave the music.
-        let width = BarEngraver::new(self, &mut notators).engrave(meta);
+        let width = BarEngraver::new(self, meta, &mut notators).engrave();
         self.width += width;
     }
 
