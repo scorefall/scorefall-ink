@@ -1,0 +1,14 @@
+on: [push]
+name: rustfmt
+jobs:
+  checks:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        tc: [nightly]
+    steps:
+    - uses: taiki-e/checkout-action@v1
+    - uses: taiki-e/install-action@v2
+    - run: rustup set profile minimal
+    - run: cargo fmt --all --check
