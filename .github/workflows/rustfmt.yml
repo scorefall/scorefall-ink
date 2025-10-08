@@ -10,4 +10,6 @@ jobs:
     steps:
     - uses: taiki-e/checkout-action@v1
     - uses: taiki-e/install-action@v2
+      with:
+        fallback: none
     - run: sh ./ci/rustfmt.sh ${{ matrix.tc }}
