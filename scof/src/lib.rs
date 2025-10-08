@@ -18,22 +18,23 @@
 
 #![allow(clippy::blacklisted_name)] // bar is a useful musical term
 
+use std::{convert::TryInto, str::FromStr};
+
+use devout::{Tag, log};
 use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
-use std::convert::TryInto;
-use std::str::FromStr;
-
-use devout::{log, Tag};
 
 const SCOF: Tag = Tag::new("SCOF");
 
 mod fraction;
 pub mod note;
 
-pub use fraction::{Fraction, IsZero};
-pub use note::{
-    Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
-    PitchOctave, Steps,
+pub use self::{
+    fraction::{Fraction, IsZero},
+    note::{
+        Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
+        PitchOctave, Steps,
+    },
 };
 
 /// Cursor pointing to a marking
@@ -517,7 +518,8 @@ pub struct Meta {
     pub revised: Vec<String>,
     /// License information
     pub licenses: Vec<String>,
-    /// Playing level (how hard it is to play times 2 - to allow grade 1.5 etc.).
+    /// Playing level (how hard it is to play times 2 - to allow grade 1.5
+    /// etc.).
     pub grade: Option<u8>,
     /// List of the movements in order.
     pub movement: Vec<String>,

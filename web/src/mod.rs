@@ -21,22 +21,21 @@
 
 mod screen;
 
-use screen::Screen;
-
-use async_main::LocalSpawner;
-use devout::{log, Tag};
-use human::{Input, Key};
-use pasts::{
-    notify::Notify,
-    prelude::{Future, Pin, Poll},
-    Executor, Loop,
-};
-
 use std::{panic, task::Context};
 
+use async_main::LocalSpawner;
+use devout::{Tag, log};
+use human::{Input, Key};
+use pasts::{
+    Executor, Loop,
+    notify::Notify,
+    prelude::{Future, Pin, Poll},
+};
 use scof::{Fraction, Pitch, Steps};
 use scorefall_ink::Program;
-use staverator::{BarElem, SfFontMetadata, Stave, STAVE_SPACE};
+use staverator::{BarElem, STAVE_SPACE, SfFontMetadata, Stave};
+
+use self::screen::Screen;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -338,7 +337,6 @@ fn init() -> State {
     state.render_score().unwrap();
     state
 }
-
 
 #[async_main::async_main]
 async fn main(_spawner: LocalSpawner) {

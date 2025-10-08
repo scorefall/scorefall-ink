@@ -2,12 +2,13 @@
 
 #![allow(clippy::suspicious_arithmetic_impl)] // It's fractions, come on clippy!
 
-use std::cmp::Ordering;
-use std::convert::TryInto;
-use std::ops::{
-    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign,
+use std::{
+    cmp::Ordering,
+    convert::TryInto,
+    fmt,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+    str::FromStr,
 };
-use std::{fmt, str::FromStr};
 
 /// (Unsigned) Fraction of a measure.
 #[derive(Copy, Clone, Debug)]

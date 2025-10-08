@@ -21,13 +21,13 @@
 //! Render a bar for all parts.  This not only handles space between notes, but
 //! also calculates the required width of the bar.
 
-use std::collections::VecDeque;
-use std::convert::TryInto;
+use std::{collections::VecDeque, convert::TryInto};
 
-use crate::{BarElem, Beams, Notator, Stave, BAR_WIDTH};
 use hatmil::{Html, Svg};
 use scof::Steps;
 use sfff::SfFontMetadata;
+
+use crate::{BAR_WIDTH, BarElem, Beams, Notator, Stave};
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a, 'b, 'c> {

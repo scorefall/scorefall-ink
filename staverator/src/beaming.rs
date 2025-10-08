@@ -22,9 +22,8 @@
 
 use std::collections::VecDeque;
 
+use devout::{Tag, log};
 use scof::{Pitch, Steps};
-
-use devout::{log, Tag};
 
 const INFO: Tag = Tag::new("Beaming");
 
@@ -231,7 +230,7 @@ impl Beam {
         // Choose stem direction of beamed group.
         let mut sum = 0i16;
         for note_i in 0..beams.notes.len() {
-            let vd = beams.notes[note_i].2 .0[0].visual_distance();
+            let vd = beams.notes[note_i].2.0[0].visual_distance();
             match vd.0 {
                 _a if _a > 0 => sum += 1,
                 _a if _a < 0 => sum -= 1,
@@ -246,7 +245,7 @@ impl Beam {
         for note in beams.notes.drain(..) {
             let one_beam = note.3 && uses_three_beams;
             // FIXME: Choose closest note to beam.
-            notes.push((note.0, note.1, (note.2 .0[0], note.2 .1), one_beam));
+            notes.push((note.0, note.1, (note.2.0[0], note.2.1), one_beam));
         }
 
         Beam { notes, stems_up }

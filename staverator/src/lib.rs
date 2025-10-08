@@ -24,18 +24,20 @@ mod notator;
 mod notehead;
 mod rhythmic_spacing;
 
-pub use sfff::{SfFontMetadata, STAVE_SPACE};
+use std::fmt;
 
-use beaming::{Beam, Beams, Short};
-use notator::Notator;
-use notehead::Notehead;
-use rhythmic_spacing::BarEngraver;
-
-use devout::{log, Tag};
+use devout::{Tag, log};
 use hatmil::{Html, Svg};
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
-use std::fmt;
+pub use sfff::{STAVE_SPACE, SfFontMetadata};
+
+use self::{
+    beaming::{Beam, Beams, Short},
+    notator::Notator,
+    notehead::Notehead,
+    rhythmic_spacing::BarEngraver,
+};
 
 const INFO: Tag = Tag::new("Staverator");
 
@@ -70,12 +72,12 @@ pub struct Stave {
 }
 
 impl Stave {
+    /// Minimum number of steps in top/bottom margins
+    const MARGIN_STEPS: Steps = Steps(6);
     /// A stave space
     const SPACE: i32 = STAVE_SPACE;
     /// Half or whole step visual distance in the measure (half a stave space)
     const STEP: i32 = Self::SPACE / 2;
-    /// Minimum number of steps in top/bottom margins
-    const MARGIN_STEPS: Steps = Steps(6);
 
     /// Create a new stave
     pub fn new(lines: i32, steps_middle_c: Steps, ypos: Steps) -> Self {
@@ -173,10 +175,10 @@ impl BarElem {
     const STEM_LENGTH: i32 = 7 * Stave::STEP;
     /// Maximum stem length for beamed notes on stave lines.
     const STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP / 2);
-    /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
-    const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP;
     /// Minimum Shortened Stem Length For Notes On Stave
     const STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP;
+    /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
+    const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP;
 
     /// Create a new bar element
     pub fn new(stave: Stave, high: Steps, low: Steps) -> Self {
@@ -206,9 +208,9 @@ impl BarElem {
         offset_x: i32,
     ) {
         let mut curs = Cursor::new(
-            0, /*mvmt*/
-            measure, 0, /*i chan*/
-            0, /*marking*/
+            0, /* mvmt */
+            measure, 0, /* i chan */
+            0, /* marking */
         );
         let reset_cursor = curs.clone();
 

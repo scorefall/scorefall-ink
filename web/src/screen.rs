@@ -16,15 +16,15 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::cell::RefCell;
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::task::{Context, Poll, Waker};
+use std::{
+    cell::RefCell,
+    future::Future,
+    pin::Pin,
+    sync::atomic::{AtomicBool, AtomicU32, Ordering},
+    task::{Context, Poll, Waker},
+};
 
-use wasm_bindgen::closure::Closure;
-use wasm_bindgen::convert::FromWasmAbi;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{JsCast, closure::Closure, convert::FromWasmAbi};
 use web_sys::UiEvent;
 
 const SVGNS: Option<&str> = Some("http://www.w3.org/2000/svg");
@@ -66,7 +66,9 @@ impl Screen {
     }
 
     /// Get a future that returns resize events.
-    pub fn resize(&mut self) -> impl Future<Output = (u32, u32)> + Unpin + use<> {
+    pub fn resize(
+        &mut self,
+    ) -> impl Future<Output = (u32, u32)> + Unpin + use<> {
         let svg = self.svg.clone();
 
         self.on_event("resize", move |_ui_event: UiEvent| {
