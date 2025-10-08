@@ -29,7 +29,8 @@
 //! - `G`
 //! - `R`
 //!
-//! **accidental**: Optional accidental.  If not provided, from key signature.  Cannot be same as what is in the key signature.
+//! **accidental**: Optional accidental.  If not provided, from key signature.
+//! Cannot be same as what is in the key signature.
 //!
 //! - `bb`: Double Flat (Whole-Tone Flat)
 //! - `db`: 3/4-Tone Flat
@@ -60,15 +61,14 @@
 //! - `@`: harmonic (smaller o)
 //! - `|`: pedal
 
+use std::{convert::TryInto, fmt, str::FromStr};
+
 use crate::Fraction;
-use std::convert::TryInto;
-use std::{fmt, str::FromStr};
 
 mod articulation;
 mod pitch;
 
-pub use self::articulation::*;
-pub use self::pitch::*;
+pub use self::{articulation::*, pitch::*};
 
 /// Number of steps above middle C
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]

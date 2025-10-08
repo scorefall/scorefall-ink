@@ -21,13 +21,13 @@
 //! Render a bar for all parts.  This not only handles space between notes, but
 //! also calculates the required width of the bar.
 
-use std::collections::VecDeque;
-use std::convert::TryInto;
+use std::{collections::VecDeque, convert::TryInto};
 
-use crate::{BarElem, Beams, Notator, Stave, BAR_WIDTH};
 use hatmil::{Html, Svg};
 use scof::Steps;
 use sfff::SfFontMetadata;
+
+use crate::{BAR_WIDTH, BarElem, Beams, Notator, Stave};
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a> {
@@ -121,12 +121,17 @@ impl<'a> BarEngraver<'a> {
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = self.cursor {
             self.cursor = None;
-            let e = if x == 0.0 { 0 } else { -self.meta.barline_thickness };
+            let e = if x == 0.0 {
+                0
+            } else {
+                -self.meta.barline_thickness
+            };
             let x = (BAR_WIDTH as f32 * x) as i32;
             self.cursor_rect = Some((
                 x + e, // X
                 0i32,  // Y
-                self.meta.barline_thickness + (BAR_WIDTH as f32 * self.width) as i32
+                self.meta.barline_thickness
+                    + (BAR_WIDTH as f32 * self.width) as i32
                     - x
                     - e, // W
                 self.bar.height(),
@@ -165,13 +170,14 @@ impl<'a> BarEngraver<'a> {
     /// Engrave one marking
     fn engrave_one(&mut self, mut time: u16, stave_i: usize) {
         let ymargin = self.bar.stave.height_steps() + Steps(12);
-        let (pitches, dur, ic) =
-            if let Some(a) = self.notators[stave_i].next() {
-                a
-            } else {
-                self.rests.push((stave_i, self.notators[stave_i].is_cursor()));
-                return;
-            };
+        let (pitches, dur, ic) = if let Some(a) = self.notators[stave_i].next()
+        {
+            a
+        } else {
+            self.rests
+                .push((stave_i, self.notators[stave_i].is_cursor()));
+            return;
+        };
         // Increment width
         if time < self.all {
             self.width += get_spacing(self.all - time) / 7.0;
@@ -190,10 +196,21 @@ impl<'a> BarEngraver<'a> {
         } else if let Some((x, stave_j)) = self.cursor {
             if stave_i == stave_j {
                 self.cursor = None;
-                let e = if x == 0.0 { 0 } else { -self.meta.barline_thickness };
-                let f = if x == 0.0 { -self.meta.barline_thickness } else { 0 };
-                let x = if x == 0.0 { self.meta.barline_thickness } else { 0 }
-                    + (BAR_WIDTH as f32 * x) as i32;
+                let e = if x == 0.0 {
+                    0
+                } else {
+                    -self.meta.barline_thickness
+                };
+                let f = if x == 0.0 {
+                    -self.meta.barline_thickness
+                } else {
+                    0
+                };
+                let x = if x == 0.0 {
+                    self.meta.barline_thickness
+                } else {
+                    0
+                } + (BAR_WIDTH as f32 * x) as i32;
                 self.cursor_rect = Some((
                     x + e,                                          // X
                     0i32,                                           // Y
@@ -217,9 +234,8 @@ impl<'a> BarEngraver<'a> {
             let y_offset = ymargin * stave_i as i32;
             // Add chord
             for pitch in &pitches {
-                let y = self
-                    .bar
-                    .y_from_steps(pitch.visual_distance(), y_offset);
+                let y =
+                    self.bar.y_from_steps(pitch.visual_distance(), y_offset);
 
                 self.bar.add_pitch(
                     self.meta,

@@ -1,7 +1,9 @@
 //! ScoreFall Font Format
 
-use std::convert::TryInto;
-use std::io::{Read, Write};
+use std::{
+    convert::TryInto,
+    io::{Read, Write},
+};
 
 /// The number of units per stave space in this format.
 pub const STAVE_SPACE: i32 = 100;
