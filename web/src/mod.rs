@@ -315,7 +315,6 @@ impl State {
             &self.program.scof,
             &self.program.cursor,
             measure,
-            offset_x,
         );
         bar_g.0.set_inner_html(&format!("{bar}"));
         bar.width

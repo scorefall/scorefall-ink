@@ -27,7 +27,10 @@ use hatmil::{Html, Svg};
 use scof::Steps;
 use sfff::SfFontMetadata;
 
-use crate::{BAR_WIDTH, BarElem, Beams, Notator, Stave};
+use crate::bar::{BAR_WIDTH, BarElem};
+use crate::beaming::Beams;
+use crate::notator::Notator;
+use crate::stave::Stave;
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a> {
