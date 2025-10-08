@@ -107,7 +107,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
         self.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
         for (rest_stave, rest_ic) in &self.rests {
-            let steps = ymargin * (*rest_stave) as i32;
+            let steps = ymargin * (*rest_stave as i32);
             self.bar.add_measure_rest(self.width, steps);
             if *rest_ic {
                 self.cursor_rect = Some((
