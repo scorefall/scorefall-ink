@@ -6,8 +6,8 @@ Web UI for ScoreFall™ Ink.
 
 ### Prerequisites
 
-Install [wabt](https://github.com/WebAssembly/wabt); If you're on Fedora, you
-can do this by running:
+Install [wabt](https://github.com/WebAssembly/wabt) (provides wasm-strip); If
+you're on Fedora, you can do this by running:
 
 ```shell
 sudo dnf install wabt
