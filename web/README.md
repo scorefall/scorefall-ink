@@ -6,20 +6,31 @@ Web UI for ScoreFall™ Ink.
 
 ### Prerequisites
 
+Install [wabt](https://github.com/WebAssembly/wabt); If you're on Fedora, you
+can do this by running:
+
+```shell
+sudo dnf install wabt
+```
+
+Install the wasm-bindgen CLI and wasm-opt with `cargo`:
+
 ```shell
 cargo install wasm-bindgen-cli --locked
-cargo install wasm-snip --locked # currently not used
 cargo install wasm-opt --locked
 ```
 
-### Build and Start Webserver
+### Iterative Development
+
+Build the debug binary and start webserver with:
 
 ```shell
-cd web
 ./debug.sh
 ```
 
-### Build Release
+### Testing Release Build
+
+Build the release binary and start webserver with:
 
 ```shell
 ./release.sh
