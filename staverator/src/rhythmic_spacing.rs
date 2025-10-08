@@ -68,7 +68,7 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             pq.push_back((128, i));
             beams.push(Beams::new());
         }
-        let rests = vec![];
+        let rests = Vec::new();
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
         let all = 128;
