@@ -244,12 +244,12 @@ impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
             loop {
                 if index == 0 {
                     self.pq.push_front((time, stave_i));
-                    break;
+                    return;
                 }
                 index -= 1;
                 if self.pq[index].0 > time {
                     self.pq.push_back((time, stave_i));
-                    break;
+                    return;
                 }
             }
         }
