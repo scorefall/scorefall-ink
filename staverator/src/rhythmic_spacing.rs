@@ -30,17 +30,17 @@ use scof::Steps;
 use sfff::SfFontMetadata;
 
 /// Engraver for a single bar of music (multiple staves)
-pub struct BarEngraver<'a, 'b, 'c> {
+pub struct BarEngraver<'a> {
     /// Font metadata
-    meta: &'b SfFontMetadata,
+    meta: &'a SfFontMetadata,
     // Priority Queue for the next note to render (priority: 128ths remaining)
     pq: VecDeque<(u16, usize)>,
     // Slice of notators for each stave
-    notators: &'a mut [Notator<'c>],
+    notators: &'a mut [Notator<'a>],
     // Rests (stave, is_cursor)
     rests: Vec<(usize, bool)>,
     // Bar element to engrave
-    bar: &'b mut BarElem,
+    bar: &'a mut BarElem,
     // Bar physical width
     width: f32,
     // Remaining 128th notes for all staves
@@ -53,12 +53,12 @@ pub struct BarEngraver<'a, 'b, 'c> {
     beams: Vec<Beams>,
 }
 
-impl<'a, 'b, 'c> BarEngraver<'a, 'b, 'c> {
+impl<'a> BarEngraver<'a> {
     /// Create a new bar engraver from .
     pub(super) fn new(
-        bar: &'b mut BarElem,
-        meta: &'b SfFontMetadata,
-        notators: &'a mut [Notator<'c>],
+        bar: &'a mut BarElem,
+        meta: &'a SfFontMetadata,
+        notators: &'a mut [Notator<'a>],
     ) -> Self {
         // Add each stave
         let mut beams = vec![];
