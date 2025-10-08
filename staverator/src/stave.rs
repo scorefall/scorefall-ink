@@ -16,9 +16,10 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-use crate::bar;
 use scof::Steps;
 use sfff::SfFontMetadata;
+
+use crate::bar;
 
 /// Stave lines
 pub struct Stave {
@@ -31,12 +32,12 @@ pub struct Stave {
 }
 
 impl Stave {
+    /// Minimum number of steps in top/bottom margins
+    const MARGIN_STEPS: Steps = Steps(6);
     /// A stave space
     pub(crate) const SPACE: i32 = bar::STAVE_SPACE;
     /// Half or whole step visual distance in the measure (half a stave space)
     pub(crate) const STEP: i32 = Self::SPACE / 2;
-    /// Minimum number of steps in top/bottom margins
-    const MARGIN_STEPS: Steps = Steps(6);
 
     /// Create a new stave
     pub fn new(lines: i32, steps_middle_c: Steps, ypos: Steps) -> Self {

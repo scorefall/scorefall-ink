@@ -26,13 +26,12 @@ mod notehead;
 mod rhythmic_spacing;
 mod stave;
 
+pub use bar::{BarElem, STAVE_SPACE};
 use devout::{Tag, log};
 use hatmil::{Html, Svg};
 use scof::{Cursor, Scof, Steps};
 use sfff::Glyph;
 pub use sfff::SfFontMetadata;
-
-pub use bar::{BarElem, STAVE_SPACE};
 pub use stave::Stave;
 
 /// Get Modern font data as SVG defs.

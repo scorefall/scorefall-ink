@@ -16,19 +16,21 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-use crate::beaming::{Beam, Beams, Short};
-use crate::glyph;
-use crate::notator::Notator;
-use crate::notehead::{self, Notehead};
-use crate::rhythmic_spacing::BarEngraver;
-use crate::stave::Stave;
+use std::fmt;
 
 use devout::{Tag, log};
 use hatmil::{Html, Svg};
 use scof::{Cursor, Scof, Steps};
 use sfff::{Glyph, SfFontMetadata};
 
-use std::fmt;
+use crate::{
+    beaming::{Beam, Beams, Short},
+    glyph,
+    notator::Notator,
+    notehead::{self, Notehead},
+    rhythmic_spacing::BarEngraver,
+    stave::Stave,
+};
 
 const INFO: Tag = Tag::new("Staverator");
 
@@ -65,10 +67,10 @@ impl fmt::Display for BarElem {
 impl BarElem {
     /// Length of stems
     const STEM_LENGTH: i32 = 7 * Stave::STEP;
-    /// Maximum stem length for beamed notes on stave lines.
-    const _STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP / 2);
     /// FIXME: Minimum Shortened Stem Length For Notes On Ledger Lines
     const _STEM_LENGTH_LEDGER: i32 = 5 * Stave::STEP;
+    /// Maximum stem length for beamed notes on stave lines.
+    const _STEM_LENGTH_LINE: i32 = Self::STEM_LENGTH - (Stave::STEP / 2);
     /// Minimum Shortened Stem Length For Notes On Stave
     const _STEM_LENGTH_SHORT: i32 = 6 * Stave::STEP;
 
