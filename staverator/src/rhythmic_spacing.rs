@@ -38,32 +38,29 @@ use crate::{
 pub struct BarEngraver<'a> {
     /// Font metadata
     meta: &'a SfFontMetadata,
+    // Notators for each stave
+    notators: Vec<Notator<'a>>,
     // Priority Queue for the next note to render (priority: 128ths remaining)
     pq: VecDeque<(u16, usize)>,
-    // Slice of notators for each stave
-    notators: &'a mut [Notator<'a>],
     // Rests (stave, is_cursor)
     rests: Vec<(usize, bool)>,
-    // Bar element to engrave
-    bar: &'a mut BarElem,
     // Bar physical width
     width: f32,
     // Remaining 128th notes for all staves
     all: u16,
     // Cursor (x, stave)
     cursor: Option<(f32, usize)>,
-    // Cursor rectangle
-    cursor_rect: Option<(i32, i32, i32, i32)>,
+    // Cursor span (x, width)
+    cursor_span: Option<(i32, i32)>,
     // Keep track of which notes to beam, and which to flag.
     beams: Vec<Beams>,
 }
 
 impl<'a> BarEngraver<'a> {
-    /// Create a new bar engraver from .
+    /// Create a new bar engraver
     pub(super) fn new(
-        bar: &'a mut BarElem,
         meta: &'a SfFontMetadata,
-        notators: &'a mut [Notator<'a>],
+        notators: Vec<Notator<'a>>,
     ) -> Self {
         // Add each stave
         let mut beams = vec![];
@@ -78,188 +75,24 @@ impl<'a> BarEngraver<'a> {
         let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
         let all = 128;
         let cursor = None;
-        let cursor_rect = None;
+        let cursor_span = None;
 
         Self {
             meta,
-            pq,
             notators,
+            pq,
             rests,
-            bar,
             width,
             all,
             cursor,
-            cursor_rect,
+            cursor_span,
             beams,
         }
     }
 
-    /// Engrave the bar of music.
-    pub fn engrave(&mut self) -> i32 {
-        let ymargin = self.bar.stave.height_steps() + Steps(12);
-        self.cursor = None;
-        // Empty the priority queue.
-        while let Some((time, stave_i)) = self.pq.pop_front() {
-            self.engrave_one(time, stave_i);
-        }
-        // Beam eighth notes and shorter.
-        while let Some(beam) = self.beams.pop() {
-            self.bar.add_flags_and_beams(self.meta, beam);
-        }
-        // Add the rest of the width.
-        self.width += get_spacing(self.all) / 7.0;
-        // End of bar margin
-        self.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
-        // Draw measure rests
-        for (rest_stave, rest_ic) in &self.rests {
-            let steps = ymargin * (*rest_stave as i32);
-            self.bar.add_measure_rest(self.width, steps);
-            if *rest_ic {
-                self.cursor_rect = Some((
-                    self.meta.barline_thickness,            // X
-                    0i32,                                   // Y
-                    (BAR_WIDTH as f32 * self.width) as i32, // W
-                    self.bar.height(),
-                ));
-            }
-        }
-        // Cursor at end of bar.
-        if let Some((x, _stave_j)) = self.cursor {
-            self.cursor = None;
-            let e = if x == 0.0 {
-                0
-            } else {
-                -self.meta.barline_thickness
-            };
-            let x = (BAR_WIDTH as f32 * x) as i32;
-            self.cursor_rect = Some((
-                x + e, // X
-                0i32,  // Y
-                self.meta.barline_thickness
-                    + (BAR_WIDTH as f32 * self.width) as i32
-                    - x
-                    - e, // W
-                self.bar.height(),
-            ));
-        }
-        // Calculate physical bar width.
-        let bar_width = ((BAR_WIDTH as f32 * self.width) as i32).max(BAR_WIDTH);
-        // Draw barlines
-        for i in 0..self.notators.len().try_into().unwrap() {
-            let y = self.bar.offset_y(self.bar.stave.steps_middle_c);
-            let d = self.bar.stave.path(self.meta, y, bar_width, ymargin * i);
-            let mut html = Html::new();
-            Svg::new(&mut html).path().d(d).end();
-            self.bar.elements.push(html);
-            self.bar.add_barline(self.meta, bar_width, ymargin * i);
-        }
-
-        if let Some((x, y, w, h)) = self.cursor_rect {
-            let mut html = Html::new();
-            Svg::new(&mut html)
-                .rect()
-                .id("cursor")
-                .x(x)
-                .y(y)
-                .width(w)
-                .height(h)
-                .fill("#FF9AF0")
-                .end();
-            self.bar.elements.insert(0, html);
-        }
-
-        // Return calculated physical bar width.
-        bar_width
-    }
-
-    /// Engrave one marking
-    fn engrave_one(&mut self, mut time: u16, stave_i: usize) {
-        let ymargin = self.bar.stave.height_steps() + Steps(12);
-        let (pitches, dur, ic) = if let Some(a) = self.notators[stave_i].next()
-        {
-            a
-        } else {
-            self.rests
-                .push((stave_i, self.notators[stave_i].is_cursor()));
-            return;
-        };
-        // Increment width
-        if time < self.all {
-            self.width += get_spacing(self.all - time) / 7.0;
-            self.all = time;
-        }
-        // Render cursor
-        if ic {
-            if self.cursor.is_none() {
-                if time == 128 {
-                    // If first thing, cursor takes up margin.
-                    self.cursor = Some((0.0, stave_i));
-                } else {
-                    self.cursor = Some((self.width, stave_i));
-                }
-            }
-        } else if let Some((x, stave_j)) = self.cursor {
-            if stave_i == stave_j {
-                self.cursor = None;
-                let e = if x == 0.0 {
-                    0
-                } else {
-                    -self.meta.barline_thickness
-                };
-                let f = if x == 0.0 {
-                    -self.meta.barline_thickness
-                } else {
-                    0
-                };
-                let x = if x == 0.0 {
-                    self.meta.barline_thickness
-                } else {
-                    0
-                } + (BAR_WIDTH as f32 * x) as i32;
-                self.cursor_rect = Some((
-                    x + e,                                          // X
-                    0i32,                                           // Y
-                    (BAR_WIDTH as f32 * self.width) as i32 - x + f, // W
-                    self.bar.height(),
-                ));
-            }
-        }
-        // Render pitch or rest.
-        if pitches.is_empty() {
-            // Add rest
-            self.bar.add_rest(
-                crate::glyph::rest_duration(dur),
-                self.width,
-                ymargin * stave_i as i32,
-            );
-            // Advance beaming
-            self.beams[stave_i].advance(dur, self.width, None);
-        } else {
-            // Offset Y, so that the note appears on the correct stave.
-            let y_offset = ymargin * stave_i as i32;
-            // Add chord
-            for pitch in &pitches {
-                let y =
-                    self.bar.y_from_steps(pitch.visual_distance(), y_offset);
-
-                self.bar.add_pitch(
-                    self.meta,
-                    dur,
-                    self.width,
-                    pitch.visual_distance(),
-                    y,
-                );
-            }
-            // Advance beaming (using closest note to the beam)
-            self.beams[stave_i].advance(
-                dur,
-                self.width,
-                Some((pitches.clone(), y_offset)),
-            );
-        }
-        // Add back to queue if time is remaining.
-        time -= dur;
-        if time != 0 {
+    /// Add to queue if time is remaining
+    fn add_time(&mut self, time: u16, stave_i: usize) {
+        if time > 0 {
             // Insert at correct priority level.
             let mut index = self.pq.len();
             loop {
@@ -274,6 +107,172 @@ impl<'a> BarEngraver<'a> {
                 }
             }
         }
+    }
+}
+
+impl BarElem {
+    /// Engrave the bar of music.
+    pub fn engrave(&mut self, mut engraver: BarEngraver<'_>) -> i32 {
+        let ymargin = self.stave.height_steps() + Steps(12);
+        // Empty the priority queue.
+        while let Some((time, stave_i)) = engraver.pq.pop_front() {
+            self.engrave_one(&mut engraver, time, stave_i);
+        }
+        // Beam eighth notes and shorter.
+        while let Some(beam) = engraver.beams.pop() {
+            self.add_flags_and_beams(engraver.meta, beam);
+        }
+        // Add the rest of the width.
+        engraver.width += get_spacing(engraver.all) / 7.0;
+        // End of bar margin
+        engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
+        // Draw measure rests
+        for (rest_stave, rest_ic) in &engraver.rests {
+            let steps = ymargin * (*rest_stave as i32);
+            self.add_measure_rest(engraver.width, steps);
+            if *rest_ic {
+                engraver.cursor_span = Some((
+                    engraver.meta.barline_thickness,            // X
+                    (BAR_WIDTH as f32 * engraver.width) as i32, // W
+                ));
+            }
+        }
+        // Cursor at end of bar.
+        if let Some((x, _stave_j)) = engraver.cursor {
+            engraver.cursor = None;
+            let e = if x == 0.0 {
+                0
+            } else {
+                -engraver.meta.barline_thickness
+            };
+            let x = (BAR_WIDTH as f32 * x) as i32;
+            engraver.cursor_span = Some((
+                x + e, // X
+                engraver.meta.barline_thickness
+                    + (BAR_WIDTH as f32 * engraver.width) as i32
+                    - x
+                    - e, // W
+            ));
+        }
+        // Calculate physical bar width.
+        let bar_width =
+            ((BAR_WIDTH as f32 * engraver.width) as i32).max(BAR_WIDTH);
+        // Draw barlines
+        for i in 0..engraver.notators.len().try_into().unwrap() {
+            let y = self.offset_y(self.stave.steps_middle_c);
+            let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
+            let mut html = Html::new();
+            Svg::new(&mut html).path().d(d).end();
+            self.elements.push(html);
+            self.add_barline(engraver.meta, bar_width, ymargin * i);
+        }
+
+        if let Some((x, w)) = engraver.cursor_span {
+            let mut html = Html::new();
+            Svg::new(&mut html)
+                .rect()
+                .id("cursor")
+                .x(x)
+                .y(0)
+                .width(w)
+                .height(self.height())
+                .fill("#FF9AF0")
+                .end();
+            self.elements.insert(0, html);
+        }
+
+        // Return calculated physical bar width.
+        bar_width
+    }
+
+    /// Engrave one marking
+    fn engrave_one(
+        &mut self,
+        engraver: &mut BarEngraver<'_>,
+        mut time: u16,
+        stave_i: usize,
+    ) {
+        let Some((pitches, dur, ic)) = engraver.notators[stave_i].next() else {
+            engraver
+                .rests
+                .push((stave_i, engraver.notators[stave_i].is_cursor()));
+            return;
+        };
+        // Increment width
+        if time < engraver.all {
+            engraver.width += get_spacing(engraver.all - time) / 7.0;
+            engraver.all = time;
+        }
+        // Render cursor
+        if ic {
+            if engraver.cursor.is_none() {
+                if time == 128 {
+                    // If first thing, cursor takes up margin.
+                    engraver.cursor = Some((0.0, stave_i));
+                } else {
+                    engraver.cursor = Some((engraver.width, stave_i));
+                }
+            }
+        } else if let Some((x, stave_j)) = engraver.cursor {
+            if stave_i == stave_j {
+                engraver.cursor = None;
+                let e = if x == 0.0 {
+                    0
+                } else {
+                    -engraver.meta.barline_thickness
+                };
+                let f = if x == 0.0 {
+                    -engraver.meta.barline_thickness
+                } else {
+                    0
+                };
+                let x = if x == 0.0 {
+                    engraver.meta.barline_thickness
+                } else {
+                    0
+                } + (BAR_WIDTH as f32 * x) as i32;
+                engraver.cursor_span = Some((
+                    x + e,                                              // X
+                    (BAR_WIDTH as f32 * engraver.width) as i32 - x + f, // W
+                ));
+            }
+        }
+        let ymargin = self.stave.height_steps() + Steps(12);
+        // Render pitch or rest.
+        if pitches.is_empty() {
+            // Add rest
+            self.add_rest(
+                crate::glyph::rest_duration(dur),
+                engraver.width,
+                ymargin * stave_i as i32,
+            );
+            // Advance beaming
+            engraver.beams[stave_i].advance(dur, engraver.width, None);
+        } else {
+            // Offset Y, so that the note appears on the correct stave.
+            let y_offset = ymargin * stave_i as i32;
+            // Add chord
+            for pitch in &pitches {
+                let y = self.y_from_steps(pitch.visual_distance(), y_offset);
+
+                self.add_pitch(
+                    engraver.meta,
+                    dur,
+                    engraver.width,
+                    pitch.visual_distance(),
+                    y,
+                );
+            }
+            // Advance beaming (using closest note to the beam)
+            engraver.beams[stave_i].advance(
+                dur,
+                engraver.width,
+                Some((pitches.clone(), y_offset)),
+            );
+        }
+        time -= dur;
+        // Add back to queue if time is remaining.
+        engraver.add_time(time, stave_i);
     }
 }
 

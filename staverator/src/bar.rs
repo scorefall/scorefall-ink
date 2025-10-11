@@ -92,7 +92,8 @@ impl BarElem {
     /// Add markings to this measure.
     ///
     /// - `scof`: The score.
-    /// - `curs`: Cursor of measure.
+    /// - `cursor`: Current cursor position.
+    /// - `measure`: Measure of bar.
     pub fn add_markings(
         &mut self,
         meta: &SfFontMetadata,
@@ -115,8 +116,8 @@ impl BarElem {
         }
 
         // Engrave the music.
-        let width = BarEngraver::new(self, meta, &mut notators).engrave();
-        self.width += width;
+        let engraver = BarEngraver::new(meta, notators);
+        self.width += self.engrave(engraver);
     }
 
     /// Get the Y offset of a step value
