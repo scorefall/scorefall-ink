@@ -85,7 +85,7 @@ impl<'a> Iterator for Notator<'a> {
             }
             _ => unreachable!(),
         };
-        self.curs.right_unchecked();
+        self.curs = self.curs.right_unchecked();
         <Self as Iterator>::next(self)
     }
 }

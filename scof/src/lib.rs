@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ pub use self::{
 };
 
 /// Cursor pointing to a marking
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cursor {
     /// Movement number at cursor
     movement: u16,
@@ -61,18 +61,8 @@ impl Cursor {
         }
     }
 
-    /// Create a cursor from the first marking
-    pub fn first_marking(&self) -> Self {
-        Cursor {
-            movement: self.movement,
-            bar: self.bar,
-            chan: self.chan,
-            marking: 0,
-        }
-    }
-
-    /// Create a cursor from the first marking and chan #.
-    pub fn chan(&self, chan: u16) -> Self {
+    /// Create a cursor from a chan #.
+    pub fn chan(self, chan: u16) -> Self {
         Cursor {
             movement: self.movement,
             bar: self.bar,
@@ -81,61 +71,36 @@ impl Cursor {
         }
     }
 
-    /// Move cursor left.
-    pub fn left(&mut self, scof: &Scof) {
+    /// Create a cursor one marking to the left, shifting bar if necessary.
+    pub fn left(mut self, scof: &Scof) -> Self {
         if self.marking > 0 {
             self.marking -= 1;
-        } else if self.bar != 0 {
+        } else if self.bar > 0 {
             self.bar -= 1;
             let len = scof.marking_len(self);
             self.marking = if len > 0 { len - 1 } else { 0 };
         }
+        self
     }
 
-    /// Move cursor right, and to the next bar if the bar ended.
-    pub fn right(&mut self, scof: &Scof) {
-        if self.right_checked(scof) {
-            // Bar has ended.
-            self.bar += 1;
-            self.marking = 0;
-        }
-    }
-
-    /// Fix the cursor if it is wrong.  Move cursor right, and to the next bar
-    /// if the bar ended.  FIXME: Maybe remove other API in favor of this
-    /// function in conjunction with others.
-    pub fn right_fix(&mut self, scof: &Scof) -> bool {
-        if self.marking >= scof.marking_len(self) {
-            // Bar has ended.
-            self.bar += 1;
-            self.marking = 0;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Move cursor right within the bar, returning true if the bar ended.  If
-    /// the bar has ended, the cursor is not changed.
-    pub fn right_checked(&mut self, scof: &Scof) -> bool {
-        let len = scof.marking_len(self);
-
-        if self.marking + 1 < len {
-            self.marking += 1;
-            false
-        } else {
-            true
-        }
-    }
-
-    /// Move cursor to the right within the bar, not checking if it ended.
-    pub fn right_unchecked(&mut self) -> Self {
+    /// Create a cursor one marking to the right, shifting bar if necessary.
+    pub fn right(mut self, scof: &Scof) -> Self {
         self.marking += 1;
-        self.clone()
+        if self.marking >= scof.marking_len(self) {
+            self.bar += 1;
+            self.marking = 0;
+        }
+        self
+    }
+
+    /// Create a cursor one marking to the right, not checking if bar ended.
+    pub fn right_unchecked(mut self) -> Self {
+        self.marking += 1;
+        self
     }
 
     /// Returns true if it's the first bar of music.
-    pub fn is_first_bar(&self) -> bool {
+    pub fn is_first_bar(self) -> bool {
         self.bar == 0
     }
 }
@@ -647,18 +612,17 @@ impl Scof {
     }
 
     /// Get the count of markings in a measure
-    pub fn marking_len(&self, cursor: &Cursor) -> u16 {
-        let mut curs = (*cursor).clone();
-        curs.marking = 0;
-        while self.marking(&curs).is_some() {
-            curs.marking += 1;
+    pub fn marking_len(&self, mut cursor: Cursor) -> u16 {
+        cursor.marking = 0;
+        while self.marking(&cursor).is_some() {
+            cursor.marking += 1;
         }
-        curs.marking
+        cursor.marking
     }
 
     /// Return true if there are no markings in a measure (measure doesn't
     /// exist).
-    pub fn marking_is_empty(&self, cursor: &Cursor) -> bool {
+    pub fn marking_is_empty(&self, cursor: Cursor) -> bool {
         self.marking_len(cursor) == 0
     }
 
