@@ -30,7 +30,7 @@ use sfff::SfFontMetadata;
 use crate::{
     bar::{BAR_WIDTH, BarElem},
     beaming::Beams,
-    notator::Notator,
+    notator::Notes,
     stave::Stave,
 };
 
@@ -38,8 +38,10 @@ use crate::{
 pub struct BarEngraver<'a> {
     /// Font metadata
     meta: &'a SfFontMetadata,
-    // Notators for each stave
-    notators: Vec<Notator<'a>>,
+    // Notes for each stave
+    stave_notes: Vec<Vec<Notes>>,
+    // Cursors for each stave
+    stave_cursors: Vec<bool>,
     // Priority Queue for the next note to render (priority: 128ths remaining)
     pq: VecDeque<(u16, usize)>,
     // Rests (stave, is_cursor)
@@ -60,12 +62,13 @@ impl<'a> BarEngraver<'a> {
     /// Create a new bar engraver
     pub(super) fn new(
         meta: &'a SfFontMetadata,
-        notators: Vec<Notator<'a>>,
+        stave_notes: Vec<Vec<Notes>>,
+        stave_cursors: Vec<bool>,
     ) -> Self {
         // Add each stave
         let mut beams = vec![];
         let mut pq = VecDeque::new();
-        for i in 0..notators.len() {
+        for i in 0..stave_notes.len() {
             // 128 128ths remaining.
             pq.push_back((128, i));
             beams.push(Beams::new());
@@ -79,7 +82,8 @@ impl<'a> BarEngraver<'a> {
 
         Self {
             meta,
-            notators,
+            stave_notes,
+            stave_cursors,
             pq,
             rests,
             width,
@@ -107,6 +111,21 @@ impl<'a> BarEngraver<'a> {
                 }
             }
         }
+    }
+
+    /// Pop next notes for the given stave
+    fn pop_notes(&mut self, stave_i: usize) -> Option<Notes> {
+        let sn = &mut self.stave_notes[stave_i];
+        if sn.is_empty() {
+            None
+        } else {
+            Some(sn.remove(0))
+        }
+    }
+
+    /// Check if a stave contains the cursor
+    fn is_cursor(&self, stave_i: usize) -> bool {
+        self.stave_cursors[stave_i]
     }
 }
 
@@ -158,7 +177,7 @@ impl BarElem {
         let bar_width =
             ((BAR_WIDTH as f32 * engraver.width) as i32).max(BAR_WIDTH);
         // Draw barlines
-        for i in 0..engraver.notators.len().try_into().unwrap() {
+        for i in 0..engraver.stave_notes.len().try_into().unwrap() {
             let y = self.offset_y(self.stave.steps_middle_c);
             let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
             let mut html = Html::new();
@@ -192,10 +211,8 @@ impl BarElem {
         mut time: u16,
         stave_i: usize,
     ) {
-        let Some((pitches, dur, ic)) = engraver.notators[stave_i].next() else {
-            engraver
-                .rests
-                .push((stave_i, engraver.notators[stave_i].is_cursor()));
+        let Some(notes) = engraver.pop_notes(stave_i) else {
+            engraver.rests.push((stave_i, engraver.is_cursor(stave_i)));
             return;
         };
         // Increment width
@@ -204,7 +221,7 @@ impl BarElem {
             engraver.all = time;
         }
         // Render cursor
-        if ic {
+        if notes.is_cursor {
             if engraver.cursor.is_none() {
                 if time == 128 {
                     // If first thing, cursor takes up margin.
@@ -239,25 +256,25 @@ impl BarElem {
         }
         let ymargin = self.stave.height_steps() + Steps(12);
         // Render pitch or rest.
-        if pitches.is_empty() {
+        if notes.pitches.is_empty() {
             // Add rest
             self.add_rest(
-                crate::glyph::rest_duration(dur),
+                crate::glyph::rest_duration(notes.dur),
                 engraver.width,
                 ymargin * stave_i as i32,
             );
             // Advance beaming
-            engraver.beams[stave_i].advance(dur, engraver.width, None);
+            engraver.beams[stave_i].advance(notes.dur, engraver.width, None);
         } else {
             // Offset Y, so that the note appears on the correct stave.
             let y_offset = ymargin * stave_i as i32;
             // Add chord
-            for pitch in &pitches {
+            for pitch in &notes.pitches {
                 let y = self.y_from_steps(pitch.visual_distance(), y_offset);
 
                 self.add_pitch(
                     engraver.meta,
-                    dur,
+                    notes.dur,
                     engraver.width,
                     pitch.visual_distance(),
                     y,
@@ -265,12 +282,12 @@ impl BarElem {
             }
             // Advance beaming (using closest note to the beam)
             engraver.beams[stave_i].advance(
-                dur,
+                notes.dur,
                 engraver.width,
-                Some((pitches.clone(), y_offset)),
+                Some((notes.pitches.clone(), y_offset)),
             );
         }
-        time -= dur;
+        time -= notes.dur;
         // Add back to queue if time is remaining.
         engraver.add_time(time, stave_i);
     }

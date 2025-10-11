@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -20,19 +20,29 @@ use std::convert::TryInto;
 
 use scof::{Cursor, Marking, Pitch, Scof};
 
+/// Set of notes at one position in a piece
+pub struct Notes {
+    /// Pitches of notes
+    pub pitches: Vec<Pitch>,
+    /// Duration
+    pub dur: u16,
+    /// Flag if cursor is here
+    pub is_cursor: bool,
+}
+
 /// An iterator over durations of notes in a measure.  Should only output
 /// correct notation.  (Turns 3/8 into dotted 1/4 or 1/4 tied to 1/8 depending
 /// on what's appropriate).
-pub(super) struct Notator<'a> {
+struct Notator<'a> {
+    // Score
+    scof: &'a Scof,
     // Cursor through the notes.
     curs: Cursor,
     // Duration left of current note (may be note tied to another)
     dur: u16,
     // Note to check duration against
     check: u16,
-    //
-    scof: &'a Scof,
-    //
+    // Current pitch
     pitch: Vec<Pitch>,
     // User's cursor
     cursor: Cursor,
@@ -40,34 +50,49 @@ pub(super) struct Notator<'a> {
     ic: bool,
 }
 
+impl Notes {
+    /// Create notes at a position of a piece
+    fn new(pitches: Vec<Pitch>, dur: u16, is_cursor: bool) -> Self {
+        Notes {
+            pitches,
+            dur,
+            is_cursor,
+        }
+    }
+}
+
 impl<'a> Notator<'a> {
     /// Create a new `Notator`
-    pub(super) fn new(scof: &'a Scof, cursor: Cursor, curs: Cursor) -> Self {
+    fn new(scof: &'a Scof, cursor: Cursor, curs: Cursor) -> Self {
         Notator {
+            scof,
             curs,
             dur: 0,
             check: 128,
-            scof,
             pitch: vec![],
             cursor,
             ic: false,
         }
     }
 
-    pub(super) fn is_cursor(&self) -> bool {
+    fn is_cursor(&self) -> bool {
         self.curs == self.cursor
     }
 }
 
 impl<'a> Iterator for Notator<'a> {
-    type Item = (Vec<Pitch>, u16, bool);
+    type Item = Notes;
 
     fn next(&mut self) -> Option<Self::Item> {
         // If duration is not 0, find next note to add.
         while self.dur != 0 {
             if self.dur >= self.check {
                 self.dur -= self.check;
-                return Some((self.pitch.clone(), self.check, self.ic));
+                return Some(Notes::new(
+                    self.pitch.clone(),
+                    self.check,
+                    self.ic,
+                ));
             }
             self.check /= 2;
         }
@@ -88,4 +113,9 @@ impl<'a> Iterator for Notator<'a> {
         self.curs.right_unchecked();
         <Self as Iterator>::next(self)
     }
+}
+
+/// Notate one measure
+pub fn notate(scof: &Scof, cursor: Cursor, curs: Cursor) -> Vec<Notes> {
+    Notator::new(scof, cursor.clone(), curs.clone()).collect()
 }
