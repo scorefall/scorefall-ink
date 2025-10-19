@@ -555,7 +555,7 @@ impl Default for Scof {
 
 impl Scof {
     /// Lookup a marking at a cursor position
-    pub fn marking(&self, cursor: &Cursor) -> Option<&Marking> {
+    pub fn marking(&self, cursor: Cursor) -> Option<&Marking> {
         self.movement
             .get(cursor.movement as usize)?
             .bar
@@ -567,13 +567,13 @@ impl Scof {
     }
 
     /// Get mutable marking at a cursor position
-    pub fn marking_mut(&mut self, cursor: &Cursor) -> Option<&mut Marking> {
+    pub fn marking_mut(&mut self, cursor: Cursor) -> Option<&mut Marking> {
         self.chan_notes_mut(cursor)?
             .get_mut(cursor.marking as usize)
     }
 
     /// Get mutable vec of markings for measure at cursor position.
-    fn chan_notes_mut(&mut self, cursor: &Cursor) -> Option<&mut Vec<Marking>> {
+    fn chan_notes_mut(&mut self, cursor: Cursor) -> Option<&mut Vec<Marking>> {
         Some(
             &mut self
                 .movement
@@ -618,9 +618,10 @@ impl Scof {
     }
 
     /// Get the count of markings in a measure
-    pub fn marking_len(&self, mut cursor: Cursor) -> u16 {
+    pub fn marking_len(&self, cursor: Cursor) -> u16 {
+        let mut cursor = cursor;
         cursor.marking = 0;
-        while self.marking(&cursor).is_some() {
+        while self.marking(cursor).is_some() {
             cursor.marking += 1;
         }
         cursor.marking
@@ -633,7 +634,7 @@ impl Scof {
     }
 
     /// Get the note at cursor
-    pub fn note(&self, cursor: &Cursor) -> Option<&Note> {
+    pub fn note(&self, cursor: Cursor) -> Option<&Note> {
         if let Marking::Note(note) = self.marking(cursor)? {
             Some(note)
         } else {
@@ -642,7 +643,7 @@ impl Scof {
     }
 
     /// Set pitch class and octave of a note at a cursor
-    pub fn set_pitch(&mut self, cursor: &Cursor, i: u16, pitch: Pitch) {
+    pub fn set_pitch(&mut self, cursor: Cursor, i: u16, pitch: Pitch) {
         let mut note = self.note(cursor).unwrap().clone();
         note.set_pitch(i, pitch);
         let m = self.marking_mut(cursor).unwrap();
@@ -653,7 +654,7 @@ impl Scof {
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_empty_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
         // FIXME: Time Signatures
@@ -667,19 +668,19 @@ impl Scof {
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_full_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
-        let mut cursor = cursor.clone();
+        let mut cursor = cursor;
         cursor.marking = 0;
-        self.set_part_measure(&cursor, note)
+        self.set_part_measure(cursor, note)
     }
 
     /// Set a full measure to be replaced at the start.
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_part_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
         let mut note = note.clone();
@@ -730,7 +731,7 @@ impl Scof {
     }
 
     /// Set whole rest at cursor to C4.
-    pub fn set_whole_pitch(&mut self, cursor: &Cursor) {
+    pub fn set_whole_pitch(&mut self, cursor: Cursor) {
         // If it's a whole measure rest, insert a whole note (4/4)
         // FIXME: Add time signatures.
         self.chan_notes_mut(cursor)
@@ -739,7 +740,7 @@ impl Scof {
     }
 
     /// Set duration of a note.
-    pub fn set_duration(&mut self, cursor: &Cursor, dur: Fraction) {
+    pub fn set_duration(&mut self, cursor: Cursor, dur: Fraction) {
         let mut note = self.note(cursor).unwrap().clone();
         let old = note.duration;
         note.set_duration(dur);
@@ -756,17 +757,17 @@ impl Scof {
             );
 
             // Set first note.
-            let m = self.marking_mut(&cursor).unwrap();
+            let m = self.marking_mut(cursor).unwrap();
             *m = Marking::Note(note);
         } else {
-            let mut cursor = cursor.clone();
+            let mut cursor = cursor;
 
-            while let Some(rem) = self.set_part_measure(&cursor, &note) {
+            while let Some(rem) = self.set_part_measure(cursor, &note) {
                 log!(SCOF, "Remainder {}", rem);
                 cursor.bar += 1;
                 cursor.marking = 0;
                 self.new_measure();
-                let notes = self.chan_notes_mut(&cursor).unwrap();
+                let notes = self.chan_notes_mut(cursor).unwrap();
                 if notes.is_empty() {
                     notes.push("1/1R".parse().unwrap());
                 }
@@ -775,7 +776,7 @@ impl Scof {
         }
     }
 
-    pub fn set_whole_duration(&mut self, cursor: &Cursor, dur: Fraction) {
+    pub fn set_whole_duration(&mut self, cursor: Cursor, dur: Fraction) {
         let note = Note {
             pitch: vec![],
             duration: dur,
@@ -789,10 +790,10 @@ impl Scof {
     /// Insert a note after the cursor.
     fn insert_after(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         marking: Marking,
     ) -> Option<()> {
-        self.chan_notes_mut(&cursor.clone().right_unchecked())?
+        self.chan_notes_mut(cursor.right_unchecked())?
             .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
     }

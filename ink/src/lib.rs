@@ -78,11 +78,11 @@ impl Program {
             scof::PitchOctave::Octave4,
         );
 
-        if let Some(mark) = self.scof.marking(&self.cursor).cloned() {
+        if let Some(mark) = self.scof.marking(self.cursor).cloned() {
             match mark {
                 Marking::Dynamic(_) => { /*Do nothing*/ }
                 Marking::GraceInto(note) => self.scof.set_pitch(
-                    &self.cursor,
+                    self.cursor,
                     0,
                     if up {
                         step_up_fn(&note, 0, create)
@@ -92,7 +92,7 @@ impl Program {
                     .pitch[0],
                 ),
                 Marking::GraceOutOf(note) => self.scof.set_pitch(
-                    &self.cursor,
+                    self.cursor,
                     0,
                     if up {
                         step_up_fn(&note, 0, create)
@@ -102,7 +102,7 @@ impl Program {
                     .pitch[0],
                 ),
                 Marking::Note(note) => self.scof.set_pitch(
-                    &self.cursor,
+                    self.cursor,
                     0,
                     if up {
                         step_up_fn(&note, 0, create)
@@ -123,7 +123,7 @@ impl Program {
                 Marking::Repeat => { /*Do nothing*/ }
             }
         } else {
-            self.scof.set_whole_pitch(&self.cursor);
+            self.scof.set_whole_pitch(self.cursor);
         }
     }
 
@@ -159,17 +159,17 @@ impl Program {
 
     /// Set duration of a note.
     pub fn set_dur(&mut self, dur: Fraction) {
-        if let Some(mark) = self.scof.marking(&self.cursor) {
+        if let Some(mark) = self.scof.marking(self.cursor) {
             match mark {
                 Marking::Dynamic(_) => { /*Do nothing*/ }
                 Marking::GraceInto(_note) => {
-                    self.scof.set_duration(&self.cursor, dur)
+                    self.scof.set_duration(self.cursor, dur)
                 }
                 Marking::GraceOutOf(_note) => {
-                    self.scof.set_duration(&self.cursor, dur)
+                    self.scof.set_duration(self.cursor, dur)
                 }
                 Marking::Note(_note) => {
-                    self.scof.set_duration(&self.cursor, dur)
+                    self.scof.set_duration(self.cursor, dur)
                 }
                 Marking::Breath => { /*Do nothing*/ }
                 Marking::CaesuraShort => { /*Do nothing*/ }
@@ -183,7 +183,7 @@ impl Program {
                 Marking::Repeat => { /*Do nothing*/ }
             }
         } else {
-            self.scof.set_whole_duration(&self.cursor, dur);
+            self.scof.set_whole_duration(self.cursor, dur);
         }
     }
 

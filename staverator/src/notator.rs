@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ impl<'a> Iterator for Notator<'a> {
             self.check /= 2;
         }
         // Get next note/rest, return None if done.
-        match self.scof.marking(&self.curs)? {
+        match self.scof.marking(self.curs)? {
             Marking::Note(note) => {
                 self.ic = self.curs == self.cursor;
                 self.check = 128;
