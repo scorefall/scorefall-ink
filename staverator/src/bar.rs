@@ -25,8 +25,7 @@ use sfff::{Glyph, SfFontMetadata};
 
 use crate::{
     beaming::{Beam, Beams, Short},
-    glyph,
-    notator::Notator,
+    glyph, notator,
     notehead::{self, Notehead},
     rhythmic_spacing::BarEngraver,
     stave::Stave,
@@ -92,7 +91,8 @@ impl BarElem {
     /// Add markings to this measure.
     ///
     /// - `scof`: The score.
-    /// - `curs`: Cursor of measure.
+    /// - `cursor`: Current cursor position.
+    /// - `measure`: Measure of bar.
     pub fn add_markings(
         &mut self,
         meta: &SfFontMetadata,
@@ -107,16 +107,19 @@ impl BarElem {
         );
         let reset_cursor = curs.clone();
 
-        // Make notators for each stave.
-        let mut notators = vec![];
+        // Make notes for each stave.
+        let mut stave_notes = vec![];
+        let mut stave_cursors = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
             curs = reset_cursor.chan(chan);
-            notators.push(Notator::new(scof, cursor.clone(), curs.clone()));
+            let notes = notator::notate(scof, cursor.clone(), curs.clone());
+            stave_notes.push(notes);
+            stave_cursors.push(*cursor == curs);
         }
 
         // Engrave the music.
-        let width = BarEngraver::new(self, meta, &mut notators).engrave();
-        self.width += width;
+        let engraver = BarEngraver::new(meta, stave_notes, stave_cursors);
+        self.width += self.engrave(engraver);
     }
 
     /// Get the Y offset of a step value
