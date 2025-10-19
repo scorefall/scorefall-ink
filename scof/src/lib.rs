@@ -52,6 +52,7 @@ pub struct Cursor {
 
 impl Cursor {
     /// Create a new cursor
+    #[must_use]
     pub fn new(movement: u16, bar: u16, chan: u16, marking: u16) -> Self {
         Cursor {
             movement,
@@ -62,6 +63,7 @@ impl Cursor {
     }
 
     /// Create a cursor from a chan #.
+    #[must_use]
     pub fn chan(self, chan: u16) -> Self {
         Cursor {
             movement: self.movement,
@@ -72,6 +74,7 @@ impl Cursor {
     }
 
     /// Create a cursor one marking to the left, shifting bar if necessary.
+    #[must_use]
     pub fn left(mut self, scof: &Scof) -> Self {
         if self.marking > 0 {
             self.marking -= 1;
@@ -84,6 +87,7 @@ impl Cursor {
     }
 
     /// Create a cursor one marking to the right, shifting bar if necessary.
+    #[must_use]
     pub fn right(mut self, scof: &Scof) -> Self {
         self.marking += 1;
         if self.marking >= scof.marking_len(self) {
@@ -94,12 +98,14 @@ impl Cursor {
     }
 
     /// Create a cursor one marking to the right, not checking if bar ended.
+    #[must_use]
     pub fn right_unchecked(mut self) -> Self {
         self.marking += 1;
         self
     }
 
     /// Returns true if it's the first bar of music.
+    #[must_use]
     pub fn is_first_bar(self) -> bool {
         self.bar == 0
     }
