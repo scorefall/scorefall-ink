@@ -20,8 +20,8 @@ use std::convert::TryInto;
 
 use scof::{Cursor, Marking, Pitch, Scof};
 
-/// Set of notes at one position in a piece
-pub struct Notes {
+/// A voicing is the set of notes at one position in a piece
+pub struct Voicing {
     /// Pitches of notes
     pub pitches: Vec<Pitch>,
     /// Duration
@@ -50,10 +50,10 @@ struct Notator<'a> {
     ic: bool,
 }
 
-impl Notes {
-    /// Create notes at a position of a piece
+impl Voicing {
+    /// Create a new voicing
     fn new(pitches: Vec<Pitch>, dur: u16, is_cursor: bool) -> Self {
-        Notes {
+        Voicing {
             pitches,
             dur,
             is_cursor,
@@ -81,14 +81,14 @@ impl<'a> Notator<'a> {
 }
 
 impl<'a> Iterator for Notator<'a> {
-    type Item = Notes;
+    type Item = Voicing;
 
     fn next(&mut self) -> Option<Self::Item> {
         // If duration is not 0, find next note to add.
         while self.dur != 0 {
             if self.dur >= self.check {
                 self.dur -= self.check;
-                return Some(Notes::new(
+                return Some(Voicing::new(
                     self.pitch.clone(),
                     self.check,
                     self.ic,
@@ -116,6 +116,6 @@ impl<'a> Iterator for Notator<'a> {
 }
 
 /// Notate one measure
-pub fn notate(scof: &Scof, cursor: Cursor, curs: Cursor) -> Vec<Notes> {
+pub fn notate(scof: &Scof, cursor: Cursor, curs: Cursor) -> Vec<Voicing> {
     Notator::new(scof, cursor.clone(), curs.clone()).collect()
 }

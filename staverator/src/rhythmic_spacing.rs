@@ -30,7 +30,7 @@ use sfff::SfFontMetadata;
 use crate::{
     bar::{BAR_WIDTH, BarElem},
     beaming::Beams,
-    notator::Notes,
+    notator::Voicing,
     stave::Stave,
 };
 
@@ -38,10 +38,10 @@ use crate::{
 pub struct BarEngraver<'a> {
     /// Font metadata
     meta: &'a SfFontMetadata,
-    // Notes for each stave
-    stave_notes: Vec<Vec<Notes>>,
+    // Voicings for each stave
+    stave_voicing: Vec<Vec<Voicing>>,
     // Cursors for each stave
-    stave_cursors: Vec<bool>,
+    stave_cursor: Vec<bool>,
     // Priority Queue for the next note to render (priority: 128ths remaining)
     pq: VecDeque<(u16, usize)>,
     // Rests (stave, is_cursor)
@@ -62,13 +62,13 @@ impl<'a> BarEngraver<'a> {
     /// Create a new bar engraver
     pub(super) fn new(
         meta: &'a SfFontMetadata,
-        stave_notes: Vec<Vec<Notes>>,
-        stave_cursors: Vec<bool>,
+        stave_voicing: Vec<Vec<Voicing>>,
+        stave_cursor: Vec<bool>,
     ) -> Self {
         // Add each stave
         let mut beams = vec![];
         let mut pq = VecDeque::new();
-        for i in 0..stave_notes.len() {
+        for i in 0..stave_voicing.len() {
             // 128 128ths remaining.
             pq.push_back((128, i));
             beams.push(Beams::new());
@@ -82,8 +82,8 @@ impl<'a> BarEngraver<'a> {
 
         Self {
             meta,
-            stave_notes,
-            stave_cursors,
+            stave_voicing,
+            stave_cursor,
             pq,
             rests,
             width,
@@ -113,9 +113,9 @@ impl<'a> BarEngraver<'a> {
         }
     }
 
-    /// Pop next notes for the given stave
-    fn pop_notes(&mut self, stave_i: usize) -> Option<Notes> {
-        let sn = &mut self.stave_notes[stave_i];
+    /// Pop next voicing for the given stave
+    fn pop_voicing(&mut self, stave_i: usize) -> Option<Voicing> {
+        let sn = &mut self.stave_voicing[stave_i];
         if sn.is_empty() {
             None
         } else {
@@ -125,7 +125,7 @@ impl<'a> BarEngraver<'a> {
 
     /// Check if a stave contains the cursor
     fn is_cursor(&self, stave_i: usize) -> bool {
-        self.stave_cursors[stave_i]
+        self.stave_cursor[stave_i]
     }
 }
 
@@ -177,7 +177,7 @@ impl BarElem {
         let bar_width =
             ((BAR_WIDTH as f32 * engraver.width) as i32).max(BAR_WIDTH);
         // Draw barlines
-        for i in 0..engraver.stave_notes.len().try_into().unwrap() {
+        for i in 0..engraver.stave_voicing.len().try_into().unwrap() {
             let y = self.offset_y(self.stave.steps_middle_c);
             let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
             let mut html = Html::new();
@@ -211,7 +211,7 @@ impl BarElem {
         mut time: u16,
         stave_i: usize,
     ) {
-        let Some(notes) = engraver.pop_notes(stave_i) else {
+        let Some(notes) = engraver.pop_voicing(stave_i) else {
             engraver.rests.push((stave_i, engraver.is_cursor(stave_i)));
             return;
         };
