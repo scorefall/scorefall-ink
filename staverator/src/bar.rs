@@ -107,18 +107,18 @@ impl BarElem {
         );
         let reset_cursor = curs.clone();
 
-        // Make notes for each stave.
-        let mut stave_notes = vec![];
-        let mut stave_cursors = vec![];
+        // Make voicings for each stave.
+        let mut stave_voicing = vec![];
+        let mut stave_cursor = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
             curs = reset_cursor.chan(chan);
             let notes = notator::notate(scof, cursor.clone(), curs.clone());
-            stave_notes.push(notes);
-            stave_cursors.push(*cursor == curs);
+            stave_voicing.push(notes);
+            stave_cursor.push(*cursor == curs);
         }
 
         // Engrave the music.
-        let engraver = BarEngraver::new(meta, stave_notes, stave_cursors);
+        let engraver = BarEngraver::new(meta, stave_voicing, stave_cursor);
         self.width += self.engrave(engraver);
     }
 
