@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright (C) 2019-2020 Doug P. Lau
+// Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ pub use self::{
 };
 
 /// Cursor pointing to a marking
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cursor {
     /// Movement number at cursor
     movement: u16,
@@ -52,6 +52,7 @@ pub struct Cursor {
 
 impl Cursor {
     /// Create a new cursor
+    #[must_use]
     pub fn new(movement: u16, bar: u16, chan: u16, marking: u16) -> Self {
         Cursor {
             movement,
@@ -61,18 +62,9 @@ impl Cursor {
         }
     }
 
-    /// Create a cursor from the first marking
-    pub fn first_marking(&self) -> Self {
-        Cursor {
-            movement: self.movement,
-            bar: self.bar,
-            chan: self.chan,
-            marking: 0,
-        }
-    }
-
-    /// Create a cursor from the first marking and chan #.
-    pub fn chan(&self, chan: u16) -> Self {
+    /// Create a cursor from a chan #.
+    #[must_use]
+    pub fn chan(self, chan: u16) -> Self {
         Cursor {
             movement: self.movement,
             bar: self.bar,
@@ -81,61 +73,40 @@ impl Cursor {
         }
     }
 
-    /// Move cursor left.
-    pub fn left(&mut self, scof: &Scof) {
+    /// Create a cursor one marking to the left, shifting bar if necessary.
+    #[must_use]
+    pub fn left(mut self, scof: &Scof) -> Self {
         if self.marking > 0 {
             self.marking -= 1;
-        } else if self.bar != 0 {
+        } else if self.bar > 0 {
             self.bar -= 1;
             let len = scof.marking_len(self);
             self.marking = if len > 0 { len - 1 } else { 0 };
         }
+        self
     }
 
-    /// Move cursor right, and to the next bar if the bar ended.
-    pub fn right(&mut self, scof: &Scof) {
-        if self.right_checked(scof) {
-            // Bar has ended.
-            self.bar += 1;
-            self.marking = 0;
-        }
-    }
-
-    /// Fix the cursor if it is wrong.  Move cursor right, and to the next bar
-    /// if the bar ended.  FIXME: Maybe remove other API in favor of this
-    /// function in conjunction with others.
-    pub fn right_fix(&mut self, scof: &Scof) -> bool {
-        if self.marking >= scof.marking_len(self) {
-            // Bar has ended.
-            self.bar += 1;
-            self.marking = 0;
-            true
-        } else {
-            false
-        }
-    }
-
-    /// Move cursor right within the bar, returning true if the bar ended.  If
-    /// the bar has ended, the cursor is not changed.
-    pub fn right_checked(&mut self, scof: &Scof) -> bool {
-        let len = scof.marking_len(self);
-
-        if self.marking + 1 < len {
-            self.marking += 1;
-            false
-        } else {
-            true
-        }
-    }
-
-    /// Move cursor to the right within the bar, not checking if it ended.
-    pub fn right_unchecked(&mut self) -> Self {
+    /// Create a cursor one marking to the right, shifting bar if necessary.
+    #[must_use]
+    pub fn right(mut self, scof: &Scof) -> Self {
         self.marking += 1;
-        self.clone()
+        if self.marking >= scof.marking_len(self) {
+            self.bar += 1;
+            self.marking = 0;
+        }
+        self
+    }
+
+    /// Create a cursor one marking to the right, not checking if bar ended.
+    #[must_use]
+    pub fn right_unchecked(mut self) -> Self {
+        self.marking += 1;
+        self
     }
 
     /// Returns true if it's the first bar of music.
-    pub fn is_first_bar(&self) -> bool {
+    #[must_use]
+    pub fn is_first_bar(self) -> bool {
         self.bar == 0
     }
 }
@@ -584,7 +555,7 @@ impl Default for Scof {
 
 impl Scof {
     /// Lookup a marking at a cursor position
-    pub fn marking(&self, cursor: &Cursor) -> Option<&Marking> {
+    pub fn marking(&self, cursor: Cursor) -> Option<&Marking> {
         self.movement
             .get(cursor.movement as usize)?
             .bar
@@ -596,13 +567,13 @@ impl Scof {
     }
 
     /// Get mutable marking at a cursor position
-    pub fn marking_mut(&mut self, cursor: &Cursor) -> Option<&mut Marking> {
+    pub fn marking_mut(&mut self, cursor: Cursor) -> Option<&mut Marking> {
         self.chan_notes_mut(cursor)?
             .get_mut(cursor.marking as usize)
     }
 
     /// Get mutable vec of markings for measure at cursor position.
-    fn chan_notes_mut(&mut self, cursor: &Cursor) -> Option<&mut Vec<Marking>> {
+    fn chan_notes_mut(&mut self, cursor: Cursor) -> Option<&mut Vec<Marking>> {
         Some(
             &mut self
                 .movement
@@ -647,23 +618,23 @@ impl Scof {
     }
 
     /// Get the count of markings in a measure
-    pub fn marking_len(&self, cursor: &Cursor) -> u16 {
-        let mut curs = (*cursor).clone();
-        curs.marking = 0;
-        while self.marking(&curs).is_some() {
-            curs.marking += 1;
+    pub fn marking_len(&self, cursor: Cursor) -> u16 {
+        let mut cursor = cursor;
+        cursor.marking = 0;
+        while self.marking(cursor).is_some() {
+            cursor.marking += 1;
         }
-        curs.marking
+        cursor.marking
     }
 
     /// Return true if there are no markings in a measure (measure doesn't
     /// exist).
-    pub fn marking_is_empty(&self, cursor: &Cursor) -> bool {
+    pub fn marking_is_empty(&self, cursor: Cursor) -> bool {
         self.marking_len(cursor) == 0
     }
 
     /// Get the note at cursor
-    pub fn note(&self, cursor: &Cursor) -> Option<&Note> {
+    pub fn note(&self, cursor: Cursor) -> Option<&Note> {
         if let Marking::Note(note) = self.marking(cursor)? {
             Some(note)
         } else {
@@ -672,7 +643,7 @@ impl Scof {
     }
 
     /// Set pitch class and octave of a note at a cursor
-    pub fn set_pitch(&mut self, cursor: &Cursor, i: u16, pitch: Pitch) {
+    pub fn set_pitch(&mut self, cursor: Cursor, i: u16, pitch: Pitch) {
         let mut note = self.note(cursor).unwrap().clone();
         note.set_pitch(i, pitch);
         let m = self.marking_mut(cursor).unwrap();
@@ -683,7 +654,7 @@ impl Scof {
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_empty_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
         // FIXME: Time Signatures
@@ -697,19 +668,19 @@ impl Scof {
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_full_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
-        let mut cursor = cursor.clone();
+        let mut cursor = cursor;
         cursor.marking = 0;
-        self.set_part_measure(&cursor, note)
+        self.set_part_measure(cursor, note)
     }
 
     /// Set a full measure to be replaced at the start.
     /// Returns the fraction that doesn't fit in the measure.
     pub fn set_part_measure(
         &mut self,
-        cursor: &Cursor,
+        cursor: Cursor,
         note: &Note,
     ) -> Option<Fraction> {
         let mut note = note.clone();
@@ -760,7 +731,7 @@ impl Scof {
     }
 
     /// Set whole rest at cursor to C4.
-    pub fn set_whole_pitch(&mut self, cursor: &Cursor) {
+    pub fn set_whole_pitch(&mut self, cursor: Cursor) {
         // If it's a whole measure rest, insert a whole note (4/4)
         // FIXME: Add time signatures.
         self.chan_notes_mut(cursor)
@@ -769,7 +740,7 @@ impl Scof {
     }
 
     /// Set duration of a note.
-    pub fn set_duration(&mut self, cursor: &Cursor, dur: Fraction) {
+    pub fn set_duration(&mut self, cursor: Cursor, dur: Fraction) {
         let mut note = self.note(cursor).unwrap().clone();
         let old = note.duration;
         note.set_duration(dur);
@@ -786,17 +757,17 @@ impl Scof {
             );
 
             // Set first note.
-            let m = self.marking_mut(&cursor).unwrap();
+            let m = self.marking_mut(cursor).unwrap();
             *m = Marking::Note(note);
         } else {
-            let mut cursor = cursor.clone();
+            let mut cursor = cursor;
 
-            while let Some(rem) = self.set_part_measure(&cursor, &note) {
+            while let Some(rem) = self.set_part_measure(cursor, &note) {
                 log!(SCOF, "Remainder {}", rem);
                 cursor.bar += 1;
                 cursor.marking = 0;
                 self.new_measure();
-                let notes = self.chan_notes_mut(&cursor).unwrap();
+                let notes = self.chan_notes_mut(cursor).unwrap();
                 if notes.is_empty() {
                     notes.push("1/1R".parse().unwrap());
                 }
@@ -805,7 +776,7 @@ impl Scof {
         }
     }
 
-    pub fn set_whole_duration(&mut self, cursor: &Cursor, dur: Fraction) {
+    pub fn set_whole_duration(&mut self, cursor: Cursor, dur: Fraction) {
         let note = Note {
             pitch: vec![],
             duration: dur,
@@ -817,12 +788,8 @@ impl Scof {
 
     // FIXME: Needed?
     /// Insert a note after the cursor.
-    fn insert_after(
-        &mut self,
-        cursor: &Cursor,
-        marking: Marking,
-    ) -> Option<()> {
-        self.chan_notes_mut(&cursor.clone().right_unchecked())?
+    fn insert_after(&mut self, cursor: Cursor, marking: Marking) -> Option<()> {
+        self.chan_notes_mut(cursor.right_unchecked())?
             .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
     }

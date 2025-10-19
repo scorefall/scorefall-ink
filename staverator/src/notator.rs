@@ -97,7 +97,7 @@ impl<'a> Iterator for Notator<'a> {
             self.check /= 2;
         }
         // Get next note/rest, return None if done.
-        match self.scof.marking(&self.curs)? {
+        match self.scof.marking(self.curs)? {
             Marking::Note(note) => {
                 self.ic = self.curs == self.cursor;
                 self.check = 128;
@@ -110,7 +110,7 @@ impl<'a> Iterator for Notator<'a> {
             }
             _ => unreachable!(),
         };
-        self.curs.right_unchecked();
+        self.curs = self.curs.right_unchecked();
         <Self as Iterator>::next(self)
     }
 }
