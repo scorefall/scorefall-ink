@@ -788,11 +788,7 @@ impl Scof {
 
     // FIXME: Needed?
     /// Insert a note after the cursor.
-    fn insert_after(
-        &mut self,
-        cursor: Cursor,
-        marking: Marking,
-    ) -> Option<()> {
+    fn insert_after(&mut self, cursor: Cursor, marking: Marking) -> Option<()> {
         self.chan_notes_mut(cursor.right_unchecked())?
             .insert((cursor.marking + 1).try_into().unwrap(), marking);
         Some(())
