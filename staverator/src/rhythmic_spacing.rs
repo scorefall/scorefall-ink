@@ -130,6 +130,19 @@ impl<'a> BarEngraver<'a> {
     fn is_cursor(&self, stave_i: usize) -> bool {
         self.stave_cursor[stave_i]
     }
+
+    /// Calculate the cursor span
+    fn calculate_cursor_span(&mut self, x: f32) {
+        let xx = (BAR_WIDTH as f32 * x) as i32;
+        // Is this start of bar?
+        let x0 = if x == 0.0 {
+            self.meta.barline_thickness
+        } else {
+            0
+        };
+        let w = (BAR_WIDTH as f32 * self.width) as i32;
+        self.cursor_span = Some((xx + x0, w - xx - x0))
+    }
 }
 
 impl BarElem {
@@ -149,32 +162,16 @@ impl BarElem {
         // End of bar margin
         engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
-        for (rest_stave, rest_ic) in &engraver.rests {
+        for (rest_stave, _rest_ic) in &engraver.rests {
             let steps = ymargin * (*rest_stave as i32);
             self.add_measure_rest(engraver.width, steps);
-            if *rest_ic {
-                engraver.cursor_span = Some((
-                    engraver.meta.barline_thickness,            // X
-                    (BAR_WIDTH as f32 * engraver.width) as i32, // W
-                ));
-            }
+        }
+        if engraver.rests.iter().any(|(_, ic)| *ic) {
+            engraver.calculate_cursor_span(0.0);
         }
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = engraver.cursor {
-            engraver.cursor = None;
-            let e = if x == 0.0 {
-                0
-            } else {
-                -engraver.meta.barline_thickness
-            };
-            let x = (BAR_WIDTH as f32 * x) as i32;
-            engraver.cursor_span = Some((
-                x + e, // X
-                engraver.meta.barline_thickness
-                    + (BAR_WIDTH as f32 * engraver.width) as i32
-                    - x
-                    - e, // W
-            ));
+            engraver.calculate_cursor_span(x);
         }
         // Calculate physical bar width.
         let bar_width =
@@ -235,26 +232,8 @@ impl BarElem {
             }
         } else if let Some((x, stave_j)) = engraver.cursor {
             if stave_i == stave_j {
+                engraver.calculate_cursor_span(x);
                 engraver.cursor = None;
-                let e = if x == 0.0 {
-                    0
-                } else {
-                    -engraver.meta.barline_thickness
-                };
-                let f = if x == 0.0 {
-                    -engraver.meta.barline_thickness
-                } else {
-                    0
-                };
-                let x = if x == 0.0 {
-                    engraver.meta.barline_thickness
-                } else {
-                    0
-                } + (BAR_WIDTH as f32 * x) as i32;
-                engraver.cursor_span = Some((
-                    x + e,                                              // X
-                    (BAR_WIDTH as f32 * engraver.width) as i32 - x + f, // W
-                ));
             }
         }
         let ymargin = self.stave.height_steps() + Steps(12);
