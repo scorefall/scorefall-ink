@@ -214,7 +214,7 @@ impl BarElem {
         mut time: u16,
         stave_i: usize,
     ) {
-        let Some(notes) = engraver.pop_voicing(stave_i) else {
+        let Some(voicing) = engraver.pop_voicing(stave_i) else {
             engraver.rests.push((stave_i, engraver.is_cursor(stave_i)));
             return;
         };
@@ -224,7 +224,7 @@ impl BarElem {
             engraver.remaining = time;
         }
         // Render cursor
-        if notes.is_cursor {
+        if voicing.is_cursor {
             if engraver.cursor.is_none() {
                 if time == TIME_BAR {
                     // If first thing, cursor takes up margin.
@@ -259,25 +259,25 @@ impl BarElem {
         }
         let ymargin = self.stave.height_steps() + Steps(12);
         // Render pitch or rest.
-        if notes.pitches.is_empty() {
+        if voicing.pitches.is_empty() {
             // Add rest
             self.add_rest(
-                crate::glyph::rest_duration(notes.dur),
+                crate::glyph::rest_duration(voicing.dur),
                 engraver.width,
                 ymargin * stave_i as i32,
             );
             // Advance beaming
-            engraver.beams[stave_i].advance(notes.dur, engraver.width, None);
+            engraver.beams[stave_i].advance(voicing.dur, engraver.width, None);
         } else {
             // Offset Y, so that the note appears on the correct stave.
             let y_offset = ymargin * stave_i as i32;
             // Add chord
-            for pitch in &notes.pitches {
+            for pitch in &voicing.pitches {
                 let y = self.y_from_steps(pitch.visual_distance(), y_offset);
 
                 self.add_pitch(
                     engraver.meta,
-                    notes.dur,
+                    voicing.dur,
                     engraver.width,
                     pitch.visual_distance(),
                     y,
@@ -285,12 +285,12 @@ impl BarElem {
             }
             // Advance beaming (using closest note to the beam)
             engraver.beams[stave_i].advance(
-                notes.dur,
+                voicing.dur,
                 engraver.width,
-                Some((notes.pitches.clone(), y_offset)),
+                Some((voicing.pitches.clone(), y_offset)),
             );
         }
-        time -= notes.dur;
+        time -= voicing.dur;
         // Add back to queue if time is remaining.
         engraver.add_time(time, stave_i);
     }
