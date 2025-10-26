@@ -34,6 +34,9 @@ use crate::{
     stave::Stave,
 };
 
+/// Time of full bar (128th notes)
+const TIME_BAR: u16 = 128;
+
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a> {
     /// Font metadata
@@ -49,7 +52,7 @@ pub struct BarEngraver<'a> {
     // Bar physical width
     width: f32,
     // Remaining 128th notes for all staves
-    all: u16,
+    remaining: u16,
     // Cursor (x, stave)
     cursor: Option<(f32, usize)>,
     // Cursor span (x, width)
@@ -69,14 +72,14 @@ impl<'a> BarEngraver<'a> {
         let mut beams = vec![];
         let mut pq = VecDeque::new();
         for i in 0..stave_voicing.len() {
-            // 128 128ths remaining.
-            pq.push_back((128, i));
+            // All 128ths remaining.
+            pq.push_back((TIME_BAR, i));
             beams.push(Beams::new());
         }
         let rests = Vec::new();
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
-        let all = 128;
+        let remaining = TIME_BAR;
         let cursor = None;
         let cursor_span = None;
 
@@ -87,7 +90,7 @@ impl<'a> BarEngraver<'a> {
             pq,
             rests,
             width,
-            all,
+            remaining,
             cursor,
             cursor_span,
             beams,
@@ -142,7 +145,7 @@ impl BarElem {
             self.add_flags_and_beams(engraver.meta, beam);
         }
         // Add the rest of the width.
-        engraver.width += get_spacing(engraver.all) / 7.0;
+        engraver.width += get_spacing(engraver.remaining) / 7.0;
         // End of bar margin
         engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
@@ -216,14 +219,14 @@ impl BarElem {
             return;
         };
         // Increment width
-        if time < engraver.all {
-            engraver.width += get_spacing(engraver.all - time) / 7.0;
-            engraver.all = time;
+        if time < engraver.remaining {
+            engraver.width += get_spacing(engraver.remaining - time) / 7.0;
+            engraver.remaining = time;
         }
         // Render cursor
         if notes.is_cursor {
             if engraver.cursor.is_none() {
-                if time == 128 {
+                if time == TIME_BAR {
                     // If first thing, cursor takes up margin.
                     engraver.cursor = Some((0.0, stave_i));
                 } else {
