@@ -57,7 +57,7 @@ pub struct BarEngraver<'a> {
     cursor: Option<(f32, usize)>,
     // Cursor span (x, width)
     cursor_span: Option<(i32, i32)>,
-    // Keep track of which notes to beam, and which to flag.
+    // Beams for each stave; keep track of which notes to beam / flag.
     beams: Vec<Beams>,
 }
 
@@ -157,7 +157,7 @@ impl BarElem {
         while let Some(beam) = engraver.beams.pop() {
             self.add_flags_and_beams(engraver.meta, beam);
         }
-        // Add the rest of the width.
+        // Add the remaining width.
         engraver.width += get_spacing(engraver.remaining) / 7.0;
         // End of bar margin
         engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
