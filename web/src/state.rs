@@ -1,0 +1,313 @@
+// ScoreFall Ink - Music Composition Software
+//
+// Copyright © 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
+// Copyright © 2019-2025 Doug P. Lau
+//
+//     This program is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU General Public License as published by
+//     the Free Software Foundation, either version 3 of the License, or
+//     (at your option) any later version.
+//
+//     This program is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU General Public License for more details.
+//
+//     You should have received a copy of the GNU General Public License
+//     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+use std::task::Context;
+
+use devout::{Tag, log};
+use human::{Input, Key};
+use pasts::prelude::{Future, Notify, Pin, Poll};
+use scof::{Fraction, Pitch, Steps};
+use scorefall_ink::Program;
+use staverator::{BarElem, STAVE_SPACE, SfFontMetadata, Stave};
+
+use crate::screen::Screen;
+
+type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
+
+const ZOOM_LEVEL: f32 = 1.0;
+// Stave spaces for window height.
+const WINDOW_HEIGHT_SS: i32 = 64;
+const SCALEDOWN: f32 = (STAVE_SPACE * WINDOW_HEIGHT_SS) as f32 / ZOOM_LEVEL;
+
+const RENDER: Tag = Tag::new("Render");
+const GUI: Tag = Tag::new("Gui");
+
+/// Adapter for using a repeating future as a pasts notify
+pub struct Adapter<F>(F)
+where
+    F: Future + Unpin;
+
+impl<F> Notify for Adapter<F>
+where
+    F: Future + Unpin,
+{
+    type Event = F::Output;
+
+    fn poll_next(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Self::Event> {
+        Pin::new(&mut self.0).poll(cx)
+    }
+}
+
+/// Program state
+pub struct State {
+    /// The web front-end.
+    screen: Screen,
+    /// Front-end agnostic program state
+    program: Program,
+    /// Font metadata
+    meta: SfFontMetadata,
+    /// Window width in Stave Spaces.
+    width: f32,
+    /// Event sources
+    pub input: Adapter<Pin<Box<dyn Future<Output = Input>>>>,
+    /// Resize sources
+    pub resize: Adapter<Pin<Box<dyn Future<Output = (u32, u32)>>>>,
+}
+
+impl State {
+    /// Create new program state
+    pub fn new() -> State {
+        let mut screen = Screen::new().expect("Failed to create screen");
+        let (meta, defs) = staverator::modern();
+        let input: Pin<Box<dyn Future<Output = Input>>> =
+            Box::pin(Input::listener());
+        let resize: Pin<Box<dyn Future<Output = (u32, u32)>>> =
+            Box::pin(screen.resize());
+
+        screen.set_svg(&defs);
+        State {
+            screen,
+            program: Program::new(),
+            meta,
+            width: 0.0,
+            input: Adapter(input),
+            resize: Adapter(resize),
+        }
+    }
+
+    /// Handle input event
+    pub fn event_input(&mut self, input: Input) -> Poll {
+        match input {
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::H | Key::Left) =>
+            {
+                // TODO: Halve duration
+            }
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::J | Key::Down) =>
+            {
+                self.program.down_half_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::K | Key::Up) =>
+            {
+                self.program.up_half_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.ctrl() && matches!(key, Key::L | Key::Right) =>
+            {
+                // TODO: Double duration
+            }
+
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::H | Key::Left) =>
+            {
+                // TODO: Move selection to the left
+            }
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::J | Key::Down) =>
+            {
+                self.program.down_quarter_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::K | Key::Up) =>
+            {
+                self.program.up_quarter_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.alt() && matches!(key, Key::L | Key::Right) =>
+            {
+                // TODO: Move selection to the right
+            }
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::H | Key::Left) =>
+            {
+                // TODO: Select left
+            }
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::J | Key::Down) =>
+            {
+                // TODO: Select down
+            }
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::K | Key::Up) =>
+            {
+                // TODO: Select up
+            }
+            Input::Key(mods, key, true)
+                if mods.shift() && matches!(key, Key::L | Key::Right) =>
+            {
+                // TODO: Select right
+            }
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::H | Key::Left) =>
+            {
+                self.program.left();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::J | Key::Down) =>
+            {
+                self.program.down_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::K | Key::Up) =>
+            {
+                self.program.up_step();
+                self.render_measures();
+            }
+            Input::Key(mods, key, true)
+                if mods.none() && matches!(key, Key::L | Key::Right) =>
+            {
+                self.program.right();
+                self.render_measures();
+            }
+            Input::Key(mods, Key::One, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 64));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Two, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 32));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Three, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 16));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Four, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 8));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Five, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 4));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Six, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 2));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Seven, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(1, 1));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Eight, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(2, 1));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Nine, true) if mods.none() => {
+                self.program.set_dur(Fraction::new(4, 1));
+                self.render_measures();
+            }
+            Input::Key(mods, Key::Period, true) if mods.none() => {
+                self.program.dotted();
+                self.render_measures();
+            }
+            _ => { /* ignore all other input */ }
+        }
+
+        Poll::Pending
+    }
+
+    /// Handle resize event
+    pub fn event_resize(&mut self, size: (u32, u32)) -> Poll {
+        self.resize(size).ok();
+        Poll::Pending
+    }
+
+    /// Resize the SVG
+    pub fn resize(&mut self, size: (u32, u32)) -> Result<()> {
+        log!(GUI, "Resize {:?}", size);
+        let ratio: f32 = size.0 as f32 / size.1 as f32;
+        let width = SCALEDOWN * ratio;
+        let height = SCALEDOWN;
+        let viewbox = format!("0 0 {} {}", width, height);
+        self.screen.viewbox(viewbox.as_str());
+        self.width = ratio * WINDOW_HEIGHT_SS as f32;
+        Ok(())
+    }
+
+    /// Initialize the score SVG
+    fn initialize_score(&self) -> Result<()> {
+        let mut page = self.screen.new_group();
+        page.set_id("page");
+        self.screen.append_child(page.0);
+        Ok(())
+    }
+
+    /// Render the score
+    pub fn render_score(&mut self) -> Result<()> {
+        self.initialize_score()?;
+        self.resize(self.screen.size())?;
+        self.render_measures();
+        Ok(())
+    }
+
+    /// Render the measures to the SVG
+    fn render_measures(&self) {
+        log!(RENDER, "render measures");
+        let page = self.screen.element_by_id("page").unwrap();
+        page.set_inner_html("");
+
+        let mut offset_x = STAVE_SPACE; // Stave Margin
+        let mut measure = 0;
+        'render_measures: loop {
+            let width = self.render_measure(measure, offset_x);
+            log!(RENDER, "measure: {} width {}", measure, width);
+            offset_x += width;
+            if offset_x >= (self.width * STAVE_SPACE as f32) as i32 {
+                break 'render_measures;
+            }
+            measure += 1;
+        }
+    }
+
+    /// Render one measure
+    fn render_measure(&self, measure: u16, offset_x: i32) -> i32 {
+        let offset_y = 0;
+        let bar_id = &format!("m{}", measure);
+        let trans = &format!("translate({} {})", offset_x, offset_y);
+        let page = self.screen.element_by_id("page").unwrap();
+        let mut bar_g = self.screen.new_group();
+        bar_g.set_id(bar_id);
+        bar_g.set_transform(trans);
+        page.append_child(&bar_g.0).unwrap();
+
+        let high = "C4".parse::<Pitch>().unwrap().visual_distance();
+        let low = "C4".parse::<Pitch>().unwrap().visual_distance();
+
+        // Alto clef has 0 steps offset
+        let mut bar =
+            BarElem::new(Stave::new(5, Steps(4), Steps(0)), high, low);
+        bar.add_markings(
+            &self.meta,
+            &self.program.scof,
+            &self.program.cursor,
+            measure,
+        );
+        bar_g.0.set_inner_html(&format!("{bar}"));
+        bar.width
+    }
+}
