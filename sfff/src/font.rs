@@ -205,10 +205,11 @@ fn write_positions<T: Write>(
     writer: &mut T,
     pos: [[i32; 2]; 2],
 ) -> Result<(), WriteError> {
-    write_i32(writer, pos[0][0])?;
-    write_i32(writer, pos[0][1])?;
-    write_i32(writer, pos[1][0])?;
-    write_i32(writer, pos[0][1])?;
+    let [[x1, y1], [x2, y2]] = pos;
+    write_i32(writer, x1)?;
+    write_i32(writer, y1)?;
+    write_i32(writer, x2)?;
+    write_i32(writer, y2)?;
     Ok(())
 }
 
