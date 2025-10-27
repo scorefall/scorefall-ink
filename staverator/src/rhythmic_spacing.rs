@@ -34,6 +34,9 @@ use crate::{
     stave::Stave,
 };
 
+/// Time of full bar (128th notes)
+const TIME_BAR: u16 = 128;
+
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a> {
     /// Font metadata
@@ -49,12 +52,12 @@ pub struct BarEngraver<'a> {
     // Bar physical width
     width: f32,
     // Remaining 128th notes for all staves
-    all: u16,
+    remaining: u16,
     // Cursor (x, stave)
     cursor: Option<(f32, usize)>,
     // Cursor span (x, width)
     cursor_span: Option<(i32, i32)>,
-    // Keep track of which notes to beam, and which to flag.
+    // Beams for each stave; keep track of which notes to beam / flag.
     beams: Vec<Beams>,
 }
 
@@ -69,14 +72,14 @@ impl<'a> BarEngraver<'a> {
         let mut beams = vec![];
         let mut pq = VecDeque::new();
         for i in 0..stave_voicing.len() {
-            // 128 128ths remaining.
-            pq.push_back((128, i));
+            // All 128ths remaining.
+            pq.push_back((TIME_BAR, i));
             beams.push(Beams::new());
         }
         let rests = Vec::new();
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
-        let all = 128;
+        let remaining = TIME_BAR;
         let cursor = None;
         let cursor_span = None;
 
@@ -87,7 +90,7 @@ impl<'a> BarEngraver<'a> {
             pq,
             rests,
             width,
-            all,
+            remaining,
             cursor,
             cursor_span,
             beams,
@@ -127,6 +130,19 @@ impl<'a> BarEngraver<'a> {
     fn is_cursor(&self, stave_i: usize) -> bool {
         self.stave_cursor[stave_i]
     }
+
+    /// Calculate the cursor span
+    fn calculate_cursor_span(&mut self, x: f32) {
+        let xx = (BAR_WIDTH as f32 * x) as i32;
+        // Is this start of bar?
+        let x0 = if x == 0.0 {
+            self.meta.barline_thickness
+        } else {
+            0
+        };
+        let w = (BAR_WIDTH as f32 * self.width) as i32;
+        self.cursor_span = Some((xx + x0, w - xx - x0))
+    }
 }
 
 impl BarElem {
@@ -141,37 +157,21 @@ impl BarElem {
         while let Some(beam) = engraver.beams.pop() {
             self.add_flags_and_beams(engraver.meta, beam);
         }
-        // Add the rest of the width.
-        engraver.width += get_spacing(engraver.all) / 7.0;
+        // Add the remaining width.
+        engraver.width += get_spacing(engraver.remaining) / 7.0;
         // End of bar margin
         engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
-        for (rest_stave, rest_ic) in &engraver.rests {
+        for (rest_stave, _rest_ic) in &engraver.rests {
             let steps = ymargin * (*rest_stave as i32);
             self.add_measure_rest(engraver.width, steps);
-            if *rest_ic {
-                engraver.cursor_span = Some((
-                    engraver.meta.barline_thickness,            // X
-                    (BAR_WIDTH as f32 * engraver.width) as i32, // W
-                ));
-            }
+        }
+        if engraver.rests.iter().any(|(_, ic)| *ic) {
+            engraver.calculate_cursor_span(0.0);
         }
         // Cursor at end of bar.
         if let Some((x, _stave_j)) = engraver.cursor {
-            engraver.cursor = None;
-            let e = if x == 0.0 {
-                0
-            } else {
-                -engraver.meta.barline_thickness
-            };
-            let x = (BAR_WIDTH as f32 * x) as i32;
-            engraver.cursor_span = Some((
-                x + e, // X
-                engraver.meta.barline_thickness
-                    + (BAR_WIDTH as f32 * engraver.width) as i32
-                    - x
-                    - e, // W
-            ));
+            engraver.calculate_cursor_span(x);
         }
         // Calculate physical bar width.
         let bar_width =
@@ -211,19 +211,19 @@ impl BarElem {
         mut time: u16,
         stave_i: usize,
     ) {
-        let Some(notes) = engraver.pop_voicing(stave_i) else {
+        let Some(voicing) = engraver.pop_voicing(stave_i) else {
             engraver.rests.push((stave_i, engraver.is_cursor(stave_i)));
             return;
         };
         // Increment width
-        if time < engraver.all {
-            engraver.width += get_spacing(engraver.all - time) / 7.0;
-            engraver.all = time;
+        if time < engraver.remaining {
+            engraver.width += get_spacing(engraver.remaining - time) / 7.0;
+            engraver.remaining = time;
         }
         // Render cursor
-        if notes.is_cursor {
+        if voicing.is_cursor {
             if engraver.cursor.is_none() {
-                if time == 128 {
+                if time == TIME_BAR {
                     // If first thing, cursor takes up margin.
                     engraver.cursor = Some((0.0, stave_i));
                 } else {
@@ -232,49 +232,31 @@ impl BarElem {
             }
         } else if let Some((x, stave_j)) = engraver.cursor {
             if stave_i == stave_j {
+                engraver.calculate_cursor_span(x);
                 engraver.cursor = None;
-                let e = if x == 0.0 {
-                    0
-                } else {
-                    -engraver.meta.barline_thickness
-                };
-                let f = if x == 0.0 {
-                    -engraver.meta.barline_thickness
-                } else {
-                    0
-                };
-                let x = if x == 0.0 {
-                    engraver.meta.barline_thickness
-                } else {
-                    0
-                } + (BAR_WIDTH as f32 * x) as i32;
-                engraver.cursor_span = Some((
-                    x + e,                                              // X
-                    (BAR_WIDTH as f32 * engraver.width) as i32 - x + f, // W
-                ));
             }
         }
         let ymargin = self.stave.height_steps() + Steps(12);
         // Render pitch or rest.
-        if notes.pitches.is_empty() {
+        if voicing.pitches.is_empty() {
             // Add rest
             self.add_rest(
-                crate::glyph::rest_duration(notes.dur),
+                crate::glyph::rest_duration(voicing.dur),
                 engraver.width,
                 ymargin * stave_i as i32,
             );
             // Advance beaming
-            engraver.beams[stave_i].advance(notes.dur, engraver.width, None);
+            engraver.beams[stave_i].advance(voicing.dur, engraver.width, None);
         } else {
             // Offset Y, so that the note appears on the correct stave.
             let y_offset = ymargin * stave_i as i32;
             // Add chord
-            for pitch in &notes.pitches {
+            for pitch in &voicing.pitches {
                 let y = self.y_from_steps(pitch.visual_distance(), y_offset);
 
                 self.add_pitch(
                     engraver.meta,
-                    notes.dur,
+                    voicing.dur,
                     engraver.width,
                     pitch.visual_distance(),
                     y,
@@ -282,12 +264,12 @@ impl BarElem {
             }
             // Advance beaming (using closest note to the beam)
             engraver.beams[stave_i].advance(
-                notes.dur,
+                voicing.dur,
                 engraver.width,
-                Some((notes.pitches.clone(), y_offset)),
+                Some((voicing.pitches.clone(), y_offset)),
             );
         }
-        time -= notes.dur;
+        time -= voicing.dur;
         // Add back to queue if time is remaining.
         engraver.add_time(time, stave_i);
     }
