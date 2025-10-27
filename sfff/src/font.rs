@@ -167,12 +167,9 @@ fn read_u16<T: Read>(reader: &mut T) -> Result<u16, ReadError> {
 
 /// Write one 16-bit value in LE byte order
 fn write_u16<T: Write>(writer: &mut T, value: u16) -> Result<(), WriteError> {
-    let bytes = writer
-        .write(&value.to_le_bytes())
-        .map_err(|_| WriteError::Prevented)?;
-    // FIXME: turn this into a write error
-    assert_eq!(bytes, 2);
-    Ok(())
+    writer
+        .write_all(&value.to_le_bytes())
+        .map_err(|_| WriteError::Prevented)
 }
 
 /// Read one 32-bit value in LE byte order
