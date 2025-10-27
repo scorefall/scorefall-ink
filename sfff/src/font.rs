@@ -235,14 +235,10 @@ fn write_short_str<T: Write>(
         .len()
         .try_into()
         .map_err(|_| WriteError::FontNameTooLong)?;
-    let bytes = writer.write(&[len]).map_err(|_| WriteError::Prevented)?;
-    // FIXME: turn this into a write error
-    assert_eq!(bytes, 1);
-    let bytes = writer
-        .write(val.as_bytes())
+    writer.write_all(&[len]).map_err(|_| WriteError::Prevented)?;
+    writer
+        .write_all(val.as_bytes())
         .map_err(|_| WriteError::Prevented)?;
-    // FIXME: turn this into a write error
-    assert_eq!(bytes, usize::from(len));
     Ok(())
 }
 
