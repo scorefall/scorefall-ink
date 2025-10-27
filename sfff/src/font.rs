@@ -235,7 +235,9 @@ fn write_short_str<T: Write>(
         .len()
         .try_into()
         .map_err(|_| WriteError::FontNameTooLong)?;
-    writer.write_all(&[len]).map_err(|_| WriteError::Prevented)?;
+    writer
+        .write_all(&[len])
+        .map_err(|_| WriteError::Prevented)?;
     writer
         .write_all(val.as_bytes())
         .map_err(|_| WriteError::Prevented)?;
