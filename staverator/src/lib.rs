@@ -16,8 +16,6 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(clippy::blacklisted_name)] // bar is a useful musical term
-
 mod bar;
 mod beaming;
 mod glyph;

@@ -15,3 +15,6 @@ scof = { path = "../scof" }
 
 [dependencies.devout]
 version = "0.2"
+
+[dependencies.ranch]
+version = "0.2.1"

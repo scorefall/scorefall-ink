@@ -1,6 +1,6 @@
 // ScoreFall Ink - Music Composition Software
 //
-// Copyright (C) 2019-2020 Jeron Aldaron Lau <jeronlau@plopgrizzly.com>
+// Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
 // Copyright (C) 2019-2025 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 use std::{collections::VecDeque, convert::TryInto};
 
 use hatmil::{Html, Svg};
+use ranch::RangedU16;
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -34,8 +35,10 @@ use crate::{
     stave::Stave,
 };
 
-/// Time of full bar (128th notes)
-const TIME_BAR: u16 = 128;
+/// Time of full 4/4 bar (128th notes)
+const COMMON_TIME_BAR: u16 = 128;
+/// Maximum time that can be notated (longa = 4 whole notes)
+const MAX_TIME_BAR: u16 = COMMON_TIME_BAR * 4;
 
 /// Engraver for a single bar of music (multiple staves)
 pub struct BarEngraver<'a> {
@@ -46,13 +49,13 @@ pub struct BarEngraver<'a> {
     // Cursors for each stave
     stave_cursor: Vec<bool>,
     // Priority Queue for the next note to render (priority: 128ths remaining)
-    pq: VecDeque<(u16, usize)>,
+    pq: VecDeque<(RangedU16<0, MAX_TIME_BAR>, usize)>,
     // Rests (stave, is_cursor)
     rests: Vec<(usize, bool)>,
     // Bar physical width
     width: f32,
     // Remaining 128th notes for all staves
-    remaining: u16,
+    remaining: RangedU16<0, MAX_TIME_BAR>,
     // Cursor (x, stave)
     cursor: Option<(f32, usize)>,
     // Cursor span (x, width)
@@ -73,13 +76,13 @@ impl<'a> BarEngraver<'a> {
         let mut pq = VecDeque::new();
         for i in 0..stave_voicing.len() {
             // All 128ths remaining.
-            pq.push_back((TIME_BAR, i));
+            pq.push_back((RangedU16::new_const::<COMMON_TIME_BAR>(), i));
             beams.push(Beams::new());
         }
         let rests = Vec::new();
         // Beginning of bar margin
         let width = Stave::SPACE as f32 / BAR_WIDTH as f32;
-        let remaining = TIME_BAR;
+        let remaining = RangedU16::new_const::<COMMON_TIME_BAR>();
         let cursor = None;
         let cursor_span = None;
 
@@ -98,8 +101,8 @@ impl<'a> BarEngraver<'a> {
     }
 
     /// Add to queue if time is remaining
-    fn add_time(&mut self, time: u16, stave_i: usize) {
-        if time > 0 {
+    fn add_time(&mut self, time: RangedU16<0, MAX_TIME_BAR>, stave_i: usize) {
+        if time > RangedU16::new_const::<0>() {
             // Insert at correct priority level.
             let mut index = self.pq.len();
             loop {
@@ -158,7 +161,7 @@ impl BarElem {
             self.add_flags_and_beams(engraver.meta, beam);
         }
         // Add the remaining width.
-        engraver.width += get_spacing(engraver.remaining) / 7.0;
+        engraver.width += get_spacing(engraver.remaining.get()) / 7.0;
         // End of bar margin
         engraver.width += Stave::SPACE as f32 / BAR_WIDTH as f32;
         // Draw measure rests
@@ -208,7 +211,7 @@ impl BarElem {
     fn engrave_one(
         &mut self,
         engraver: &mut BarEngraver<'_>,
-        mut time: u16,
+        mut time: RangedU16<0, MAX_TIME_BAR>,
         stave_i: usize,
     ) {
         let Some(voicing) = engraver.pop_voicing(stave_i) else {
@@ -216,14 +219,16 @@ impl BarElem {
             return;
         };
         // Increment width
-        if time < engraver.remaining {
-            engraver.width += get_spacing(engraver.remaining - time) / 7.0;
+        if let Some(dur) = engraver.remaining.checked_sub(time)
+            && dur.get() != 0
+        {
+            engraver.width += get_spacing(dur.get()) / 7.0;
             engraver.remaining = time;
         }
         // Render cursor
         if voicing.is_cursor {
             if engraver.cursor.is_none() {
-                if time == TIME_BAR {
+                if time.get() == COMMON_TIME_BAR {
                     // If first thing, cursor takes up margin.
                     engraver.cursor = Some((0.0, stave_i));
                 } else {
@@ -269,7 +274,7 @@ impl BarElem {
                 Some((voicing.pitches.clone(), y_offset)),
             );
         }
-        time -= voicing.dur;
+        time = time.checked_sub(voicing.dur).unwrap();
         // Add back to queue if time is remaining.
         engraver.add_time(time, stave_i);
     }
