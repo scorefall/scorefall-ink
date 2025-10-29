@@ -39,25 +39,20 @@ thread_local! {
 
 /// Graphical screen.
 pub struct Screen {
+    // Window containing the DOM document
     window: web_sys::Window,
+    // DOM Document for the application
     document: web_sys::Document,
+    // Root SVG element
     svg: web_sys::Element,
 }
 
 impl Screen {
     /// Create a new `Screen`
     pub fn new() -> Option<Self> {
-        // Get the javascript window.
         let window = web_sys::window()?;
-        // Get the DOM Document.
         let document = window.document()?;
-        // Get the SVG element.
-        let svg = document
-            .get_elements_by_tag_name("svg")
-            .get_with_index(0)
-            .unwrap();
-
-        // Return Screen.
+        let svg = document.get_elements_by_tag_name("svg").get_with_index(0)?;
         Some(Screen {
             window,
             document,
@@ -113,7 +108,7 @@ impl Screen {
     }
 
     /// Set SVG viewbox.
-    pub fn viewbox(&mut self, vbox: &str) {
+    pub fn set_viewbox(&mut self, vbox: &str) {
         self.svg
             .set_attribute("viewBox", vbox)
             .expect("Failed to set attrib");
@@ -132,10 +127,12 @@ impl Screen {
             .expect("Failed to append child");
     }
 
+    /// Set the SVG content
     pub fn set_svg(&self, svg: &str) {
         self.svg.set_inner_html(&svg);
     }
 
+    /// Get a DOM element by ID
     pub fn element_by_id(&self, id: &str) -> Option<web_sys::Element> {
         self.document.get_element_by_id(id)
     }
