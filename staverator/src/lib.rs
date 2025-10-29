@@ -28,12 +28,9 @@ pub use bar::{BarElem, STAVE_SPACE};
 pub use sfff::SfFontMetadata;
 pub use stave::Stave;
 
-/// Get Modern font data as SVG defs.
-pub fn modern() -> (sfff::SfFontMetadata, String) {
+/// Get Modern font data.
+pub fn modern() -> sfff::SfFontMetadata {
     let data: &[u8] = include_bytes!("../modern.sfff");
     let data = std::io::Cursor::new(data);
-    let (meta, glyphs) = sfff::SfFontMetadata::from_buf_reader(data).unwrap();
-    let glyphs = sfff::generate_defs(&glyphs);
-
-    (meta, glyphs)
+    sfff::SfFontMetadata::from_buf_reader(data).unwrap()
 }

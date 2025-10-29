@@ -77,21 +77,39 @@ impl State {
     /// Create new program state
     pub fn new() -> State {
         let mut screen = Screen::new().expect("Failed to create screen");
-        let (meta, defs) = staverator::modern();
         let input: Pin<Box<dyn Future<Output = Input>>> =
             Box::pin(Input::listener());
         let resize: Pin<Box<dyn Future<Output = (u32, u32)>>> =
             Box::pin(screen.resize());
 
-        screen.set_svg(&defs);
         State {
             screen,
             program: Program::new(),
-            meta,
+            meta: staverator::modern(),
             width: 0.0,
             input: Adapter(input),
             resize: Adapter(resize),
         }
+    }
+
+    /// Render the score
+    pub fn render_score(&mut self) {
+        let mut html = Html::new();
+        Svg::new(&mut html).defs();
+        // render each glyph as a path in defs section
+        for (id, path) in self.meta.glyph_paths.iter().enumerate() {
+            Svg::new(&mut html)
+                .path()
+                .id(format!("{id:x}"))
+                .d(path)
+                .end();
+        }
+        html.end(); // defs
+        Svg::new(&mut html).g().id("page");
+        let score = html.to_string();
+        self.screen.set_svg(&score);
+        self.resize(self.screen.size()).unwrap();
+        self.render_page();
     }
 
     /// Handle input event
@@ -246,22 +264,6 @@ impl State {
         let viewbox = format!("0 0 {} {}", width, height);
         self.screen.set_viewbox(viewbox.as_str());
         self.width = ratio * WINDOW_HEIGHT_SS as f32;
-        Ok(())
-    }
-
-    /// Initialize the score SVG
-    fn initialize_score(&self) -> Result<()> {
-        let mut page = self.screen.new_group();
-        page.set_id("page");
-        self.screen.append_child(page.0);
-        Ok(())
-    }
-
-    /// Render the score
-    pub fn render_score(&mut self) -> Result<()> {
-        self.initialize_score()?;
-        self.resize(self.screen.size())?;
-        self.render_measures();
         Ok(())
     }
 

@@ -27,8 +27,6 @@ use std::{
 use wasm_bindgen::{JsCast, closure::Closure, convert::FromWasmAbi};
 use web_sys::UiEvent;
 
-const SVGNS: Option<&str> = Some("http://www.w3.org/2000/svg");
-
 static WIDTH: AtomicU32 = AtomicU32::new(0);
 static HEIGHT: AtomicU32 = AtomicU32::new(0);
 static RESIZED: AtomicBool = AtomicBool::new(false);
@@ -114,19 +112,6 @@ impl Screen {
             .expect("Failed to set attrib");
     }
 
-    /// Create a new group.
-    pub fn new_group(&self) -> Group {
-        let group = self.document.create_element_ns(SVGNS, "g").unwrap();
-        Group(group)
-    }
-
-    /// Add SVG element.
-    pub fn append_child(&self, element: web_sys::Element) {
-        self.svg
-            .append_child(&element)
-            .expect("Failed to append child");
-    }
-
     /// Set the SVG content
     pub fn set_svg(&self, svg: &str) {
         self.svg.set_inner_html(&svg);
@@ -135,20 +120,6 @@ impl Screen {
     /// Get a DOM element by ID
     pub fn element_by_id(&self, id: &str) -> Option<web_sys::Element> {
         self.document.get_element_by_id(id)
-    }
-}
-
-pub struct Group(pub web_sys::Element);
-
-impl Group {
-    pub fn set_id(&mut self, id: &str) {
-        self.0
-            .set_attribute_ns(None, "id", &id.to_string())
-            .unwrap();
-    }
-
-    pub fn set_transform(&mut self, trans: &str) {
-        self.0.set_attribute_ns(None, "transform", trans).unwrap();
     }
 }
 
