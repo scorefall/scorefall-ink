@@ -289,7 +289,12 @@ impl State {
     }
 
     /// Render one measure
-    fn render_measure(&self, measure: u16, offset_x: i32, html: &mut Html) -> i32 {
+    fn render_measure(
+        &self,
+        measure: u16,
+        offset_x: i32,
+        html: &mut Html,
+    ) -> i32 {
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
