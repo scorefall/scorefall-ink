@@ -4,7 +4,7 @@ name: Deploy Website To Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["v1"]
+    branches: ["v0"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
       - name: Install Dependencies
         uses: taiki-e/install-action@v2
         with:
-          tool: wasm-bindgen-cli, wasm-opt
+          tool: wasm-bindgen-cli, wasm-opt, wasm-pack
       - run: rustup target add wasm32-unknown-unknown
       - run: sh release.sh
       - name: Upload Artifact
