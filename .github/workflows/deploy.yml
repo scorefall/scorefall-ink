@@ -37,7 +37,7 @@ jobs:
           tool: wasm-bindgen-cli, wasm-opt
       - run: sudo apt install wabt
       - run: rustup target add wasm32-unknown-unknown
-      - run: sh release.sh
+      - run: sh build.sh
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
