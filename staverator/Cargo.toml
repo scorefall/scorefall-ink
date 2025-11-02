@@ -9,8 +9,8 @@ edition = "2024"
 license = "GPL"
 
 [dependencies]
-devout = { workspace = true }
-hatmil = { workspace = true }
+devout.workspace = true
+hatmil.workspace = true
 sfff = { path = "../sfff" }
 scof = { path = "../scof" }
 
