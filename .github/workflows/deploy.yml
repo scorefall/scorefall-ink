@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload site folder
-          path: './site'
+          path: './web/site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
