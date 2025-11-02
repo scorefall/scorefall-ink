@@ -394,6 +394,7 @@ impl BarElem {
     }
 
     /// Add clefs
+    #[expect(dead_code)]
     pub(crate) fn add_clefs(&mut self, scof: &Scof) {
         for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
             let ymargin =
@@ -404,6 +405,7 @@ impl BarElem {
     }
 
     /// Add time signature
+    #[expect(dead_code)]
     pub(crate) fn add_times(&mut self, scof: &Scof) {
         for i in 0..scof.movement[0].bar[0].chan.len() as i32 {
             let ymargin =
@@ -426,6 +428,7 @@ impl BarElem {
     }
 
     /// Add clef & time signature.
+    #[expect(dead_code)]
     pub(crate) fn add_signatures(&mut self, _scof: &Scof) {
         //self.add_clefs(_scof);
         //self.add_times(_scof);

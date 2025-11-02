@@ -75,6 +75,7 @@ impl<'a> Notator<'a> {
         }
     }
 
+    #[expect(dead_code)]
     fn is_cursor(&self) -> bool {
         self.curs == self.cursor
     }

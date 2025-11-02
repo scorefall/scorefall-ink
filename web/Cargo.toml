@@ -18,15 +18,10 @@
 
 [package]
 name = "scorefall-ink-web"
-version = "0.0.1"
-authors = [
-    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
-    "Douglas Lau <doug.p.lau@gmail.com>",
-]
-edition = "2024"
-license = "GPL"
-repository = "https://github.com/scorefall/scorefall-ink"
-homepage = "https://ink.scorefall.com"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 
 [[bin]]
 name = "ink"
@@ -43,10 +38,11 @@ scorefall-ink = { path = "../ink" }
 [dependencies.web-sys] # for building the GUI.
 version = "0.3"
 features = [
-    "Window",
     "Document",
     "Element",
+    "HtmlCollection",
     "UiEvent",
+    "Window",
     "console",
 ]
 

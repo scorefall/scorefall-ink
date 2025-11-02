@@ -17,6 +17,7 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 [workspace]
+resolver = "3"
 members = [
     # ScoreFall Ink's "Backend"
     "ink",
@@ -29,6 +30,12 @@ members = [
     # ScoreFall Ink's font format parser
     "sfff",
 ]
+
+[workspace.package]
+homepage = "https://github.com/scorefall/scorefall-ink/releases"
+repository = "https://github.com/scorefall/scorefall-ink"
+edition = "2024"
+license = "GPL"
 
 [workspace.dependencies]
 devout = "0.2"
