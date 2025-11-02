@@ -1,0 +1,15 @@
+on: [pull_request, push]
+name: tests
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        tc: [stable]
+    steps:
+    - uses: taiki-e/checkout-action@v1
+    - uses: taiki-e/install-action@v2
+      with:
+        fallback: none
+    - run: sh ./ci/tests.sh ${{ matrix.tc }}

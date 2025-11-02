@@ -1,27 +1,22 @@
 # Simple workflow for deploying to GitHub Pages
 name: Deploy Website To Pages
-
 on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["v0"]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between the run
 # in-progress and latest queued.  However, do NOT cancel in-progress runs as we
 # want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
 jobs:
   deploy:
     defaults:
@@ -39,7 +34,8 @@ jobs:
       - name: Install Dependencies
         uses: taiki-e/install-action@v2
         with:
-          tool: wasm-bindgen-cli, wasm-opt, wasm-pack
+          tool: wasm-bindgen-cli, wasm-opt
+      - run: apt install wabt
       - run: rustup target add wasm32-unknown-unknown
       - run: sh release.sh
       - name: Upload Artifact
