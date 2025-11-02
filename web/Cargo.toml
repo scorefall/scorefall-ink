@@ -33,8 +33,8 @@ name = "ink"
 path = "src/mod.rs"
 
 [dependencies]
-devout = { workspace = true }
-hatmil = { workspace = true }
+devout.workspace = true
+hatmil.workspace = true
 wasm-bindgen = "0.2.104"
 scof = { path = "../scof" }
 staverator = { path = "../staverator" }
