@@ -38,10 +38,11 @@ scorefall-ink = { path = "../ink" }
 [dependencies.web-sys] # for building the GUI.
 version = "0.3"
 features = [
-    "Window",
     "Document",
     "Element",
+    "HtmlCollection",
     "UiEvent",
+    "Window",
     "console",
 ]
 
