@@ -42,7 +42,7 @@ fn init() -> State {
     }));
 
     let mut state = State::new();
-    state.render_score().unwrap();
+    state.render_score();
     state
 }
 

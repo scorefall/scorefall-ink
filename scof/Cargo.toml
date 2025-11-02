@@ -17,9 +17,7 @@ keywords = ["music", "format", "scof", "score", "muon"]
 categories = ["data-structures", "encoding", "parser-implementations"]
 
 [dependencies]
+devout.workspace = true
 muon-rs = "0.2"
 serde = "1.0"
 serde_derive = "1.0"
-
-[dependencies.devout]
-version = "0.2"

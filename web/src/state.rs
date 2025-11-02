@@ -19,6 +19,7 @@
 use std::task::Context;
 
 use devout::{Tag, log};
+use hatmil::{Html, Svg};
 use human::{Input, Key};
 use pasts::prelude::{Future, Notify, Pin, Poll};
 use scof::{Fraction, Pitch, Steps};
@@ -76,21 +77,39 @@ impl State {
     /// Create new program state
     pub fn new() -> State {
         let mut screen = Screen::new().expect("Failed to create screen");
-        let (meta, defs) = staverator::modern();
         let input: Pin<Box<dyn Future<Output = Input>>> =
             Box::pin(Input::listener());
         let resize: Pin<Box<dyn Future<Output = (u32, u32)>>> =
             Box::pin(screen.resize());
 
-        screen.set_svg(&defs);
         State {
             screen,
             program: Program::new(),
-            meta,
+            meta: staverator::modern(),
             width: 0.0,
             input: Adapter(input),
             resize: Adapter(resize),
         }
+    }
+
+    /// Render the score
+    pub fn render_score(&mut self) {
+        let mut html = Html::new();
+        Svg::new(&mut html).defs();
+        // render each glyph as a path in defs section
+        for (id, path) in self.meta.glyph_paths.iter().enumerate() {
+            Svg::new(&mut html)
+                .path()
+                .id(format!("{id:x}"))
+                .d(path)
+                .end();
+        }
+        html.end(); // defs
+        Svg::new(&mut html).g().id("page");
+        let score = html.to_string();
+        self.screen.set_svg(&score);
+        self.resize(self.screen.size()).unwrap();
+        self.render_page();
     }
 
     /// Handle input event
@@ -105,20 +124,19 @@ impl State {
                 if mods.ctrl() && matches!(key, Key::J | Key::Down) =>
             {
                 self.program.down_half_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.ctrl() && matches!(key, Key::K | Key::Up) =>
             {
                 self.program.up_half_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.ctrl() && matches!(key, Key::L | Key::Right) =>
             {
                 // TODO: Double duration
             }
-
             Input::Key(mods, key, true)
                 if mods.alt() && matches!(key, Key::H | Key::Left) =>
             {
@@ -128,13 +146,13 @@ impl State {
                 if mods.alt() && matches!(key, Key::J | Key::Down) =>
             {
                 self.program.down_quarter_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.alt() && matches!(key, Key::K | Key::Up) =>
             {
                 self.program.up_quarter_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.alt() && matches!(key, Key::L | Key::Right) =>
@@ -165,65 +183,65 @@ impl State {
                 if mods.none() && matches!(key, Key::H | Key::Left) =>
             {
                 self.program.left();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.none() && matches!(key, Key::J | Key::Down) =>
             {
                 self.program.down_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.none() && matches!(key, Key::K | Key::Up) =>
             {
                 self.program.up_step();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, key, true)
                 if mods.none() && matches!(key, Key::L | Key::Right) =>
             {
                 self.program.right();
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::One, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 64));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Two, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 32));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Three, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 16));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Four, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 8));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Five, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 4));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Six, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 2));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Seven, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(1, 1));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Eight, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(2, 1));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Nine, true) if mods.none() => {
                 self.program.set_dur(Fraction::new(4, 1));
-                self.render_measures();
+                self.render_page();
             }
             Input::Key(mods, Key::Period, true) if mods.none() => {
                 self.program.dotted();
-                self.render_measures();
+                self.render_page();
             }
             _ => { /* ignore all other input */ }
         }
@@ -244,56 +262,42 @@ impl State {
         let width = SCALEDOWN * ratio;
         let height = SCALEDOWN;
         let viewbox = format!("0 0 {} {}", width, height);
-        self.screen.viewbox(viewbox.as_str());
+        self.screen.set_viewbox(viewbox.as_str());
         self.width = ratio * WINDOW_HEIGHT_SS as f32;
         Ok(())
     }
 
-    /// Initialize the score SVG
-    fn initialize_score(&self) -> Result<()> {
-        let mut page = self.screen.new_group();
-        page.set_id("page");
-        self.screen.append_child(page.0);
-        Ok(())
-    }
-
-    /// Render the score
-    pub fn render_score(&mut self) -> Result<()> {
-        self.initialize_score()?;
-        self.resize(self.screen.size())?;
-        self.render_measures();
-        Ok(())
-    }
-
-    /// Render the measures to the SVG
-    fn render_measures(&self) {
-        log!(RENDER, "render measures");
-        let page = self.screen.element_by_id("page").unwrap();
-        page.set_inner_html("");
+    /// Render the page to the SVG
+    fn render_page(&self) {
+        log!(RENDER, "render page");
+        let mut html = Html::new();
 
         let mut offset_x = STAVE_SPACE; // Stave Margin
         let mut measure = 0;
-        'render_measures: loop {
-            let width = self.render_measure(measure, offset_x);
+        loop {
+            let width = self.render_measure(measure, offset_x, &mut html);
             log!(RENDER, "measure: {} width {}", measure, width);
             offset_x += width;
             if offset_x >= (self.width * STAVE_SPACE as f32) as i32 {
-                break 'render_measures;
+                break;
             }
             measure += 1;
         }
+
+        let page = self.screen.element_by_id("page").unwrap();
+        page.set_inner_html(&html.to_string());
     }
 
     /// Render one measure
-    fn render_measure(&self, measure: u16, offset_x: i32) -> i32 {
+    fn render_measure(
+        &self,
+        measure: u16,
+        offset_x: i32,
+        html: &mut Html,
+    ) -> i32 {
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
-        let page = self.screen.element_by_id("page").unwrap();
-        let mut bar_g = self.screen.new_group();
-        bar_g.set_id(bar_id);
-        bar_g.set_transform(trans);
-        page.append_child(&bar_g.0).unwrap();
 
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
@@ -307,7 +311,8 @@ impl State {
             &self.program.cursor,
             measure,
         );
-        bar_g.0.set_inner_html(&format!("{bar}"));
+        Svg::new(html).g().id(bar_id).transform(trans);
+        html.raw(&format!("{bar}")).end();
         bar.width
     }
 }

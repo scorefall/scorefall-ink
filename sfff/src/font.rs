@@ -5,70 +5,8 @@ use std::{
 
 use crate::glyph::Glyph;
 
-/// Create defs section of SVG for string of glyphs.
-pub fn generate_defs(glyphs: &str) -> String {
-    const HEADER: &str = "<defs>";
-    const FOOTER: &str = "</defs>";
-
-    // At least as much space will be needed.
-    let output = Vec::with_capacity(glyphs.len() + HEADER.len() + FOOTER.len());
-    let mut writer = std::io::BufWriter::new(std::io::Cursor::new(output));
-
-    // Write to Vec should always succeed except on out of memory.
-    let _ = write!(writer, "{}", HEADER);
-
-    let mut id = 0;
-    for glyph in glyphs.split('\0') {
-        // Write to Vec should always succeed except on out of memory.
-        let _ = write!(writer, "<path id=\"{:x}\" d=\"{}\"/>", id, glyph);
-        id += 1;
-    }
-
-    assert_eq!(id, Glyph::Len as usize);
-
-    // Unwrap: Write to Vec should always succeed except on out of memory.
-    let _ = write!(writer, "{}", FOOTER);
-
-    // 2 unwraps: Guaranteed to flush OK, and UTF-8 will always be valid.
-    String::from_utf8(writer.into_inner().unwrap().into_inner()).unwrap()
-}
-
-/// Builder for all of the glyphs.
-pub struct GlyphsBuilder {
-    glyphs: Vec<Option<String>>,
-}
-
-impl Default for GlyphsBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl GlyphsBuilder {
-    pub fn new() -> Self {
-        Self {
-            glyphs: vec![None; Glyph::Len as usize],
-        }
-    }
-
-    /// Add an SVG path.  Must be added in order.
-    pub fn push(&mut self, glyph: Glyph, path: String) {
-        self.glyphs[glyph as usize] = Some(path);
-    }
-
-    pub fn into_string(self) -> String {
-        let mut output = String::new();
-
-        for glyph in self.glyphs.iter() {
-            output.push_str(glyph.as_ref().unwrap());
-            output.push('\0');
-        }
-        // Leave off the last null byte.
-        output.pop();
-
-        output
-    }
-}
+/// Glyph path array
+type GlyphPaths = [String; Glyph::Len as usize];
 
 /// Error for writing the format.
 #[derive(Debug)]
@@ -154,6 +92,9 @@ pub struct SfFontMetadata {
     pub notehead_double_diamond: [[i32; 2]; 2],
     pub notehead_double_triangle: [[i32; 2]; 2],
     pub notehead_double_slash: [[i32; 2]; 2],
+
+    /// SVG paths for all glyphs
+    pub glyph_paths: GlyphPaths,
 }
 
 /// Read one 16-bit value in LE byte order
@@ -244,13 +185,46 @@ fn write_short_str<T: Write>(
     Ok(())
 }
 
+/// Read glyph paths separated by null bytes
+fn read_glyphs<T: Read>(reader: &mut T) -> Result<GlyphPaths, ReadError> {
+    let mut input = String::new();
+    reader
+        .read_to_string(&mut input)
+        .map_err(|_| ReadError::Prevented)?;
+    let mut glyph_paths: GlyphPaths = [const { String::new() }; _];
+    for (i, path) in input.split('\0').enumerate() {
+        if i < glyph_paths.len() {
+            glyph_paths[i] = path.to_string();
+        } else {
+            return Err(ReadError::Prevented);
+        }
+    }
+    Ok(glyph_paths)
+}
+
+/// Write glyph paths separated by null bytes
+fn write_glyphs<T: Write>(
+    writer: &mut T,
+    glyphs: &[String],
+) -> Result<(), WriteError> {
+    let mut output = String::new();
+
+    for glyph in glyphs.iter() {
+        output.push_str(glyph);
+        output.push('\0');
+    }
+    // Leave off the last null byte.
+    output.pop();
+
+    writer
+        .write(output.as_bytes())
+        .map_err(|_| WriteError::Prevented)?;
+    Ok(())
+}
+
 impl SfFontMetadata {
     /// Write font data.
-    pub fn write<T: Write>(
-        &self,
-        writer: &mut T,
-        glyph_paths: &str,
-    ) -> Result<(), WriteError> {
+    pub fn write<T: Write>(&self, writer: &mut T) -> Result<(), WriteError> {
         // Header
         write_u16(writer, self.sffonts_version)?;
         // FIXME: Start Compression
@@ -301,18 +275,14 @@ impl SfFontMetadata {
         write_positions(writer, self.notehead_double_slash)?;
 
         // Glyph SVG paths
-        writer
-            .write(glyph_paths.as_bytes())
-            .map_err(|_| WriteError::Prevented)?;
+        write_glyphs(writer, &self.glyph_paths)?;
 
         // Make sure everything was written.
         writer.flush().map_err(|_| WriteError::Prevented)
     }
 
     /// Read a font into a metadata struct and a defs section of an SVG.
-    pub fn from_buf_reader<T: Read>(
-        mut reader: T,
-    ) -> Result<(Self, String), ReadError> {
+    pub fn from_buf_reader<T: Read>(mut reader: T) -> Result<Self, ReadError> {
         // Header
         let sffonts_version = read_u16(&mut reader)?;
 
@@ -364,12 +334,9 @@ impl SfFontMetadata {
         let notehead_double_slash = read_positions(&mut reader)?;
 
         // Glyph SVG paths
-        let mut glyph_paths = String::new();
-        reader
-            .read_to_string(&mut glyph_paths)
-            .map_err(|_| ReadError::Prevented)?;
+        let glyph_paths = read_glyphs(&mut reader)?;
 
-        let new = Self {
+        Ok(Self {
             sffonts_version,
             font_name,
             stave_line_thickness,
@@ -406,8 +373,7 @@ impl SfFontMetadata {
             notehead_double_diamond,
             notehead_double_triangle,
             notehead_double_slash,
-        };
-
-        Ok((new, glyph_paths))
+            glyph_paths,
+        })
     }
 }

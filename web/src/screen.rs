@@ -27,8 +27,6 @@ use std::{
 use wasm_bindgen::{JsCast, closure::Closure, convert::FromWasmAbi};
 use web_sys::UiEvent;
 
-const SVGNS: Option<&str> = Some("http://www.w3.org/2000/svg");
-
 static WIDTH: AtomicU32 = AtomicU32::new(0);
 static HEIGHT: AtomicU32 = AtomicU32::new(0);
 static RESIZED: AtomicBool = AtomicBool::new(false);
@@ -39,25 +37,20 @@ thread_local! {
 
 /// Graphical screen.
 pub struct Screen {
+    // Window containing the DOM document
     window: web_sys::Window,
+    // DOM Document for the application
     document: web_sys::Document,
+    // Root SVG element
     svg: web_sys::Element,
 }
 
 impl Screen {
     /// Create a new `Screen`
     pub fn new() -> Option<Self> {
-        // Get the javascript window.
         let window = web_sys::window()?;
-        // Get the DOM Document.
         let document = window.document()?;
-        // Get the SVG element.
-        let svg = document
-            .get_elements_by_tag_name("svg")
-            .get_with_index(0)
-            .unwrap();
-
-        // Return Screen.
+        let svg = document.get_elements_by_tag_name("svg").get_with_index(0)?;
         Some(Screen {
             window,
             document,
@@ -113,45 +106,20 @@ impl Screen {
     }
 
     /// Set SVG viewbox.
-    pub fn viewbox(&mut self, vbox: &str) {
+    pub fn set_viewbox(&mut self, vbox: &str) {
         self.svg
             .set_attribute("viewBox", vbox)
             .expect("Failed to set attrib");
     }
 
-    /// Create a new group.
-    pub fn new_group(&self) -> Group {
-        let group = self.document.create_element_ns(SVGNS, "g").unwrap();
-        Group(group)
-    }
-
-    /// Add SVG element.
-    pub fn append_child(&self, element: web_sys::Element) {
-        self.svg
-            .append_child(&element)
-            .expect("Failed to append child");
-    }
-
+    /// Set the SVG content
     pub fn set_svg(&self, svg: &str) {
         self.svg.set_inner_html(&svg);
     }
 
+    /// Get a DOM element by ID
     pub fn element_by_id(&self, id: &str) -> Option<web_sys::Element> {
         self.document.get_element_by_id(id)
-    }
-}
-
-pub struct Group(pub web_sys::Element);
-
-impl Group {
-    pub fn set_id(&mut self, id: &str) {
-        self.0
-            .set_attribute_ns(None, "id", &id.to_string())
-            .unwrap();
-    }
-
-    pub fn set_transform(&mut self, trans: &str) {
-        self.0.set_attribute_ns(None, "transform", trans).unwrap();
     }
 }
 
