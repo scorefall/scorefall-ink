@@ -2,4 +2,4 @@
 name = "sfff"
 version = "0.1.0"
 authors = ["Jeron Aldaron Lau <jeronlau@plopgrizzly.com>"]
-edition = "2024"
+edition.workspace = true

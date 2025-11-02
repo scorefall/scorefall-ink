@@ -21,9 +21,13 @@ use sfff::{Glyph, SfFontMetadata};
 /// Different styles of noteheads
 pub enum Notehead {
     Normal,
+    #[expect(dead_code)]
     X,
+    #[expect(dead_code)]
     Diamond,
+    #[expect(dead_code)]
     Triangle,
+    #[expect(dead_code)]
     Slash,
 }
 
@@ -98,6 +102,7 @@ pub(super) fn duration(duration: u16) -> Glyph {
 }
 
 /// Get the notehead glyph for a note with a specific duration
+#[expect(dead_code)]
 pub(super) fn x_duration(duration: u16) -> Glyph {
     use Glyph::*;
     variants(
@@ -110,6 +115,7 @@ pub(super) fn x_duration(duration: u16) -> Glyph {
 }
 
 /// Get the square notehead glyph for a note with a specific duration
+#[expect(dead_code)]
 pub(super) fn slashed_duration(duration: u16) -> Glyph {
     use Glyph::*;
     variants(
@@ -122,6 +128,7 @@ pub(super) fn slashed_duration(duration: u16) -> Glyph {
 }
 
 /// Get the large square notehead glyph for a note with a specific duration
+#[expect(dead_code)]
 pub(super) fn slash_duration(duration: u16) -> Glyph {
     use Glyph::*;
     variants(
