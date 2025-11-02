@@ -1,17 +1,11 @@
 [package]
 name = "scof"
-version = "0.0.1"
-authors = [
-    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
-    "Doug Lau <doug.p.lau@gmail.com>",
-]
 edition.workspace = true
-
-license = "GPL"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Parser for SCOF: A Music Score File Format."
 documentation = "https://docs.rs/scof"
-homepage = "https://scorefall.github.io/scof/"
-repository = "https://github.com/scorefall/scof"
 readme = "README.md"
 keywords = ["music", "format", "scof", "score", "muon"]
 categories = ["data-structures", "encoding", "parser-implementations"]

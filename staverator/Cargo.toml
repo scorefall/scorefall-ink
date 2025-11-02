@@ -1,12 +1,7 @@
 [package]
 name = "staverator"
-version = "0.0.1"
-authors = [
-    "Jeron Aldaron Lau <jeronlau@plopgrizzly.com>",
-    "Douglas Lau <doug.p.lau@gmail.com>"
-]
 edition.workspace = true
-license = "GPL"
+license.workspace = true
 
 [dependencies]
 devout = { workspace = true }

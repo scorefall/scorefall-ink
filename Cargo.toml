@@ -32,7 +32,10 @@ members = [
 ]
 
 [workspace.package]
+homepage = "https://github.com/scorefall/scorefall-ink/releases"
+repository = "https://github.com/scorefall/scorefall-ink"
 edition = "2024"
+license = "GPL"
 
 [workspace.dependencies]
 devout = "0.2"
