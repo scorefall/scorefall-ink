@@ -4,7 +4,6 @@
 
 use std::{
     cmp::Ordering,
-    convert::TryInto,
     fmt,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
     str::FromStr,
@@ -90,9 +89,9 @@ impl Add for Fraction {
             return other;
         }
 
-        let (self_mul, other_mul, den) = if self.den % other.den == 0 {
+        let (self_mul, other_mul, den) = if self.den.is_multiple_of(other.den) {
             (1, self.den / other.den, self.den)
-        } else if other.den % self.den == 0 {
+        } else if other.den.is_multiple_of(self.den) {
             (other.den / self.den, 1, other.den)
         } else {
             (other.den, self.den, self.den * other.den)
@@ -117,9 +116,9 @@ impl Sub for Fraction {
     type Output = Fraction;
 
     fn sub(self, other: Fraction) -> Self::Output {
-        let (self_mul, other_mul, den) = if self.den % other.den == 0 {
+        let (self_mul, other_mul, den) = if self.den.is_multiple_of(other.den) {
             (1, self.den / other.den, self.den)
-        } else if other.den % self.den == 0 {
+        } else if other.den.is_multiple_of(self.den) {
             (other.den / self.den, 1, other.den)
         } else {
             (other.den, self.den, self.den * other.den)
@@ -200,41 +199,41 @@ impl fmt::Display for Fraction {
 }
 
 pub trait IsZero {
-    fn is_zero(self) -> bool;
+    fn is_zero(&self) -> bool;
 }
 
 impl IsZero for u8 {
-    fn is_zero(self) -> bool {
-        self == 0
+    fn is_zero(&self) -> bool {
+        *self == 0
     }
 }
 
 impl IsZero for u16 {
-    fn is_zero(self) -> bool {
-        self == 0
+    fn is_zero(&self) -> bool {
+        *self == 0
     }
 }
 
 impl IsZero for u32 {
-    fn is_zero(self) -> bool {
-        self == 0
+    fn is_zero(&self) -> bool {
+        *self == 0
     }
 }
 
 impl IsZero for u64 {
-    fn is_zero(self) -> bool {
-        self == 0
+    fn is_zero(&self) -> bool {
+        *self == 0
     }
 }
 
 impl IsZero for u128 {
-    fn is_zero(self) -> bool {
-        self == 0
+    fn is_zero(&self) -> bool {
+        *self == 0
     }
 }
 
 impl IsZero for Fraction {
-    fn is_zero(self) -> bool {
+    fn is_zero(&self) -> bool {
         self.num == 0 && self.den != 0
     }
 }
@@ -353,6 +352,6 @@ mod tests {
         assert!(Fraction::new(50, 25) > Fraction::new(99, 50));
         assert!(Fraction::new(3, 4) > Fraction::new(1, 2));
         assert!(Fraction::new(1, 3) > Fraction::new(1, 4));
-        assert_eq!(false, Fraction::new(0, 3) > Fraction::new(0, 4));
+        assert!(Fraction::new(0, 3) <= Fraction::new(0, 4));
     }
 }

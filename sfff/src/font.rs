@@ -1,7 +1,4 @@
-use std::{
-    convert::TryInto,
-    io::{Read, Write},
-};
+use std::io::{Read, Write};
 
 use crate::glyph::Glyph;
 
@@ -38,21 +35,15 @@ pub struct SfFontMetadata {
     pub font_name: String,
 
     // Non-glyph components (in thousandths of stave space)
-    ///
     pub stave_line_thickness: i32,
-    ///
     pub stem_thickness: i32,
-    ///
     pub ledger_line_thickness: i32,
-    ///
     pub ledger_line_extension: i32,
     /// Also used for ties
     pub slur_endpoint_thickness: i32,
     /// Also used for ties
     pub slur_midpoint_thickness: i32,
-    ///
     pub barline_thickness: i32,
-    ///
     pub thick_barline_thickness: i32,
     /// Space between two barlines
     pub barlines_space: i32,
@@ -65,7 +56,6 @@ pub struct SfFontMetadata {
     /// Cresc., Dim., hairpin thickness (pedal, octave, ending, lyric melisma,
     /// tuple brackets)
     pub hairpin_thickness: i32,
-    ///
     pub rehearsal_box_thickness: i32,
 
     // Glyph metadata (Notehead & Stem Positions)
@@ -164,7 +154,7 @@ fn read_short_str<T: Read>(reader: &mut T) -> Result<String, ReadError> {
     reader
         .read_exact(&mut buf)
         .map_err(|_| ReadError::UnexpectedEOF)?;
-    Ok(String::from_utf8(buf).map_err(|_| ReadError::InvalidText)?)
+    String::from_utf8(buf).map_err(|_| ReadError::InvalidText)
 }
 
 /// Write a short string (0-255 bytes)

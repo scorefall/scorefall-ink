@@ -18,7 +18,6 @@
 
 use std::{
     cell::RefCell,
-    future::Future,
     pin::Pin,
     sync::atomic::{AtomicBool, AtomicU32, Ordering},
     task::{Context, Poll, Waker},
@@ -32,7 +31,9 @@ static HEIGHT: AtomicU32 = AtomicU32::new(0);
 static RESIZED: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
-    static WAKER: RefCell<Option<Waker>> = RefCell::new(None);
+    static WAKER: RefCell<Option<Waker>> = const {
+        RefCell::new(None)
+    };
 }
 
 /// Graphical screen.
@@ -114,7 +115,7 @@ impl Screen {
 
     /// Set the SVG content
     pub fn set_svg(&self, svg: &str) {
-        self.svg.set_inner_html(&svg);
+        self.svg.set_inner_html(svg);
     }
 
     /// Get a DOM element by ID

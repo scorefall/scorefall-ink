@@ -105,14 +105,14 @@ impl BarElem {
             measure, 0, /* i chan */
             0, /* marking */
         );
-        let reset_cursor = curs.clone();
+        let reset_cursor = curs;
 
         // Make voicings for each stave.
         let mut stave_voicing = vec![];
         let mut stave_cursor = vec![];
         for chan in 0..scof.movement[0].bar[0].chan.len() as u16 {
             curs = reset_cursor.chan(chan);
-            let notes = notator::notate(scof, cursor.clone(), curs.clone());
+            let notes = notator::notate(scof, *cursor, curs);
             stave_voicing.push(notes);
             stave_cursor.push(*cursor == curs);
         }

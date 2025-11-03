@@ -1,5 +1,3 @@
-//!
-
 use std::{fmt, str::FromStr};
 
 /// An articulation (affects how the note is played).

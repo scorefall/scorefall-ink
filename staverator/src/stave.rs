@@ -86,7 +86,6 @@ impl Stave {
         width: i32,
         ofs: Steps,
     ) -> String {
-        let width = width;
         let ofs = (ofs * Stave::STEP).0;
         let mut d = String::new();
         for i in 0..self.lines {
