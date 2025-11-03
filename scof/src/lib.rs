@@ -16,9 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(clippy::blacklisted_name)] // bar is a useful musical term
-
-use std::{convert::TryInto, str::FromStr};
+use std::str::FromStr;
 
 use devout::{Tag, log};
 use muon_rs as muon;
@@ -172,7 +170,7 @@ impl FromStr for Marking {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Marking::Note(s.parse::<Note>().and_then(Ok)?))
+        Ok(Marking::Note(s.parse::<Note>()?))
     }
 }
 
@@ -198,8 +196,6 @@ pub enum Repeat {
     Ending(u8),
 }
 
-/////////////////////
-////             ////
 /////////////////////
 
 /// A waveform.
@@ -691,7 +687,7 @@ impl Scof {
 
         let b = cursor.marking;
 
-        new_notes.extend(notes.drain(0..b.try_into().unwrap()));
+        new_notes.extend(notes.drain(0..usize::from(b)));
 
         let mut i = 0;
         i = loop {
@@ -790,7 +786,7 @@ impl Scof {
     /// Insert a note after the cursor.
     fn insert_after(&mut self, cursor: Cursor, marking: Marking) -> Option<()> {
         self.chan_notes_mut(cursor.right_unchecked())?
-            .insert((cursor.marking + 1).try_into().unwrap(), marking);
+            .insert(usize::from(cursor.marking + 1), marking);
         Some(())
     }
 }

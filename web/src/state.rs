@@ -21,7 +21,7 @@ use std::task::Context;
 use devout::{Tag, log};
 use hatmil::{Html, Svg};
 use human::{Input, Key};
-use pasts::prelude::{Future, Notify, Pin, Poll};
+use pasts::prelude::{Notify, Pin, Poll};
 use scof::{Fraction, Pitch, Steps};
 use scorefall_ink::Program;
 use staverator::{BarElem, STAVE_SPACE, SfFontMetadata, Stave};
@@ -57,6 +57,9 @@ where
     }
 }
 
+type InputNotifier = Adapter<Pin<Box<dyn Future<Output = Input>>>>;
+type ResizeNotifier = Adapter<Pin<Box<dyn Future<Output = (u32, u32)>>>>;
+
 /// Program state
 pub struct State {
     /// The web front-end.
@@ -68,9 +71,9 @@ pub struct State {
     /// Window width in Stave Spaces.
     width: f32,
     /// Event sources
-    pub input: Adapter<Pin<Box<dyn Future<Output = Input>>>>,
+    pub input: InputNotifier,
     /// Resize sources
-    pub resize: Adapter<Pin<Box<dyn Future<Output = (u32, u32)>>>>,
+    pub resize: ResizeNotifier,
 }
 
 impl State {
@@ -312,7 +315,7 @@ impl State {
             measure,
         );
         Svg::new(html).g().id(bar_id).transform(trans);
-        html.raw(&format!("{bar}")).end();
+        html.raw(bar.to_string()).end();
         bar.width
     }
 }

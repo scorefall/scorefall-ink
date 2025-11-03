@@ -61,7 +61,7 @@
 //! - `@`: harmonic (smaller o)
 //! - `|`: pedal
 
-use std::{convert::TryInto, fmt, str::FromStr};
+use std::{fmt, str::FromStr};
 
 use crate::Fraction;
 
@@ -146,11 +146,7 @@ impl fmt::Display for Note {
 impl Note {
     /// Get the note's visual distance above middle C (C4).
     pub fn visual_distance(&self, i: usize) -> Option<Steps> {
-        if let Some(pitch) = self.pitch.get(i) {
-            Some(pitch.visual_distance())
-        } else {
-            None
-        }
+        self.pitch.get(i).map(|pitch| pitch.visual_distance())
     }
 
     /// Set pitch class and octave.

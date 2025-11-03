@@ -19,20 +19,12 @@
 use scof::{Cursor, Fraction, Marking, Note, Pitch, Scof};
 
 /// This is the entire program context.
+#[derive(Default)]
 pub struct Program {
     /// The save file.
     pub scof: Scof,
     /// Current cursor
     pub cursor: Cursor,
-}
-
-impl Default for Program {
-    fn default() -> Self {
-        Self {
-            scof: Scof::default(),
-            cursor: Cursor::default(),
-        }
-    }
 }
 
 impl Program {

@@ -21,7 +21,7 @@
 //! Render a bar for all parts.  This not only handles space between notes, but
 //! also calculates the required width of the bar.
 
-use std::{collections::VecDeque, convert::TryInto};
+use std::collections::VecDeque;
 
 use hatmil::{Html, Svg};
 use ranch::RangedU16;
@@ -235,11 +235,11 @@ impl BarElem {
                     engraver.cursor = Some((engraver.width, stave_i));
                 }
             }
-        } else if let Some((x, stave_j)) = engraver.cursor {
-            if stave_i == stave_j {
-                engraver.calculate_cursor_span(x);
-                engraver.cursor = None;
-            }
+        } else if let Some((x, stave_j)) = engraver.cursor
+            && stave_i == stave_j
+        {
+            engraver.calculate_cursor_span(x);
+            engraver.cursor = None;
         }
         let ymargin = self.stave.height_steps() + Steps(12);
         // Render pitch or rest.

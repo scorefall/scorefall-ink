@@ -50,23 +50,14 @@ impl FromStr for PitchName {
 /// A Pitch Accidental.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PitchAccidental {
-    ///
     DoubleFlat,
-    ///
     FlatQuarterFlat,
-    ///
     Flat,
-    ///
     QuarterFlat,
-    ///
     Natural,
-    ///
     QuarterSharp,
-    ///
     Sharp,
-    ///
     SharpQuarterSharp,
-    ///
     DoubleSharp,
 }
 
@@ -265,9 +256,7 @@ impl Pitch {
         let steps = self.0.name as i32;
 
         // Calculate total number of steps from middle C.
-        Steps {
-            0: steps + octaves * 7,
-        }
+        Steps(steps + octaves * 7)
     }
 }
 

@@ -54,18 +54,24 @@ pub enum BeamProp {
     Flag,
 }
 
+/// A voicing that may be beamed or flagged
+type BeamedOrFlaggedVoicing = (BeamProp, u16, f32, (Vec<Pitch>, Steps));
+
+/// A voicing that is part of a beamed group
+type BeamedVoicings = (u16, f32, (Vec<Pitch>, Steps), bool);
+
 /// All of the beams in a measure.
 pub(crate) struct Beams {
     // Duration not notated yet in the measure.
     dur: u16,
     // Notes that may be flagged or beamed.
-    short: VecDeque<(BeamProp, u16, f32, (Vec<Pitch>, Steps))>,
+    short: VecDeque<BeamedOrFlaggedVoicing>,
     // Last was short?
     last_short: bool,
     // Minimum duration within current beam.
     min_dur: u16,
     // Notes in the beamed group.
-    notes: Vec<(u16, f32, (Vec<Pitch>, Steps), bool)>,
+    notes: Vec<BeamedVoicings>,
     // For iterator.
     queued: Option<Short>,
 }

@@ -16,8 +16,6 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::convert::TryInto;
-
 use scof::{Cursor, Marking, Pitch, Scof};
 
 /// A voicing is the set of notes at one position in a piece
@@ -118,5 +116,5 @@ impl<'a> Iterator for Notator<'a> {
 
 /// Notate one measure
 pub fn notate(scof: &Scof, cursor: Cursor, curs: Cursor) -> Vec<Voicing> {
-    Notator::new(scof, cursor.clone(), curs.clone()).collect()
+    Notator::new(scof, cursor, curs).collect()
 }
