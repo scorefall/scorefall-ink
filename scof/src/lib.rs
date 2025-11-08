@@ -24,90 +24,18 @@ use serde_derive::{Deserialize, Serialize};
 
 const SCOF: Tag = Tag::new("SCOF");
 
+mod cursor;
 mod fraction;
 pub mod note;
 
 pub use self::{
+    cursor::Cursor,
     fraction::{Fraction, IsZero},
     note::{
         Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
         PitchOctave, Steps,
     },
 };
-
-/// Cursor pointing to a marking
-#[derive(Clone, Copy, Default, Debug, PartialEq)]
-pub struct Cursor {
-    /// Movement number at cursor
-    movement: u16,
-    /// Bar number at cursor
-    bar: u16,
-    /// Channel number at cursor
-    chan: u16,
-    /// Marking number within bar
-    marking: u16,
-}
-
-impl Cursor {
-    /// Create a new cursor
-    #[must_use]
-    pub fn new(movement: u16, bar: u16, chan: u16, marking: u16) -> Self {
-        Cursor {
-            movement,
-            bar,
-            chan,
-            marking,
-        }
-    }
-
-    /// Create a cursor from a chan #.
-    #[must_use]
-    pub fn chan(self, chan: u16) -> Self {
-        Cursor {
-            movement: self.movement,
-            bar: self.bar,
-            chan,
-            marking: self.marking,
-        }
-    }
-
-    /// Create a cursor one marking to the left, shifting bar if necessary.
-    #[must_use]
-    pub fn left(mut self, scof: &Scof) -> Self {
-        if self.marking > 0 {
-            self.marking -= 1;
-        } else if self.bar > 0 {
-            self.bar -= 1;
-            let len = scof.marking_len(self);
-            self.marking = if len > 0 { len - 1 } else { 0 };
-        }
-        self
-    }
-
-    /// Create a cursor one marking to the right, shifting bar if necessary.
-    #[must_use]
-    pub fn right(mut self, scof: &Scof) -> Self {
-        self.marking += 1;
-        if self.marking >= scof.marking_len(self) {
-            self.bar += 1;
-            self.marking = 0;
-        }
-        self
-    }
-
-    /// Create a cursor one marking to the right, not checking if bar ended.
-    #[must_use]
-    pub fn right_unchecked(mut self) -> Self {
-        self.marking += 1;
-        self
-    }
-
-    /// Returns true if it's the first bar of music.
-    #[must_use]
-    pub fn is_first_bar(self) -> bool {
-        self.bar == 0
-    }
-}
 
 /// A Dynamic.
 #[derive(Clone, Debug, PartialEq)]
@@ -528,9 +456,6 @@ pub struct Scof {
     pub soundfont: Vec<Instrument>,
     /// Movements for the peice.
     pub movement: Vec<Movement>,
-
-    /// Cache for time signatures of each measure in each movement.
-    pub cache: Vec<Vec<Fraction>>,
 }
 
 impl Default for Scof {
@@ -543,8 +468,6 @@ impl Default for Scof {
             synth: Synth::default(),
             movement: vec![Movement::default()],
             soundfont: vec![Instrument::default()],
-
-            cache: vec![vec![]],
         }
     }
 }
