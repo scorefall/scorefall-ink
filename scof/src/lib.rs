@@ -16,6 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod articulation;
 mod chan;
 mod cursor;
 mod fraction;
@@ -27,6 +28,7 @@ mod score;
 mod synth;
 
 pub use crate::{
+    articulation::Articulation,
     chan::{Chan, Channel},
     cursor::Cursor,
     fraction::{Fraction, IsZero},
@@ -34,8 +36,7 @@ pub use crate::{
     measure::{Bar, Measure},
     movement::Movement,
     note::{
-        Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
-        PitchOctave, Steps,
+        Note, Pitch, PitchAccidental, PitchClass, PitchName, PitchOctave, Steps,
     },
     score::Scof,
     synth::{Instrument, Synth},
