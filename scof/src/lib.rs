@@ -26,11 +26,13 @@ const SCOF: Tag = Tag::new("SCOF");
 
 mod cursor;
 mod fraction;
+mod measure;
 pub mod note;
 
-pub use self::{
+pub use crate::{
     cursor::Cursor,
     fraction::{Fraction, IsZero},
+    measure::{Bar, Measure},
     note::{
         Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
         PitchOctave, Steps,
@@ -225,51 +227,6 @@ impl From<Chan> for Channel {
         let lyric = chan.lyric;
 
         Channel { notes, lyric }
-    }
-}
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct SigRef {
-    /// Index into sig list.
-    index: u32,
-    /// Which beat of the measure the signature starts applying to.
-    beat: Option<u8>,
-}
-
-/// A bar (or measure) of music.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct Bar {
-    /// Signature reference (index)
-    sig: Option<SigRef>,
-    /// All of the channels in this piece.
-    chan: Vec<Chan>,
-    /// Repeat symbols for this measure.
-    repeat: Vec<String>,
-}
-
-/// A bar (or measure) of music.
-#[derive(Debug, PartialEq)]
-pub struct Measure {
-    /// Signature reference (index)
-    pub sig: Option<SigRef>,
-    /// All of the channels in this piece.
-    pub chan: Vec<Channel>,
-    /// Repeat symbols for this measure.
-    pub repeat: Vec<String>,
-}
-
-impl From<Bar> for Measure {
-    fn from(mut bar: Bar) -> Self {
-        let mut chan = vec![];
-
-        for i in bar.chan.drain(..) {
-            chan.push(i.into());
-        }
-
-        let sig = bar.sig;
-        let repeat = bar.repeat;
-
-        Measure { sig, chan, repeat }
     }
 }
 
