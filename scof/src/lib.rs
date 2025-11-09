@@ -24,12 +24,14 @@ use serde_derive::{Deserialize, Serialize};
 
 const SCOF: Tag = Tag::new("SCOF");
 
+mod chan;
 mod cursor;
 mod fraction;
 mod measure;
 pub mod note;
 
 pub use crate::{
+    chan::{Chan, Channel},
     cursor::Cursor,
     fraction::{Fraction, IsZero},
     measure::{Bar, Measure},
@@ -180,54 +182,6 @@ pub struct Sig {
     pub tempo: u16,
     /// % Swing (default=50).
     pub swing: Option<u8>,
-}
-
-/// Channel information for a specific bar of music.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
-struct Chan {
-    /// Channel notes for 1 bar.
-    notes: String,
-    /// Channel lyrics for 1 bar.
-    lyric: Option<String>,
-}
-
-/// A parsed and transformed channel information for a specific bar of music.
-#[derive(PartialEq, Debug)]
-pub struct Channel {
-    /// Channel notes for 1 bar.
-    notes: Vec<Marking>,
-    /// Channel lyrics for 1 bar.
-    lyric: Option<String>,
-}
-
-impl Default for Chan {
-    fn default() -> Self {
-        let notes = String::new(); // no notes = whole measure rest
-        let lyric = None;
-        Chan { notes, lyric }
-    }
-}
-
-impl Default for Channel {
-    fn default() -> Self {
-        Chan::default().into()
-    }
-}
-
-impl From<Chan> for Channel {
-    fn from(chan: Chan) -> Self {
-        let mut notes = vec![];
-
-        for marking in chan.notes.split(' ').filter(|m| !m.is_empty()) {
-            notes.push(marking.parse().unwrap_or_else(|_| {
-                panic!("Invalid marking: {}", marking);
-            }));
-        }
-
-        let lyric = chan.lyric;
-
-        Channel { notes, lyric }
-    }
 }
 
 /// A movement in the score.
