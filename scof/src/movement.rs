@@ -32,7 +32,7 @@ pub struct Mvmt {
 
 impl Default for Mvmt {
     fn default() -> Mvmt {
-        muon::from_str(include_str!("default_movement.muon")).unwrap()
+        muon::from_str(include_str!("../res/default_movement.muon")).unwrap()
     }
 }
 
