@@ -19,7 +19,6 @@
 use std::str::FromStr;
 
 use devout::{Tag, log};
-use muon_rs as muon;
 use serde_derive::{Deserialize, Serialize};
 
 const SCOF: Tag = Tag::new("SCOF");
@@ -28,6 +27,7 @@ mod chan;
 mod cursor;
 mod fraction;
 mod measure;
+mod movement;
 pub mod note;
 
 pub use crate::{
@@ -35,6 +35,7 @@ pub use crate::{
     cursor::Cursor,
     fraction::{Fraction, IsZero},
     measure::{Bar, Measure},
+    movement::Movement,
     note::{
         Articulation, Note, Pitch, PitchAccidental, PitchClass, PitchName,
         PitchOctave, Steps,
@@ -182,47 +183,6 @@ pub struct Sig {
     pub tempo: u16,
     /// % Swing (default=50).
     pub swing: Option<u8>,
-}
-
-/// A movement in the score.
-#[derive(PartialEq, Debug, Serialize, Deserialize)]
-pub struct Mvmt {
-    /// A list of key signatures used in this movement.
-    pub sig: Vec<Sig>,
-    /// Each measure of the movement in order.
-    pub bar: Vec<Bar>,
-}
-
-impl Default for Mvmt {
-    fn default() -> Mvmt {
-        muon::from_str(include_str!("default_movement.muon")).unwrap()
-    }
-}
-
-/// A movement in the score.
-#[derive(PartialEq, Debug)]
-pub struct Movement {
-    /// A list of key signatures used in this movement.
-    pub sig: Vec<Sig>,
-    /// Each measure of the movement in order.
-    pub bar: Vec<Measure>,
-}
-
-impl Default for Movement {
-    fn default() -> Movement {
-        Mvmt::default().into()
-    }
-}
-
-impl From<Mvmt> for Movement {
-    fn from(mut mvmt: Mvmt) -> Movement {
-        let sig = mvmt.sig;
-        let mut bar = Vec::new();
-
-        bar.extend(mvmt.bar.drain(..).map(|i| i.into()));
-
-        Movement { sig, bar }
-    }
 }
 
 /// An instrument in the soundfont for this score.
