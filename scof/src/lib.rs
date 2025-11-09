@@ -16,8 +16,6 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::str::FromStr;
-
 use devout::{Tag, log};
 use serde_derive::{Deserialize, Serialize};
 
@@ -26,6 +24,7 @@ const SCOF: Tag = Tag::new("SCOF");
 mod chan;
 mod cursor;
 mod fraction;
+mod marking;
 mod measure;
 mod movement;
 pub mod note;
@@ -34,6 +33,7 @@ pub use crate::{
     chan::{Chan, Channel},
     cursor::Cursor,
     fraction::{Fraction, IsZero},
+    marking::{Dynamic, Marking, Repeat, Sig},
     measure::{Bar, Measure},
     movement::Movement,
     note::{
@@ -41,93 +41,6 @@ pub use crate::{
         PitchOctave, Steps,
     },
 };
-
-/// A Dynamic.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Dynamic {
-    PPPPPP,
-    PPPPP,
-    PPPP,
-    PPP,
-    PP,
-    P,
-    MP,
-    MF,
-    F,
-    FF,
-    FFF,
-    FFFF,
-    FFFFF,
-    FFFFFF,
-    N,
-    SF,
-    SFZ,
-    FP,
-    SFP,
-}
-
-/// A marking.
-#[derive(Clone, Debug, PartialEq)]
-pub enum Marking {
-    /// Change intensity of sound.
-    Dynamic(Dynamic),
-    /// Grace Note into
-    GraceInto(Note),
-    /// Grace Note from
-    GraceOutOf(Note),
-    /// Note
-    Note(Note),
-    /// Breath
-    Breath,
-    /// Short grand pause for all instruments
-    CaesuraShort,
-    /// Long grand pause for all instruments
-    CaesuraLong,
-    /// Increase intensity
-    Cresc,
-    /// Decrease intensity
-    Dim,
-    /// Pizzicato (pluck)
-    Pizz,
-    /// Arco (bowed)
-    Arco,
-    /// Standard Mute [con sordino]
-    Mute,
-    /// Open (no mute) [senza sordino]
-    Open,
-    /// Repeat
-    Repeat,
-}
-
-impl FromStr for Marking {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Marking::Note(s.parse::<Note>()?))
-    }
-}
-
-/// A repeat marking for a bar.
-pub enum Repeat {
-    /// Repeat sign open ||:
-    Open,
-    /// Repeat sign close :||
-    Close,
-    /// Sign (to jump backwards to).
-    Segno,
-    /// Jump back to beginning.
-    DC,
-    /// Jump back to sign.
-    DS,
-    /// The marks the beginning of the coda.
-    Coda,
-    /// Jump forward to the coda.
-    ToCoda,
-    /// End here (after jumping backwards to the sign).
-    Fine,
-    /// Numbered ending.
-    Ending(u8),
-}
 
 /////////////////////
 
@@ -169,20 +82,6 @@ pub struct Synth {
     effect: Vec<Effect>,
     /// Channels
     chan: Vec<SynthChan>,
-}
-
-/// A signature.
-#[derive(PartialEq, Debug, Default, Serialize, Deserialize)]
-pub struct Sig {
-    /// The key signature (0-23 quarter steps above C, 24+ reserved for middle
-    /// eastern and Indian key signatures).
-    pub key: u8,
-    /// Time signature (num_beats/note_len), 4/4 is common.
-    pub time: String,
-    /// BPM (beats per minute), 120 BPM is common (default=120).
-    pub tempo: u16,
-    /// % Swing (default=50).
-    pub swing: Option<u8>,
 }
 
 /// An instrument in the soundfont for this score.
