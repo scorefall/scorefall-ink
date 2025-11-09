@@ -63,11 +63,11 @@
 
 use std::{fmt, str::FromStr};
 
-use crate::{articulation::Articulation, fraction::Fraction};
-
-mod pitch;
-
-pub use self::pitch::*;
+use crate::{
+    articulation::Articulation,
+    fraction::Fraction,
+    pitch::{Pitch, PitchClass, PitchName},
+};
 
 /// Number of steps above middle C
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]

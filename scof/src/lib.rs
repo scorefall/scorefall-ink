@@ -23,7 +23,8 @@ mod fraction;
 mod marking;
 mod measure;
 mod movement;
-pub mod note;
+mod note;
+mod pitch;
 mod score;
 mod synth;
 
@@ -35,9 +36,8 @@ pub use crate::{
     marking::{Dynamic, Marking, Repeat, Sig},
     measure::{Bar, Measure},
     movement::Movement,
-    note::{
-        Note, Pitch, PitchAccidental, PitchClass, PitchName, PitchOctave, Steps,
-    },
+    note::{Note, Steps},
+    pitch::{Pitch, PitchAccidental, PitchClass, PitchName, PitchOctave},
     score::Scof,
     synth::{Instrument, Synth},
 };
