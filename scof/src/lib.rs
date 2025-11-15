@@ -38,6 +38,6 @@ pub use crate::{
     movement::Movement,
     note::{Note, Steps},
     pitch::{Pitch, PitchAccidental, PitchClass, PitchName, PitchOctave},
-    score::Scof,
+    score::{Meta, Scof, Style},
     synth::{Instrument, Synth},
 };
