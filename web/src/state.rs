@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright © 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright © 2019-2025 Doug P. Lau
+// Copyright © 2019-2026 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,10 @@
 use std::task::Context;
 
 use devout::{Tag, log};
-use hatmil::{Html, Svg};
+use hatmil::{
+    Page,
+    svg::{Defs, G},
+};
 use human::{Input, Key};
 use pasts::prelude::{Notify, Pin, Poll};
 use scof::{Fraction, Pitch, Steps};
@@ -97,19 +100,16 @@ impl State {
 
     /// Render the score
     pub fn render_score(&mut self) {
-        let mut html = Html::new();
-        Svg::new(&mut html).defs();
+        let mut page = Page::new();
+        let mut defs = page.frag::<Defs>();
         // render each glyph as a path in defs section
         for (id, path) in self.meta.glyph_paths.iter().enumerate() {
-            Svg::new(&mut html)
-                .path()
-                .id(format!("{id:x}"))
-                .d(path)
-                .end();
+            defs.path().id(format!("{id:x}")).d(path).close();
         }
-        html.end(); // defs
-        Svg::new(&mut html).g().id("page");
-        let score = html.to_string();
+        let mut score = String::from(page);
+        let mut page = Page::new();
+        page.frag::<G>().id("page");
+        score.push_str(&String::from(page));
         self.screen.set_svg(&score);
         self.resize(self.screen.size()).unwrap();
         self.render_page();
@@ -273,12 +273,14 @@ impl State {
     /// Render the page to the SVG
     fn render_page(&self) {
         log!(RENDER, "render page");
-        let mut html = Html::new();
+        let mut html = String::new();
 
         let mut offset_x = STAVE_SPACE; // Stave Margin
         let mut measure = 0;
         loop {
-            let width = self.render_measure(measure, offset_x, &mut html);
+            let mut page = Page::new();
+            let width = self.render_measure(measure, offset_x, &mut page);
+            html.push_str(&String::from(page));
             log!(RENDER, "measure: {} width {}", measure, width);
             offset_x += width;
             if offset_x >= (self.width * STAVE_SPACE as f32) as i32 {
@@ -288,7 +290,7 @@ impl State {
         }
 
         let page = self.screen.element_by_id("page").unwrap();
-        page.set_inner_html(&html.to_string());
+        page.set_inner_html(&html);
     }
 
     /// Render one measure
@@ -296,11 +298,14 @@ impl State {
         &self,
         measure: u16,
         offset_x: i32,
-        html: &mut Html,
+        page: &mut Page,
     ) -> i32 {
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
+
+        let mut g = page.frag::<G>();
+        g.id(bar_id).transform(trans);
 
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
         let low = "C4".parse::<Pitch>().unwrap().visual_distance();
@@ -314,8 +319,8 @@ impl State {
             &self.program.cursor,
             measure,
         );
-        Svg::new(html).g().id(bar_id).transform(trans);
-        html.raw(bar.to_string()).end();
+        page.raw(bar.to_string());
+        page.close(); // g
         bar.width
     }
 }

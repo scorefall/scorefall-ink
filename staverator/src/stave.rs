@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright (C) 2019-2025 Doug P. Lau
+// Copyright (C) 2019-2026 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 //     You should have received a copy of the GNU General Public License
 //     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+use hatmil::svg::Path;
 use scof::Steps;
 use sfff::SfFontMetadata;
 
@@ -86,23 +87,21 @@ impl Stave {
         width: i32,
         ofs: Steps,
     ) -> String {
+        let x0 = 0;
+        let x1 = x0 + width;
         let ofs = (ofs * Stave::STEP).0;
-        let mut d = String::new();
+        let mut d = Path::def_builder();
         for i in 0..self.lines {
-            let x = 0;
-            let y =
+            let y0 =
                 top + Stave::SPACE * i - meta.stave_line_thickness / 2 + ofs;
-            let line = &format!(
-                "M{} {}h{}v{}h-{}v-{}z",
-                x,
-                y,
-                width,
-                meta.stave_line_thickness,
-                width,
-                meta.stave_line_thickness,
-            );
-            d.push_str(line);
+            let y1 = y0 + meta.stave_line_thickness;
+            d.move_to((x0, y0));
+            d.line((x1, y0));
+            d.line((x1, y1));
+            d.line((x0, y1));
+            d.line((x0, y0));
+            d.close();
         }
-        d
+        String::from(d)
     }
 }

@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright (C) 2019-2025 Doug P. Lau
+// Copyright (C) 2019-2026 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -23,7 +23,10 @@
 
 use std::collections::VecDeque;
 
-use hatmil::{Html, Svg};
+use hatmil::{
+    Page,
+    svg::{Path, Rect},
+};
 use ranch::RangedU16;
 use scof::Steps;
 use sfff::SfFontMetadata;
@@ -183,24 +186,22 @@ impl BarElem {
         for i in 0..engraver.stave_voicing.len().try_into().unwrap() {
             let y = self.offset_y(self.stave.steps_middle_c);
             let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
-            let mut html = Html::new();
-            Svg::new(&mut html).path().d(d).end();
-            self.elements.push(html);
+            let mut page = Page::new();
+            page.frag::<Path>().d(d);
+            self.elements.push(String::from(page));
             self.add_barline(engraver.meta, bar_width, ymargin * i);
         }
 
         if let Some((x, w)) = engraver.cursor_span {
-            let mut html = Html::new();
-            Svg::new(&mut html)
-                .rect()
+            let mut page = Page::new();
+            page.frag::<Rect>()
                 .id("cursor")
                 .x(x)
                 .y(0)
                 .width(w)
                 .height(self.height())
-                .fill("#FF9AF0")
-                .end();
-            self.elements.insert(0, html);
+                .fill("#FF9AF0");
+            self.elements.insert(0, String::from(page));
         }
 
         // Return calculated physical bar width.

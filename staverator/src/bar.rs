@@ -1,7 +1,7 @@
 // ScoreFall Ink - Music Composition Software
 //
 // Copyright (C) 2019-2025 Jeryn Aldaron Lau <aldaronlau@gmail.com>
-// Copyright (C) 2019-2025 Doug P. Lau
+// Copyright (C) 2019-2026 Doug P. Lau
 //
 //     This program is free software: you can redistribute it and/or modify
 //     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,10 @@
 use std::fmt;
 
 use devout::{Tag, log};
-use hatmil::{Html, Svg};
+use hatmil::{
+    Page,
+    svg::{Path, Rect, Use},
+};
 use scof::{Cursor, Scof, Steps};
 use sfff::{Glyph, SfFontMetadata};
 
@@ -51,7 +54,7 @@ pub struct BarElem {
     /// Width of measure
     pub width: i32,
     /// SVG Elements
-    pub(crate) elements: Vec<Html>,
+    pub(crate) elements: Vec<String>,
 }
 
 impl fmt::Display for BarElem {
@@ -151,15 +154,9 @@ impl BarElem {
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
-        let mut html = Html::new();
-        Svg::new(&mut html)
-            .rect()
-            .x(x)
-            .y(y)
-            .width(width)
-            .height(height)
-            .end();
-        self.elements.push(html);
+        let mut page = Page::new();
+        page.frag::<Rect>().x(x).y(y).width(width).height(height);
+        self.elements.push(String::from(page));
     }
 
     /// Get Y position from steps and offset
@@ -211,7 +208,7 @@ impl BarElem {
             (left[0], 0, Self::STEM_LENGTH - thickness)
         };
 
-        let mut d = String::new();
+        let mut d = Path::def_builder();
         log!(INFO, "ADD_BEAM {} notes", beam.notes.len());
         let mut old_x = None;
         for note_i in 0..beam.notes.len() {
@@ -241,24 +238,22 @@ impl BarElem {
                 let beam_distance =
                     if beam.stems_up { -1 } else { 1 } * (3 * Stave::STEP) / 2;
                 for i in 0..count {
-                    d.push_str(&format!(
-                        "M{} {}l{} {}l{} {}l{} {}z",
-                        x + ofsx + (meta.stem_thickness / 2),
-                        y + ofsy + beamy - i * beam_distance,
-                        -diff,
-                        0,
-                        0,
-                        thickness,
-                        diff,
-                        0
-                    ));
+                    let x0 = x + ofsx + (meta.stem_thickness / 2);
+                    let x1 = x0 - diff;
+                    let y0 = y + ofsy + beamy - i * beam_distance;
+                    let y1 = y0 + thickness;
+                    d.move_to((x0, y0));
+                    d.line((x1, y0));
+                    d.line((x1, y1));
+                    d.line((x0, y1));
+                    d.close();
                 }
             }
             old_x = Some(x);
         }
-        let mut html = Html::new();
-        Svg::new(&mut html).path().d(d).end();
-        self.elements.push(html);
+        let mut page = Page::new();
+        page.frag::<Path>().d(String::from(d));
+        self.elements.push(String::from(page));
     }
 
     /// Add stems and either flags or beam elements for short notes.
@@ -324,15 +319,9 @@ impl BarElem {
             let y = y - (meta.stave_line_thickness / 2) + count * dir_step;
             let width = head_width + meta.ledger_line_extension * 2;
             let height = meta.stave_line_thickness;
-            let mut html = Html::new();
-            Svg::new(&mut html)
-                .rect()
-                .x(x)
-                .y(y)
-                .width(width)
-                .height(height)
-                .end();
-            self.elements.push(html);
+            let mut page = Page::new();
+            page.frag::<Rect>().x(x).y(y).width(width).height(height);
+            self.elements.push(String::from(page));
             count += 2;
         }
     }
@@ -349,17 +338,15 @@ impl BarElem {
         let height = stem_length;
         let rx = meta.stem_thickness / 2;
         let ry = meta.stem_thickness;
-        let mut html = Html::new();
-        Svg::new(&mut html)
-            .rect()
+        let mut page = Page::new();
+        page.frag::<Rect>()
             .x(x)
             .y(y)
             .width(width)
             .height(height)
             .rx(rx)
-            .ry(ry)
-            .end();
-        self.elements.push(html);
+            .ry(ry);
+        self.elements.push(String::from(page));
     }
 
     /// Add `use` element for a whole measure rest
@@ -383,14 +370,12 @@ impl BarElem {
 
     /// Add use element
     fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
-        let mut html = Html::new();
-        Svg::new(&mut html)
-            .r#use()
+        let mut page = Page::new();
+        page.frag::<Use>()
             .x(x)
             .y(y)
-            .attr("xlink:href", format!("#{:x}", u16::from(glyph)))
-            .end();
-        self.elements.push(html);
+            .href(format!("#{:x}", u16::from(glyph)));
+        self.elements.push(String::from(page));
     }
 
     /// Add clefs
