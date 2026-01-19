@@ -100,16 +100,16 @@ impl State {
 
     /// Render the score
     pub fn render_score(&mut self) {
-        let mut page = Page::new();
-        let mut defs = page.frag::<Defs>();
+        let mut elem = Page::new();
+        let mut defs = elem.frag::<Defs>();
         // render each glyph as a path in defs section
         for (id, path) in self.meta.glyph_paths.iter().enumerate() {
             defs.path().id(format!("{id:x}")).d(path).close();
         }
-        let mut score = String::from(page);
-        let mut page = Page::new();
-        page.frag::<G>().id("page");
-        score.push_str(&String::from(page));
+        let mut score = String::from(elem);
+        let mut elem = Page::new();
+        elem.frag::<G>().id("page");
+        score.push_str(&String::from(elem));
         self.screen.set_svg(&score);
         self.resize(self.screen.size()).unwrap();
         self.render_page();
@@ -278,9 +278,9 @@ impl State {
         let mut offset_x = STAVE_SPACE; // Stave Margin
         let mut measure = 0;
         loop {
-            let mut page = Page::new();
-            let width = self.render_measure(measure, offset_x, &mut page);
-            html.push_str(&String::from(page));
+            let mut elem = Page::new();
+            let width = self.render_measure(measure, offset_x, &mut elem);
+            html.push_str(&String::from(elem));
             log!(RENDER, "measure: {} width {}", measure, width);
             offset_x += width;
             if offset_x >= (self.width * STAVE_SPACE as f32) as i32 {
@@ -298,13 +298,13 @@ impl State {
         &self,
         measure: u16,
         offset_x: i32,
-        page: &mut Page,
+        elem: &mut Page,
     ) -> i32 {
         let offset_y = 0;
         let bar_id = &format!("m{}", measure);
         let trans = &format!("translate({} {})", offset_x, offset_y);
 
-        let mut g = page.frag::<G>();
+        let mut g = elem.frag::<G>();
         g.id(bar_id).transform(trans);
 
         let high = "C4".parse::<Pitch>().unwrap().visual_distance();
@@ -319,8 +319,8 @@ impl State {
             &self.program.cursor,
             measure,
         );
-        page.raw(bar.to_string());
-        page.close(); // g
+        elem.raw(bar.to_string());
+        elem.close(); // g
         bar.width
     }
 }

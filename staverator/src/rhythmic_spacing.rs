@@ -186,22 +186,22 @@ impl BarElem {
         for i in 0..engraver.stave_voicing.len().try_into().unwrap() {
             let y = self.offset_y(self.stave.steps_middle_c);
             let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
-            let mut page = Page::new();
-            page.frag::<Path>().d(d);
-            self.elements.push(String::from(page));
+            let mut elem = Page::new();
+            elem.frag::<Path>().d(d);
+            self.elements.push(String::from(elem));
             self.add_barline(engraver.meta, bar_width, ymargin * i);
         }
 
         if let Some((x, w)) = engraver.cursor_span {
-            let mut page = Page::new();
-            page.frag::<Rect>()
+            let mut elem = Page::new();
+            elem.frag::<Rect>()
                 .id("cursor")
                 .x(x)
                 .y(0)
                 .width(w)
                 .height(self.height())
                 .fill("#FF9AF0");
-            self.elements.insert(0, String::from(page));
+            self.elements.insert(0, String::from(elem));
         }
 
         // Return calculated physical bar width.
