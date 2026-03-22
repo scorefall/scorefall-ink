@@ -20,7 +20,7 @@ use std::fmt;
 
 use devout::{Tag, log};
 use hatmil::{
-    Page,
+    Tree,
     svg::{Path, Rect, Use},
 };
 use scof::{Cursor, Scof, Steps};
@@ -154,9 +154,9 @@ impl BarElem {
         let y = self.offset_y(self.stave.steps_middle_c) + ofs;
         let y_bottom = self.offset_y(self.stave.steps_stave_bottom()) + ofs;
         let height = y_bottom - y;
-        let mut elem = Page::new();
-        elem.frag::<Rect>().x(x).y(y).width(width).height(height);
-        self.elements.push(String::from(elem));
+        let mut tree = Tree::new();
+        tree.root::<Rect>().x(x).y(y).width(width).height(height);
+        self.elements.push(String::from(tree));
     }
 
     /// Get Y position from steps and offset
@@ -251,9 +251,9 @@ impl BarElem {
             }
             old_x = Some(x);
         }
-        let mut elem = Page::new();
-        elem.frag::<Path>().d(String::from(d));
-        self.elements.push(String::from(elem));
+        let mut tree = Tree::new();
+        tree.root::<Path>().d(String::from(d));
+        self.elements.push(String::from(tree));
     }
 
     /// Add stems and either flags or beam elements for short notes.
@@ -319,9 +319,9 @@ impl BarElem {
             let y = y - (meta.stave_line_thickness / 2) + count * dir_step;
             let width = head_width + meta.ledger_line_extension * 2;
             let height = meta.stave_line_thickness;
-            let mut elem = Page::new();
-            elem.frag::<Rect>().x(x).y(y).width(width).height(height);
-            self.elements.push(String::from(elem));
+            let mut tree = Tree::new();
+            tree.root::<Rect>().x(x).y(y).width(width).height(height);
+            self.elements.push(String::from(tree));
             count += 2;
         }
     }
@@ -338,15 +338,15 @@ impl BarElem {
         let height = stem_length;
         let rx = meta.stem_thickness / 2;
         let ry = meta.stem_thickness;
-        let mut elem = Page::new();
-        elem.frag::<Rect>()
+        let mut tree = Tree::new();
+        tree.root::<Rect>()
             .x(x)
             .y(y)
             .width(width)
             .height(height)
             .rx(rx)
             .ry(ry);
-        self.elements.push(String::from(elem));
+        self.elements.push(String::from(tree));
     }
 
     /// Add `use` element for a whole measure rest
@@ -370,12 +370,12 @@ impl BarElem {
 
     /// Add use element
     fn add_use(&mut self, glyph: Glyph, x: i32, y: i32) {
-        let mut elem = Page::new();
-        elem.frag::<Use>()
+        let mut tree = Tree::new();
+        tree.root::<Use>()
             .x(x)
             .y(y)
             .href(format!("#{:x}", u16::from(glyph)));
-        self.elements.push(String::from(elem));
+        self.elements.push(String::from(tree));
     }
 
     /// Add clefs

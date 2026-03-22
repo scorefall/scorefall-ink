@@ -24,7 +24,7 @@
 use std::collections::VecDeque;
 
 use hatmil::{
-    Page,
+    Tree,
     svg::{Path, Rect},
 };
 use ranch::RangedU16;
@@ -186,22 +186,22 @@ impl BarElem {
         for i in 0..engraver.stave_voicing.len().try_into().unwrap() {
             let y = self.offset_y(self.stave.steps_middle_c);
             let d = self.stave.path(engraver.meta, y, bar_width, ymargin * i);
-            let mut elem = Page::new();
-            elem.frag::<Path>().d(d);
-            self.elements.push(String::from(elem));
+            let mut tree = Tree::new();
+            tree.root::<Path>().d(d);
+            self.elements.push(String::from(tree));
             self.add_barline(engraver.meta, bar_width, ymargin * i);
         }
 
         if let Some((x, w)) = engraver.cursor_span {
-            let mut elem = Page::new();
-            elem.frag::<Rect>()
+            let mut tree = Tree::new();
+            tree.root::<Rect>()
                 .id("cursor")
                 .x(x)
                 .y(0)
                 .width(w)
                 .height(self.height())
                 .fill("#FF9AF0");
-            self.elements.insert(0, String::from(elem));
+            self.elements.insert(0, String::from(tree));
         }
 
         // Return calculated physical bar width.
